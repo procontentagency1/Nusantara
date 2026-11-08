@@ -255,6 +255,7 @@ button,.btn{touch-action:manipulation}
 .bp-h div i{flex:1;background:var(--c);opacity:.92;min-height:1px;display:block}
 /* kartu hasil pertempuran */
 #bres{left:50%;top:50px;width:min(430px,calc(100% - 110px));transform:translate(-50%,-150%);transition:transform .5s cubic-bezier(.2,.9,.3,1.12);z-index:9;border-radius:4px;padding:0;overflow:hidden}
+#bres:not(.open){visibility:hidden}
 #bres.open{transform:translate(-50%,0)}
 .br-hd{text-align:center;padding:5px;font:700 14px Georgia,serif;letter-spacing:1.5px;color:#f6dc8f;background:linear-gradient(#942c1f,#561710);border-bottom:2px solid #d9a93a;text-transform:uppercase}
 .br-body{display:grid;grid-template-columns:44px 1fr 44px;gap:6px;padding:8px;align-items:center}
@@ -2112,12 +2113,14 @@ function drawArmies() {
   ARM_HIT = []; BT_HIT = [];
   if (!G || phase !== 'game') return;
   const s = view.s, u = Math.max(.27, Math.min(.4, .2 + s*.06));
+  const armyScale = Math.min(1, Math.max(.4, s/(fitS*2)));
   drawRoutes(); drawSieges();
   const stack = {}, list = [];
   for (const a of G.armies) { if (a.bt) continue; const q = armyPos(a); if (q[0] < -30 || q[1] < -50 || q[0] > vw + 30 || q[1] > vh + 30) continue; list.push({ a, q }); }
   list.sort((m, n) => m.q[1] - n.q[1]);
   for (const { a, q } of list) {
     const [x, y] = q, moving = a.path.length > 0, key = a.loc + (moving ? 'm' : 's'), idx = stack[key] = (stack[key] ?? -1) + 1;
+    ctx.save(); ctx.translate(x, y); ctx.scale(armyScale, armyScale); ctx.translate(-x, -y);
     const bx = x + 12 + idx*17, by = y + 22, col = natColor[a.nat] || '#aaa', [dx] = armyDir(a), sg = moving && dx < 0 ? -1 : 1, ph = fxT*5 + a.id*1.7;
     if (G.sel === a.id) { ctx.fillStyle = `rgba(255,230,140,${.35 + .15*Math.sin(fxT*5)})`; ctx.strokeStyle = '#ffe08a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(bx + 3, by + 1, 15, 5, 0, 0, 7); ctx.fill(); ctx.stroke(); }
     if (moving) {
@@ -2131,7 +2134,9 @@ function drawArmies() {
       if (a.regs >= 8) figure(bx + 7*u - 6, by + 1.5, u, col, { dx:Math.sin(fxT*1.1 + a.id*2)*.35 });
     }
     counterSm(bx - 1, by + 7, String(a.regs), col);
-    ARM_HIT.push({ a, x0:bx - 14, y0:by - 30, x1:bx + 14, y1:by + 12 });
+    ctx.restore();
+    const hx = x + (bx - x)*armyScale, hy = y + (by - y)*armyScale;
+    ARM_HIT.push({ a, x0:hx - 14*armyScale, y0:hy - 30*armyScale, x1:hx + 14*armyScale, y1:hy + 12*armyScale });
   }
   drawBattles(); drawEnvoys();
 }
