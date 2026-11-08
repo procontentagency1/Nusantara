@@ -632,7 +632,63 @@ function meruBlock(g, cx, cy, w, tiers) {
   g.strokeStyle = '#d9a82c'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(cx + 1, top + 1); g.lineTo(cx + 1, top - w*.42); g.stroke();
   g.fillStyle = '#f2c94c'; g.beginPath(); g.arc(cx + 1, top - w*.42, 1.4, 0, 7); g.fill();
 }
+// Siluet terinspirasi peninggalan Trowulan; interpretasi ikon, bukan rekonstruksi situs.
+function majBrick(g,x,y,w,h) {
+  g.fillStyle='#b95b3c'; g.fillRect(x,y,w,h);
+  g.fillStyle='#e39a65'; g.fillRect(x,y,w,.65);
+  g.fillStyle='#733526'; g.fillRect(x+w-.8,y,.8,h);
+  g.strokeStyle='#4c2c23';g.lineWidth=.45;g.strokeRect(x,y,w,h);
+  g.strokeStyle='rgba(74,29,20,.4)'; g.lineWidth=.35;
+  for(let yy=y+2;yy<y+h;yy+=2) {g.beginPath();g.moveTo(x,yy);g.lineTo(x+w,yy);g.stroke();}
+}
+function majCandi(g,x,y,k) {
+  g.save();g.translate(x,y);g.scale(k,k);
+  // Kaki bertingkat, bilik, pintu gelap, dan mahkota batu bertingkat.
+  majBrick(g,-7,-2,14,2);majBrick(g,-6,-4,12,2);majBrick(g,-5,-6,10,2);
+  majBrick(g,-4,-15,8,9);g.fillStyle='#351d19';g.fillRect(-1.7,-12,3.4,6);
+  majBrick(g,-5,-16,10,1.5);majBrick(g,-4,-18,8,2);majBrick(g,-3,-20,6,2);majBrick(g,-2,-22,4,2);majBrick(g,-1,-24,2,2);
+  // Tangga menuju bilik, dengan garis mendatar yang terbaca saat zoom.
+  g.fillStyle='#d68659';g.beginPath();g.moveTo(-1.7,-6);g.lineTo(1.7,-6);g.lineTo(3,0);g.lineTo(-3,0);g.closePath();g.fill();
+  g.strokeStyle='#783a2a';g.lineWidth=.45;for(let yy=-4;yy<0;yy+=1.3){g.beginPath();g.moveTo(-2.5,yy);g.lineTo(2.5,yy);g.stroke();}
+  g.restore();
+}
+function majGate(g,x,y,k) {
+  g.save();g.translate(x,y);g.scale(k,k);
+  for(const dir of [-1,1]) {
+    g.save();g.scale(dir,1);
+    majBrick(g,2,-2,6,2);majBrick(g,2,-9,5,7);majBrick(g,2,-12,4,3);majBrick(g,2,-14,3,2);majBrick(g,2,-16,2,2);
+    g.fillStyle='#e29862';g.fillRect(2,-14,.6,12);g.restore();
+  }
+  g.fillStyle='#c79c70';g.fillRect(-2,-.5,4,.7);g.restore();
+}
+function majPavilion(g,x,y,k) {
+  g.save();g.translate(x,y);g.scale(k,k);
+  majBrick(g,-7,-1,14,1.5);
+  g.strokeStyle='#68422b';g.lineWidth=1;for(const xx of [-5,-1,4]){g.beginPath();g.moveTo(xx,-1);g.lineTo(xx,-7);g.stroke();}
+  poly(g,[[-8,-7],[0,-12],[8,-7],[5,-5],[-5,-5]],'#8b4831','#4b2b20');
+  poly(g,[[-8,-7],[0,-12],[1,-8],[-5,-5]],'#c4774b');
+  g.strokeStyle='#dfad74';g.lineWidth=.55;g.beginPath();g.moveTo(-8,-7);g.lineTo(-5,-5);g.lineTo(5,-5);g.lineTo(8,-7);g.stroke();g.restore();
+}
+function majCitySprite(rank,v) {
+  const key='maj-city-'+rank+'-'+v;if(SPR[key])return SPR[key];
+  const big=rank===1,W=big?40:27,H=big?31:23;
+  return SPR[key]=sprite(W,H,g=>{
+    // Pelataran bata dengan kedalaman dangkal agar titik kota tetap jelas.
+    poly(g,[[2,H-4],[W-7,H-6],[W-2,H-2],[7,H]],'#8c6748');
+    if(big) {
+      majPavilion(g,9,22,.65);majCandi(g,23,26,.98);
+      if(v===1) {g.fillStyle='#436b68';g.fillRect(3,24,8,3);g.strokeStyle='#b57850';g.strokeRect(3,24,8,3);}
+      else if(v===2) majCandi(g,7,28,.47);
+      else majPavilion(g,8,28,.6);
+      majGate(g,32,30,.65);
+    } else {
+      majPavilion(g,6,21,.45);
+      if(v===1)majGate(g,17,22,1.05);else majCandi(g,17,22,.82);
+    }
+  });
+}
 function citySprite(rank, v, style) {
+  if(style === 'majapahit') return majCitySprite(rank,v);
   // kota mungil ala EU3: gugusan kecil rapat, tanpa bayangan lebar
   const key = 'c' + rank + v + style; if (SPR[key]) return SPR[key];
   const big = rank === 1, W = big ? 30 : 20, H = big ? 22 : 15, r = rng(v*977 + rank*131 + 5);
@@ -662,10 +718,10 @@ function centerPts() {
   }
   COUNTRY_LABELS = null;
 }
-function cityDY(p, s, fs) { const k = cityK(p, s); return k ? (p.r === 1 ? 7 : 5)*k + fs*.55 : 0; }
+function cityDY(p, s, fs) { const k = cityK(p, s); return k ? (p.r === 1 ? (p.nat==='Majapahit'?9:7) : 5)*k + fs*.55 : 0; }
 function cityK(p, s) { if (p.r === 1) return s >= .8 ? Math.min(1.25, .8 + s*.1) : 0; return s >= 2.0 ? Math.min(1.2, .85 + s*.05) : 0; }
 function drawCity(x, y, k, rank, seed, nat) {
-  const c = citySprite(rank, seed % 3, regionalStyle(nat)), w = c.width/2*k, h = c.height/2*k;
+  const c = citySprite(rank, seed % 3, nat === 'Majapahit' ? 'majapahit' : regionalStyle(nat)), w = c.width/2*k, h = c.height/2*k;
   ctx.drawImage(c, x - w/2, y - h*.85, w, h);
 }
 function crownPoleSprite(col) {
@@ -1075,7 +1131,7 @@ function goodsOf(p) {
 const RELIG = { Majapahit:'Siwa-Buddha', Bali:'Hindu Bali', Samudra:'Islam Sunni', Sunda:'Hindu Sunda', Siam:'Buddha Theravada', Khmer:'Buddha Theravada', Champa:'Hindu', Tenasserim:'Buddha Theravada', Palembang:'Buddha Mahayana', Malayu:'Buddha Mahayana', Minangkabwa:'Buddha Mahayana', Dharmasraya:'Buddha Mahayana', Tumasik:'Buddha Mahayana', Lampung:'Hindu' };
 const BUILD = {
   kuil:  { n:'Kuil',  d:'+1 pajak dasar',  cost:100, months:12, k:0 },
-  pasar: { n:'Pasar', d:'+1 produksi dasar', cost:100, months:12, k:1 },
+  pasar: { n:'Pasar', d:'+1 produksi, +50% kekuatan dagang', cost:100, months:12, k:1 },
   barak: { n:'Barak', d:'+1 tenaga dasar', cost:80,  months:12, k:2 },
 };
 const TECH_NAME = ['Administrasi','Diplomasi','Militer'];
@@ -1118,7 +1174,7 @@ function newGame(nat) {
     own:{ ...BASE_OWN }, ctrl:{}, armies:[], wars:[], rel:{}, al:[], mar:[], acc:[], truce:{}, claims:[], subj:{}, imp:[], siege:{}, battles:[], wex:{}, ae:{}, coal:{}, fab:[], mis:[], net:{}, nid:1, ev:[], sel:null, flags:{}, mod:[], fired:[], evq:[], infl:0, ln:[], bank:0 };
   setWorld(); fixSave();
   { const mc = NATS['Majapahit'].capital; for (const k in NATS) { const f = PROV[NATS[k].ids[0]]; if (f.st !== 'vassal' || k === 'Majapahit') continue;
-      const c = NATS[k].capital; if (Math.hypot(c.lab[0] - mc.lab[0], c.lab[1] - mc.lab[1]) < 330) G.subj[k] = 'Majapahit'; else G.rel[pairKey('Majapahit', k)] = 45; } }
+      const c = NATS[k].capital; if (Math.hypot(c.lab[0] - mc.lab[0], c.lab[1] - mc.lab[1]) < 330) setSubject(k,'Majapahit','vassal',120); else {setSubject(k,'Majapahit','tributary',120);G.rel[pairKey('Majapahit', k)]=45;} } }
   const e = econ(); G.mp = e.mpMax * .8;
   for (const k in NATS) { const cap = capOf(k); if (!cap) continue; const regs = k === nat ? Math.max(1, Math.round(e.fl*.5)) : Math.max(1, Math.round(aiFl(k)*.6)); mkArmy(k, regs, cap.id); }
   syncRegs();
@@ -1170,7 +1226,7 @@ function monthTick() {
   }
   if (G.mo === 0) { G.prestige = Math.round(G.prestige * .95); G.legit = Math.min(100, G.legit + 1); }
   diplomacyMonth(); aiMonth(); syncRegs();
-  modMonth(); relMonth(); instMonth(); evMonth();
+  modMonth(); relMonth(); instMonth(); evMonth(); subjectsMonth();
   saveGame(true); renderWin();
 }
 function saveGame(silent) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); if (!silent) toast('Permainan disimpan.'); } catch (e) { if (!silent) toast('Penyimpanan tidak tersedia di sini.'); } }
@@ -1228,6 +1284,8 @@ function renderWin() {
   else if (winMode === 'dip') h = dipListHTML();
   else if (winMode === 'dipn') h = dipNatHTML(winProv);
   else if (winMode === 'declare') h = declarationHTML();
+  else if (winMode === 'subjects') h = subjectsHTML();
+  else if (winMode === 'trade') h = tradeHTML();
   else if (winMode === 'nation') {
     const n = NATS[G.nat], tot = Object.values(G.pv).reduce((a, q) => a + q.t + q.p + q.m, 0);
     h = hd(G.nat, n.gov) + row('Penguasa', `${n.title} ${n.ruler.name}`) + row('Kemampuan', `ADM ${n.ruler.a} · DIP ${n.ruler.d} · MIL ${n.ruler.m}`)
@@ -1235,6 +1293,7 @@ function renderWin() {
       + `<div class="sec">Stabilitas & Legitimasi</div>` + row('Stabilitas', (G.stab > 0 ? '+' : '') + G.stab + ' / +3') + row('Prestise', G.prestige + ' / 100') + row('Legitimasi', G.legit + '%')
       + `<div class="r"><span>Naikkan stabilitas</span>${btn('+1 · ' + stabCost() + ' ADM', 'stab', {}, G.stab < 3 && G.mana[0] >= stabCost())}</div>`
       + `<div class="r"><span>Agama ${RELS[G.rs].n} · kesatuan ${unity()}%</span>${btn('Agama ›', 'win', { w:'rel' })}</div>`
+      + `<div class="r"><span>Vasal dan negara upeti</span>${btn('Bawahan ›', 'win', {w:'subjects'})}</div>`
       + `<div class="r"><span>Misi kerajaan</span>${btn('Misi ›', 'win', { w:'missions' })}</div>`
       + `<p class="note">Stabilitas memberi ±3% pajak & produksi per poin. Efek penuh (pemberontak, event) menyusul.${n.ruler.real ? '' : '<br>Nama & kemampuan penguasa negara ini masih contoh.'}</p>`;
   } else if (winMode === 'econ') {
@@ -1266,7 +1325,7 @@ function provHTML(p, e) {
   if (p.k === 'L' && !mine) return foreignProvHTML(p);
   const d = mine ? [q.t, q.p, q.m] : baseDev(p);
   h += `<div class="dev">${d.map((v, i) => `<div><i style="background:${DEV_COL[i]}">${'PMT'[i]}</i>${v}<small>${DEV_NAME[i]}</small></div>`).join('')}</div>`;
-  h += row('Status', ({core:'Inti',vassal:'Mitra / tributari',rival:'Rival',indep:'Merdeka',foreign:'Asing'})[p.st]) + row('Medan', ({plains:'Dataran',jungle:'Hutan lebat',mountain:'Pegunungan',coast:'Pesisir'})[p.t])
+  h += row('Node dagang',TRADE_BY_ID[tradeNode(p)].n) + row('Status', ({core:'Inti',vassal:'Mitra / tributari',rival:'Rival',indep:'Merdeka',foreign:'Asing'})[p.st]) + row('Medan', ({plains:'Dataran',jungle:'Hutan lebat',mountain:'Pegunungan',coast:'Pesisir'})[p.t])
     + relRow(p.id) + row('Barang dagang', goodsOf(p) + ` (${GOODS[goodsOf(p)]})`);
   if (!mine) return foreignProvHTML(p);
   if (q.nc > 0) h += `<div class="r"><span>Belum inti · ${q.nc} bln (pendapatan −)</span>${btn(coreCost(p.id) + ' ADM', 'coreit', { id:p.id }, G.mana[0] >= coreCost(p.id))}</div>`;
@@ -1285,7 +1344,7 @@ function provHTML(p, e) {
 /* ---------- actions ---------- */
 const act = {
   win: b => { if (winMode === b.dataset.w) { winMode = null; } else winMode = b.dataset.w; selId = null; renderWin(); request(); },
-  back: () => { const parent = { rel:'nation', ide:'tech', missions:'nation', declare:'dipn', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
+  back: () => { const parent = { rel:'nation', ide:'tech', missions:'nation', subjects:'nation', trade:'econ', declare:'dipn', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
   close: () => { winMode = null; selId = null; renderWin(); request(); },
   dev: b => { const q = G.pv[b.dataset.id], i = +b.dataset.i, k = ['t','p','m'][i], c = devCost(q[k]); if (G.mana[i] < c) return; G.mana[i] -= c; q[k]++; toast(`${DEV_NAME[i]} ${PROV[b.dataset.id].n} naik ke ${q[k]}.`); },
   build: b => { const q = G.pv[b.dataset.id], B = BUILD[b.dataset.k]; if (G.treasury < bCost(B) || q.bld.length + q.cons.length >= slotsOf(q)) return; G.treasury -= bCost(B); q.cons.push({ type:b.dataset.k, left:B.months }); toast(`Membangun ${B.n} di ${PROV[b.dataset.id].n} (${B.months} bln).`); },
@@ -1539,6 +1598,7 @@ function occupy(id, nat) {
 function aiArmies() {
   for (const a of G.armies) {
     if (isMe(a.nat) || a.path.length || (a.id + G.d) % 2) continue;
+    if(G.subj[a.nat] && libertyDesire(a.nat)>=50)continue;
     const myWars = warsOf(a.nat);
     if (!myWars.length) {
       const h = capOf(a.nat); if (h && a.loc !== h.id && OWNR[a.loc] !== a.nat && !access(a.nat, a.loc)) orderMove(a, h.id, true);
@@ -1567,6 +1627,7 @@ function aiArmies() {
 
 /* ---------- perang: deklarasi & akhir ---------- */
 function declareWar(att, def, cb) {
+  const attacked=def; def=G.subj[def] || def;
   const w = { id:G.nid++, att:[att], def:[def], aL:att, dL:def, bp:0, cb, start:monthIdx(), ev:-99 };
   G.wars.push(w);
   const join = (nat, side) => {
@@ -1578,7 +1639,13 @@ function declareWar(att, def, cb) {
   };
   for (const [lead, side] of [[att, 'att'], [def, 'def']]) {
     for (const k of G.al) { const [x, y] = k.split('|'); const o = x === lead ? y : y === lead ? x : null; if (o && alive(o) && (side !== 'att' || !cb.callAllies || cb.callAllies.includes(o)) && !G.subj[o] && (isMe(o) ? true : Math.random() < .8) && !(side === 'att' ? w.def : w.att).includes(o)) join(o, side); }
-    for (const s of subjectsOf(lead)) { if (isMe(s)) { if (!sideOf(w, s)) (side === 'att' ? w.att : w.def).push(s); } else if (!sideOf(w, s)) (side === 'att' ? w.att : w.def).push(s); }
+    for (const s of subjectsOf(lead).filter(s=>!G.subjectData[s]?.scutage)) { if (isMe(s)) { if (!sideOf(w, s)) (side === 'att' ? w.att : w.def).push(s); } else if (!sideOf(w, s)) (side === 'att' ? w.att : w.def).push(s); }
+  }
+  if(attacked!==def && !sideOf(w,attacked))w.def.push(attacked);
+  const protector=(G.tributaries || {})[attacked];
+  if(protector && protector!==att && !sideOf(w,protector)) {
+    if(isMe(protector)) pushEvent({war:w.id,t:'Lindungi Negara Upeti',x:`${attacked} diserang ${att}. Berikan perlindungan? Menolak mengurangi kepercayaan 15 dan hubungan 30.`,o:[['Lindungi','tribdef',{w:w.id,n:attacked,yes:true}],['Tolak','tribdef',{w:w.id,n:attacked,yes:false}]]});
+    else {w.def.push(protector);for(const v of subjectsOf(protector))if(!G.subjectData[v]?.scutage&&!sideOf(w,v))w.def.push(v);}
   }
   addLog(`${att} menyatakan perang kepada ${def}.`);
   if (isMe(def) || (!isMe(att) && w.def.includes(G.nat))) pushEvent({ t:'Perang!', x:`${att} menyatakan perang kepada ${def}.`, o:[['Baik', 'ok', {}]] });
@@ -1599,6 +1666,8 @@ function finishNationCheck(nat) {
   G.wars = G.wars.filter(w => w.att.length && w.def.length);
   G.al = G.al.filter(k => !k.split('|').includes(nat)); delete G.subj[nat];
   for (const k in G.subj) if (G.subj[k] === nat) delete G.subj[k];
+  for(const n of Object.keys(G.tributaries||{}))if(n===nat||G.tributaries[n]===nat){delete G.tributaries[n];delete G.subjectData[n];}
+  delete (G.subjectData||{})[nat];
   addLog(`${nat} dianeksasi.`); toast(`${nat} telah lenyap dari peta.`);
   if (isMe(nat)) { paused = true; pushEvent({ t:'Kerajaan runtuh', x:'Seluruh wilayah Anda telah direbut. Permainan berakhir.', o:[['Kembali ke menu', 'quitGame', {}]] }); }
 }
@@ -1610,7 +1679,8 @@ function applyPeace(w, winner, opts) {
   const lostFrom = new Set();
   for (const id of (opts.provs || [])) { lostFrom.add(OWNR[id]); transferProv(id, wl); }
   if (opts.gold) { if (isMe(wl)) G.treasury += opts.gold; else if (isMe(ll)) G.treasury -= opts.gold; }
-  if (opts.vassal && alive(ll)) G.subj[ll] = wl;
+  if (opts.vassal && alive(ll)) setSubject(ll,wl,'vassal');
+  if(w.independence && winner==='def' && alive(w.independence.n) && alive(w.independence.o))setSubject(w.independence.n,w.independence.o,'vassal');
   G.wars = G.wars.filter(x => x !== w);
   for (const a of w.att) for (const b of w.def) G.truce[pairKey(a, b)] = monthIdx() + 60;
   // hapus pendudukan yang terkait perang ini bila tak ada perang lain yang menahannya
@@ -1693,7 +1763,7 @@ function aiMonth() {
     const neigh = new Set(); for (const id of OWNED[n]) for (const l of LINK[id]) { const o = OWNR[l.to]; if (o !== n) neigh.add(o); }
     const mine = powerOf(armiesOf(n), capOf(n).id, false);
     for (const t of neigh) {
-      if (!alive(t) || allied(n, t) || married(n, t) || truceLeft(n, t) > 0 || G.subj[t] === n || warsOf(t).length > 1) continue;
+      if (!alive(t) || subjectMaster(n)===t || subjectMaster(t)===n || allied(n, t) || married(n, t) || truceLeft(n, t) > 0 || G.subj[t] === n || warsOf(t).length > 1) continue;
       if (t === G.nat && monthIdx() < 24) continue;
       const their = powerOf(armiesOf(t), capOf(t).id, false) + 1, r = mine/their;
       if (r < 1.15) continue;
@@ -1722,6 +1792,8 @@ function canDeclare(t) {
   if (atWar(G.nat, t)) return 'Sudah berperang';
   if (truceLeft(G.nat, t) > 0) return `Gencatan senjata ${Math.ceil(truceLeft(G.nat, t)/12*10)/10} th lagi`;
   if (allied(G.nat, t)) return 'Sekutu';
+  if(G.subj[G.nat])return 'Vasal tidak dapat memulai perang sendiri';
+  if((G.tributaries||{})[t]===G.nat || (G.tributaries||{})[G.nat]===t)return 'Putuskan hubungan upeti dahulu';
   if (G.subj[t] === G.nat) return 'Vasal Anda';
   if (G.subj[G.nat] === t) return 'Penguasa Anda';
   return null;
@@ -1744,15 +1816,17 @@ function openDeclaration(t) {
 }
 function declarationHTML() {
   const d=WAR_DRAFT; if(!d) return hd('Deklarasi perang');
+  const defenseLead=G.subj[d.target] || d.target;
   let h=hd('Deklarasi Perang',G.nat+' → '+d.target);
   for(const cb of [...availableCBs(d.target),{k:'nocb',n:'Tanpa alasan',ids:[]}]) {
     h+='<div class="r">'+btn((d.kind===cb.k?'● ':'○ ')+(cb.k==='claim'?'Penaklukan (klaim)':cb.k==='core'?'Rebut kembali inti':'Tanpa alasan'),'warcb',{kind:cb.k})+'</div>';
     if(d.kind===cb.k) for(const id of cb.ids) h+='<div class="r">'+btn((d.goal===id?'✓ ':'')+'Rebut '+PROV[id].n,'wargoal',{id})+'</div>';
   }
   h+=row('Tujuan',d.goal!=null?'Duduki '+PROV[d.goal].n:'Menangkan pertempuran')+'<p class="note">'+(d.kind==='nocb'?'Tanpa alasan: −2 stabilitas, −10 prestise, +6 ekspansi agresif.':'Pertahankan sasaran untuk skor perang bertahap, hingga ±25. Klaim tidak langsung memindahkan kepemilikan.')+'</p>';
-  h+='<div class="sec">Pihak lawan</div><p class="note">'+[d.target,...subjectsOf(d.target)].join(', ')+'<br>Sekutu yang mungkin membantu: '+(warAllies(d.target).join(', ')||'Tidak ada')+'</p><div class="sec">Panggil sekutu</div>';
+  if(G.tributaries[d.target])h+=row('Pelindung negara upeti',G.tributaries[d.target]+' (dapat membantu)');
+  h+='<div class="sec">Pihak lawan</div><p class="note">'+[...new Set([defenseLead,d.target,...subjectsOf(defenseLead).filter(n=>!G.subjectData[n]?.scutage)])].join(', ')+'<br>Sekutu yang mungkin membantu: '+(warAllies(defenseLead).join(', ')||'Tidak ada')+'</p><div class="sec">Panggil sekutu</div>';
   for(const n of warAllies(G.nat).filter(n=>n!==d.target)) h+='<div class="r">'+btn((d.allies.includes(n)?'☑ ':'☐ ')+n,'warally',{n},!truceLeft(n,d.target))+'</div>';
-  return h+'<p class="note">Vasal otomatis ikut. Sekutu dapat menolak panggilan.</p><div class="r">'+btn('Batal','back',{})+btn('Konfirmasi perang','warconfirm',{},!canDeclare(d.target))+'</div>';
+  return h+'<p class="note">Vasal tanpa scutage otomatis ikut. Tributary tidak ikut perang penguasa. Sekutu dapat menolak panggilan.</p><div class="r">'+btn('Batal','back',{})+btn('Konfirmasi perang','warconfirm',{},!canDeclare(d.target))+'</div>';
 }
 act.warcb=b=>{const d=WAR_DRAFT,cb=availableCBs(d.target).find(c=>c.k===b.dataset.kind); d.kind=cb?cb.k:'nocb';d.goal=cb?cb.ids[0]:null;};
 act.wargoal=b=>{WAR_DRAFT.goal=+b.dataset.id;};
@@ -1858,7 +1932,7 @@ function peaceHTML() {
     h += `<div class="r"><span>Biaya</span><b class="${tot <= s ? 'pos' : 'neg'}">${tot} / ${s}</b></div>${row('Ekspansi agresif', '+' + Math.round(PD.sel.size ? [...PD.sel].reduce((s, id) => s + provDev(id)*((w.goals || []).includes(id) || BASE_OWN[id] === G.nat ? .45 : 1.1), 0) : 0) + ' (kini ' + Math.round(aeOf(G.nat)) + ')')}${row('Kelelahan lawan', wexOf(enemy).toFixed(1) + (wexOf(enemy) >= 8 ? ' (mau damai)' : ' (belum menyerah)'))}<div class="sec">Tuntutan</div>`;
     for (const id of cand.slice(0, 14)) { const on = PD.sel.has(id), c = provCost(id, G.nat); h += `<button class="btn rowb${on ? ' on' : ''}" data-act="ptog" data-id="${id}"><span>${on ? '☑' : '☐'} ${PROV[id].n}${CTRL[id] ? ' ⚑' : ''}${(w.goals || []).includes(id) ? ' ★' : ''}</span><em>${c}</em></button>`; }
     h += `<button class="btn rowb${PD.gold ? ' on' : ''}" data-act="pgold"><span>${PD.gold ? '☑' : '☐'} Ganti rugi ${PD.gold ? PD.gold*50 : 50} dukat</span><em>${8*Math.max(1, PD.gold)}</em></button>`;
-    if (!G.subj[enemy]) h += `<button class="btn rowb${PD.vas ? ' on' : ''}" data-act="pvas"><span>${PD.vas ? '☑' : '☐'} Jadikan vasal</span><em>100</em></button>`;
+    if (!subjectMaster(enemy) && !subjectsOf(enemy).length && !Object.values(G.tributaries||{}).includes(enemy)) h += `<button class="btn rowb${PD.vas ? ' on' : ''}" data-act="pvas"><span>${PD.vas ? '☑' : '☐'} Jadikan vasal</span><em>100</em></button>`;
     h += `<div class="r"><span></span><span style="display:flex;gap:4px">${btn('Tawarkan', 'psend', {}, tot > 0 && tot <= s)}${btn('Damai putih', 'pwhite', {}, s <= 15)}</span></div>`;
     h += `<p class="note">⚑ = provinsi yang Anda duduki (lebih murah). ★ = tujuan perang (klaim). Hanya provinsi yang diduduki atau jadi tujuan perang yang boleh dituntut. Menuntut tanpa klaim menaikkan ekspansi agresif (≥50 + 3 musuh = koalisi menyerang Anda).</p>`;
   } else if (s < -5) {
@@ -1885,7 +1959,7 @@ function dipNatHTML(t) {
   const rel = relGet(G.nat, t), war = atWar(G.nat, t), al = allied(G.nat, t), mar = married(G.nat, t), acc = G.acc.includes(t + '>' + G.nat), tr = truceLeft(G.nat, t);
   let h = hd(t, `${n.title} ${n.ruler.name}`);
   h += row('Hubungan', relTxt(rel)) + row('Provinsi', (OWNED[t] || []).length) + row('Resimen', regsOf(t)) + row('Agama', n.relig);
-  if (G.subj[t]) h += row('Status', G.subj[t] === G.nat ? 'Vasal Anda' : 'Vasal ' + G.subj[t]);
+  if(subjectMaster(t)) h+=subjectPanel(t);
   const fl = []; if (war) fl.push('Perang'); if (al) fl.push('Sekutu'); if (mar) fl.push('Pernikahan'); if (acc) fl.push('Akses militer'); if (tr) fl.push(`Gencatan ${(tr/12).toFixed(1)} th`);
   if (fl.length) h += row('Hubungan khusus', fl.join(' · '));
   h += misFor(t) + `<div class="sec">Hubungan</div>`;
@@ -1895,7 +1969,8 @@ function dipNatHTML(t) {
   h += `<div class="r"><span>Aliansi</span>${al ? btn('Putuskan', 'dact', { k:'unally', n:t }) : btn('Ajukan', 'dact', { k:'ally', n:t }, !war && dipFree() > 0)}</div>`;
   h += `<div class="r"><span>Pernikahan kerajaan</span>${btn('Ajukan', 'dact', { k:'marry', n:t }, !mar && !war && dipFree() > 0)}</div>`;
   h += `<div class="r"><span>Akses militer</span>${acc ? btn('Cabut', 'dact', { k:'revoke', n:t }) : btn('Minta', 'dact', { k:'access', n:t }, !war && dipFree() > 0)}</div>`;
-  if (G.subj[t] === G.nat) h += `<div class="r"><span>Integrasi vasal (${Math.round(natDev(t)*3)} DIP)</span>${btn('Integrasi', 'dact', { k:'integ', n:t }, G.mana[1] >= natDev(t)*3)}</div>`;
+  if(!subjectMaster(t) && !subjectMaster(G.nat))h+='<div class="r">'+btn('Tawarkan hubungan upeti · 25 DIP','offertribute',{n:t},!war && dipFree()>0 && G.mana[1]>=25)+'</div>';
+  if(!subjectMaster(t) && !subjectMaster(G.nat))h+='<div class="r">'+btn('Tawarkan vasalisasi · 25 DIP','offervassal',{n:t},!war && dipFree()>0 && G.mana[1]>=25)+'</div><p class="note">Upeti: hubungan +100, perkembangan 1,5× target. Vasal: sekutu, hubungan +190, perkembangan 3× target (target maks. 100). Keduanya damai dan target tidak punya bawahan.</p>';
   h += `<div class="sec">Perang & klaim</div>`;
   const why = canDeclare(t);
   if (why) h += `<div class="r"><span>Perang</span><b style="opacity:.6">${why}</b></div>`;
@@ -1973,7 +2048,7 @@ Object.assign(act, {
     else if (k === 'marry') { if (dipChance(t, 'marry')) { G.mar.push(pairKey(G.nat, t)); relAdd(G.nat, t, 25); G.prestige += 1; toast(`Pernikahan kerajaan dengan ${t}.`); } else toast(`${t} menolak pernikahan.`); }
     else if (k === 'access') { if (dipChance(t, 'access')) { G.acc.push(t + '>' + G.nat); toast(`${t} memberi akses militer.`); } else toast(`${t} menolak.`); }
     else if (k === 'revoke') { G.acc = G.acc.filter(x => x !== t + '>' + G.nat); }
-    else if (k === 'integ') { const c = natDev(t)*3; if (G.mana[1] >= c) { G.mana[1] -= c; for (const id of [...(OWNED[t] || [])]) transferProv(id, G.nat); delete G.subj[t]; rebuildOwned(); finishNationCheck(t); refreshWorld(); toast(`${t} diintegrasikan.`); } }
+    else if (k === 'integ') { act.subjectact({dataset:{n:t,k:'integrate'}}); }
     else if (k === 'claim') { const id = +b.dataset.id, c = claimCost(id); if (G.mana[1] >= c && !G.claims.includes(id)) { G.mana[1] -= c; G.claims.push(id); toast(`Klaim atas ${PROV[id].n} dibuat.`); } }
     else if (k === 'war') {
       openDeclaration(t);
@@ -2477,7 +2552,7 @@ const fortLv = id => lim(fortOf(id) + 1 + Math.floor(provDev(id)/10), 2, 7);
 const supplyLim = id => 3 + Math.floor(provDev(id)/5) + (OWNR[id] && PROV[id] === capOf(OWNR[id]) ? 2 : 0);
 const supplyHome = (nat, loc) => { const o = OWNR[loc]; return !o || o === nat || allied(nat, o) || G.subj[nat] === o || G.subj[o] === nat; };
 const dipMax = () => 2 + (NATS[G.nat].ruler.d >= 5 ? 1 : 0) + Math.floor((G.tech[1] - 3)/3) + modSum('dipl');
-function dipFree() { return Math.max(0, dipMax() - (G.mis || []).length); }
+function dipFree() { return Math.max(0, dipMax() - (G.mis || []).length - Object.keys(G.subjectData||{}).filter(n=>G.subj[n]===G.nat && G.subjectData[n].integration).length); }
 const fabOf = id => (G.fab || []).find(f => f.id === id);
 const coreCost = id => 10 + provDev(id)*4;
 const demandable = (w, id, taker) => (CTRL[id] && sameSide(CTRL[id], taker)) || (w.goals || []).includes(id);
@@ -2622,7 +2697,7 @@ function war2Month() {
     const e = _econ.apply(this, arguments); if (!G) return e;
     const m = 1 - Math.min(.45, .03*wexOf(G.nat)); let nc = 0;
     for (const id in G.pv) { const q = G.pv[id]; if (q.nc > 0 && !(CTRL[id] && CTRL[id] !== G.nat)) nc += .6*(q.t*.09 + q.p*2*.04); }
-    e.tax = Math.max(0, e.tax*m - nc*.5); e.prod = Math.max(0, e.prod*m - nc*.5); e.mpRec *= m; e.net = e.tax + e.prod - e.armyCost - e.interest; e.wm = m; return e;
+    e.tax = Math.max(0, e.tax*m - nc*.5); e.prod = Math.max(0, e.prod*m - nc*.5); e.mpRec *= m; e.net = e.tax + e.prod - e.armyCost - e.interest; e.wm = m; return subjectBudget(e);
   };
   const _dw = declareWar;
   declareWar = function (att, def, cb) {
@@ -2706,7 +2781,7 @@ function drawEnvoys() {
   }
 }
 (() => {
-  const _dt = dayTick; dayTick = function () { const r = _dt.apply(this, arguments); misDay(); return r; };
+  const _dt = dayTick; dayTick = function () { const r = _dt.apply(this, arguments); misDay(); tradeDay(); return r; };
   const _d3 = act.dact;
   const _mm = monthTick; monthTick = function () { const r = _mm.apply(this, arguments); G.net ||= {}; for (const k in G.net) if (!(G.mis || []).some(m => m.k === 'net' && m.n === k && m.st === 'work')) G.net[k] = Math.max(0, G.net[k] - 1); return r; };
   act.dact = b => {
@@ -2747,7 +2822,7 @@ function syncLoans() { G.loans = G.ln.reduce((a, l) => a + l.a, 0); }
 function fixSave() {
   G.claims=[...new Set((G.claims || []).map(Number).filter(id=>PROV[id] && PROV[id].k==='L'))];
   G.missions ||= []; G.flags ||= {}; G.mod ||= []; G.fired ||= []; G.evq ||= []; G.infl ||= 0; G.bank ||= 0;
-  G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel();
+  G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel(); fixSubjects(); fixTrade();
 }
 function takeLoan(auto) {
   if (G.ln.length >= MAXLN) return false;
@@ -2776,9 +2851,9 @@ function ecoMonth() {
   if (G.treasury < 0) bankrupt();
 }
 function econHTML(e) {
-  const mm = v => v.toFixed(2), LB = { tax:'pajak', prod:'produksi', army:'biaya pasukan', mp:'pemulihan tenaga', tech:'biaya teknologi', int:'bunga', adm:'ADM', dip:'DIP', mil:'MIL' };
+  const mm = v => v.toFixed(2), LB = { tax:'pajak', prod:'produksi', army:'biaya pasukan', trade:'efisiensi dagang', mp:'pemulihan tenaga', tech:'biaya teknologi', int:'bunga', adm:'ADM', dip:'DIP', mil:'MIL' };
   const fxText = fx => Object.entries(fx).map(([k, v]) => ['adm', 'dip', 'mil'].includes(k) ? `${v > 0 ? '+' : ''}${v} ${LB[k]}/bln` : k === 'int' ? `${v > 0 ? '+' : ''}${v}% ${LB[k]}` : `${v > 0 ? '+' : ''}${Math.round(v*100)}% ${LB[k]}`).join(' · ');
-  let h = hd('Ekonomi', 'Anggaran bulanan') + `<div class="sec">Pemasukan</div>` + row('Pajak', mm(e.tax)) + row('Produksi', mm(e.prod)) + row('Dagang', '— (menyusul)')
+  let h = hd('Ekonomi', 'Anggaran bulanan') + `<div class="sec">Pemasukan</div>` + row('Pajak', mm(e.tax)) + row('Produksi', mm(e.prod)) + row('Dagang',mm(e.trade || 0)) + '<div class="r">'+btn('Jaringan perdagangan ›','win',{w:'trade'})+'</div>' + row('Pajak vasal',mm(e.vassalIncome || 0)) + row('Pajak kepada penguasa','−'+mm(e.subjectTax || 0))
     + `<div class="sec">Pengeluaran</div>` + row('Pemeliharaan pasukan', '−' + mm(e.armyCost)) + row('Misionaris', '−' + mm(e.misCost)) + row(`Bunga pinjaman (${e.rate}%)`, '−' + mm(e.interest))
     + `<div class="r" style="background:rgba(0,0,0,.2)"><span>Saldo bulanan</span><b class="${e.net >= 0 ? 'pos' : 'neg'}">${sg(e.net)}</b></div>`
     + `<div class="sec">Kas & Inflasi</div>` + row('Kas', Math.floor(G.treasury) + ' dukat') + row('Inflasi', G.infl.toFixed(1) + '% (biaya naik)')
@@ -2814,7 +2889,7 @@ const EF = {
   mod: addMod, flag: setFlag,
   fire: id => fireEvent(id), fireIn: (id, m) => { G.evq.push({ id, at:absMonth() + m }); },
 };
-const grossInc = () => { const e = econ(); return Math.max(5, e.tax + e.prod); };
+const grossInc = () => { const e = econ(); return Math.max(5, e.tax + e.prod + (e.trade || 0)); };
 function fireEvent(id) {
   const d = EVT[id]; if (!d || !G) return false;
   if (d.historical && d.cond && !d.cond()) return false;
@@ -3156,6 +3231,273 @@ function missionsHTML() {
   }
   return h + '<p class="note">Hadiah diambil sekali saat semua syarat terpenuhi. Misi tidak membelanjakan sumber daya syarat. Tiap cabang dapat dikerjakan bersamaan.</p>';
 }
+
+/* ---------- Bawahan: vasal dan negara upeti ---------- */
+function fixSubjects() {
+  G.subj ||= {}; G.tributaries ||= {}; G.subjectData ||= {};
+  for(const n of Object.keys(G.subj)) if(!alive(n)||!alive(G.subj[n])) delete G.subj[n];
+  for(const n of Object.keys(G.tributaries)) if(G.subj[n]||!alive(n)||!alive(G.tributaries[n])) delete G.tributaries[n];
+  for(const n of [...Object.keys(G.subj),...Object.keys(G.tributaries)]) G.subjectData[n] ||= {since:monthIdx(),extra:0,trust:50,tribute:'cash',lastYear:G.y,scutage:false};
+  for(const n of Object.keys(G.subjectData)) if(!G.subj[n]&&!G.tributaries[n])delete G.subjectData[n];
+}
+function subjectMaster(n) { return G.subj[n] || (G.tributaries || {})[n]; }
+function setSubject(n,o,type,age=0) {
+  if(n===o || !alive(n)||!alive(o)||subjectMaster(o)||subjectsOf(n).length || Object.values(G.tributaries||{}).includes(n)) return false;
+  G.tributaries ||= {};G.subjectData ||= {};delete G.subj[n];delete G.tributaries[n];
+  (type==='tributary'?G.tributaries:G.subj)[n]=o;
+  G.subjectData[n]={since:monthIdx()-age,extra:0,trust:50,tribute:'cash',lastYear:G.y,scutage:false};return true;
+}
+function libertyDesire(n) {
+  const o=subjectMaster(n);if(!o)return 0;
+  const meta=G.subjectData[n] || {}, v=!!G.subj[n], ownPower=regsOf(n)+natDev(n)*.05;
+  const pool=v?subjectsOf(o).reduce((sum,s)=>sum+regsOf(s)+natDev(s)*.05,0):ownPower;
+  const relative=(ownPower*.75+pool*.25)/Math.max(1,regsOf(o)+natDev(o)*.05);
+  const extra=meta.extra || 0, trust=meta.trust ?? 50;
+  return lim(Math.round(15+40*relative-relGet(n,o)*.15+(v?0:(50-trust)*.4)+extra),0,100);
+}
+const vassalTaxBase = n => (OWNED[n]||[]).reduce((s,id)=>s+((CTRL[id] && CTRL[id]!==n)?0:baseDev(PROV[id])[0]*.09),0);
+function subjectBudget(e) {
+  e.vassalIncome=subjectsOf(G.nat).filter(n=>libertyDesire(n)<50).reduce((sum,n)=>sum+vassalTaxBase(n)*.1*(G.subjectData[n]?.scutage?1.5:1),0);
+  e.subjectTax=G.subj[G.nat] && libertyDesire(G.nat)<50 ? e.tax*.1*(G.subjectData[G.nat]?.scutage?1.5:1):0;
+  e.trade=tradeSnapshot().income;
+  e.net=e.tax+e.prod+e.trade+e.vassalIncome-e.subjectTax-e.armyCost-e.misCost-e.interest;
+  return e;
+}
+const tributeName = k => ({cash:'dukat',adm:'ADM',dip:'DIP',mil:'MIL',manpower:'ribu tenaga'}[k] || k);
+function tributeAmount(n) {
+  const kind=G.subjectData[n]?.tribute || 'cash';
+  if(kind==='cash')return Math.max(1,Math.round(natDev(n)*.07*12*.125));
+  if(kind==='manpower')return Math.max(.1,natDev(n)*.25/40);
+  return Math.min(12,Math.max(1,Math.floor(natDev(n)*.03)));
+}
+function sendTribute(n,pay) {
+  const o=G.tributaries[n],m=G.subjectData[n];if(!o||!m||m.lastYear===G.y)return;
+  const kind=m.tribute,amount=tributeAmount(n),i=['adm','dip','mil'].indexOf(kind);
+  if(n===G.nat && pay)pay=kind==='cash'?G.treasury>=amount:kind==='manpower'?G.mp>=amount:G.mana[i]>=amount;
+  m.lastYear=G.y;m.pending=false;m.lastPaid=!!pay;m.lastAmount=pay?amount:0;
+  if(pay) {
+    if(n===G.nat) {if(kind==='cash')G.treasury-=amount;else if(kind==='manpower')G.mp-=amount;else G.mana[i]-=amount;}
+    if(o===G.nat) {if(kind==='cash')G.treasury+=amount;else if(kind==='manpower')G.mp=Math.min(econ().mpMax,G.mp+amount);else G.mana[i]=Math.min(999,G.mana[i]+amount);}
+    m.trust=Math.min(100,m.trust+1);relAdd(n,o,1);
+  } else {m.trust=Math.max(0,m.trust-15);m.extra=Math.min(50,(m.extra||0)+5);relAdd(n,o,-10);}
+  if(n===G.nat||o===G.nat){const text=n+(pay?' membayar upeti.':' menolak upeti.');addLog(text);toast(text);}
+}
+function integrationReason(n) {
+  const m=G.subjectData[n];if(G.subj[n]!==G.nat)return 'Hanya vasal dapat diintegrasikan';
+  if(!m||monthIdx()-m.since<120)return 'Harus menjadi vasal selama 10 tahun';
+  if(relGet(n,G.nat)<190)return 'Hubungan minimal +190';
+  if(libertyDesire(n)>=50)return 'Keinginan merdeka harus di bawah 50%';
+  if(warsOf(n).length||warsOf(G.nat).length)return 'Keduanya harus damai';
+  return null;
+}
+function finishIntegration(n) {
+  for(const id of [...(OWNED[n]||[])])transferProv(id,G.nat);
+  for(const a of G.armies)if(a.nat===n)a.nat=G.nat;
+  delete G.subj[n];delete G.subjectData[n];rebuildOwned();finishNationCheck(n);syncRegs();refreshWorld();toast(n+' selesai diintegrasikan.');
+}
+function startIndependence(n) {
+  const o=G.subj[n];if(!o||warsOf(n).length||warsOf(o).length||libertyDesire(n)<50)return null;
+  delete G.subj[n];delete G.subjectData[n];
+  const w=declareWar(n,o,{k:'independence'});w.independence={n,o};return w;
+}
+function subjectsMonth() {
+  fixSubjects();
+  for(const a of G.armies)if(a.nat!==G.nat && G.subj[a.nat] && libertyDesire(a.nat)>=50 && !a.bt){a.path=[];a.prog=0;}
+  for(const n of Object.keys(G.subjectData)) {
+    const m=G.subjectData[n];m.extra=(m.extra||0)*.99;
+    if(G.tributaries[n] && m.lastYear<G.y && !m.pending) {
+      if(n===G.nat) {m.pending=true;pushEvent({t:'Upeti Tahunan',x:`${subjectMaster(n)} meminta ${tributeAmount(n).toFixed(1)} ${tributeName(m.tribute)}. Penolakan mengurangi kepercayaan 15.`,o:[['Bayar','tribute',{n,pay:true}],['Tolak','tribute',{n,pay:false}]]});}
+      else {
+        sendTribute(n,libertyDesire(n)<50);
+        if(m.trust<30 && libertyDesire(n)>=75) {const o=G.tributaries[n];delete G.tributaries[n];delete G.subjectData[n];G.truce[pairKey(n,o)]=monthIdx()+60;addLog(n+' memutuskan hubungan upeti.');if(o===G.nat)toast(n+' memutuskan hubungan upeti.');continue;}
+      }
+    }
+    if(n!==G.nat && G.subj[n] && libertyDesire(n)>=75 && regsOf(n)>=regsOf(G.subj[n]) && !warsOf(n).length && !warsOf(G.subj[n]).length && Math.random()<.02) {startIndependence(n);continue;}
+    if(m.integration && G.subj[n]===G.nat && !integrationReason(n)) {
+      const cost=Math.max(1,Math.ceil(natDev(n)*8)),spent=Math.min(3,G.mana[1],Math.max(0,cost-m.integration.spent));
+      G.mana[1]-=spent;m.integration.spent+=spent;
+      if(m.integration.spent>=cost)finishIntegration(n);
+    }
+  }
+}
+function subjectPanel(n) {
+  const o=subjectMaster(n),mine=o===G.nat,m=G.subjectData[n],trib=!!G.tributaries[n];
+  if(!o||!m)return '';
+  const ld=libertyDesire(n);
+  let h='<div class="sec">'+(trib?'Negara Upeti':'Vasal')+'</div>'+row('Penguasa',o)+row('Keinginan merdeka',ld+'% · '+(ld<50?'Setia':'Tidak setia'));
+  h+='<p class="note">Keinginan merdeka dipengaruhi kekuatan relatif, hubungan, dan tindakan penguasa.</p>';
+  h+='<p class="note">'+(trib?'Mandiri dalam diplomasi; tidak ikut perang penguasa. Upeti dibayar sekali setahun dan dapat ditolak. Tidak dapat diintegrasikan.':'Ikut perang penguasa, kecuali dibebaskan lewat scutage. Tidak membayar pajak pada keinginan merdeka ≥50%; AI tidak membantu serangan penguasa.')+'</p>';
+  if(trib)h+=row('Kepercayaan',m.trust+'/100')+row('Upeti tahunan',tributeAmount(n).toFixed(1)+' '+tributeName(m.tribute))+row('Terakhir',m.lastPaid===undefined?'Belum jatuh tempo':m.lastPaid?'Dibayar':'Ditolak');
+  else h+=row('Pajak bulanan',ld<50?(vassalTaxBase(n)*.1*(m.scutage?1.5:1)).toFixed(2):'0 · tidak setia');
+  if(mine) {
+    h+='<div class="r">'+btn('Tenangkan · 20 prestise','subjectact',{n,k:'placate'},G.prestige>=20)+btn('Subsidi · 20 dukat','subjectact',{n,k:'subsidy'},G.treasury>=20)+'</div>';
+    if(trib)for(const kind of ['cash','adm','dip','mil','manpower'])h+='<div class="r">'+btn((m.tribute===kind?'✓ ':'')+({cash:'Dukat',adm:'ADM',dip:'DIP',mil:'MIL',manpower:'Tenaga'}[kind]),'subjectact',{n,k:'tribute',kind})+'</div>';
+    else {h+='<div class="r">'+btn('Scutage: '+(m.scutage?'aktif':'mati'),'subjectact',{n,k:'scutage'},!warsOf(n).length&&!warsOf(G.nat).length)+'</div><p class="note">Scutage: pajak vasal +50%, tidak dipanggil berperang. Perubahan menambah keinginan merdeka 5.</p>';
+      const why=integrationReason(n);h+='<p class="note">Integrasi: 10 tahun, hubungan +190, setia, damai; 8 DIP/development, sampai 3 DIP/bulan. Memakai satu diplomat; berhenti sementara bila syarat gagal.</p>';
+      h+=m.integration?row('Integrasi',m.integration.spent+'/'+Math.ceil(natDev(n)*8)+' DIP')+'<p class="note">'+(why||'Berjalan')+'</p>'+btn('Batalkan integrasi','subjectact',{n,k:'cancel'}):btn('Mulai integrasi','subjectact',{n,k:'integrate'},!why&&dipFree()>0);
+      if(why&&!m.integration)h+='<p class="note">'+why+'</p>';
+    }
+    h+='<div class="r">'+btn('Lepaskan hubungan','subjectact',{n,k:'release'},!warsOf(n).length&&!warsOf(G.nat).length)+'</div>';
+  }
+  return h;
+}
+act.subjectact=b=>{
+  const n=b.dataset.n,k=b.dataset.k,m=G.subjectData[n];if(subjectMaster(n)!==G.nat||!m)return;
+  if(k==='placate'&&G.prestige>=20){G.prestige-=20;m.extra=Math.max(-100,(m.extra||0)-10);}
+  if(k==='subsidy'&&G.treasury>=20){G.treasury-=20;relAdd(n,G.nat,15);m.extra=Math.max(-100,(m.extra||0)-5);}
+  if(k==='tribute'&&G.tributaries[n]&&['cash','adm','dip','mil','manpower'].includes(b.dataset.kind))m.tribute=b.dataset.kind;
+  if(k==='scutage'&&G.subj[n]&&!warsOf(n).length&&!warsOf(G.nat).length){m.scutage=!m.scutage;m.extra=(m.extra||0)+5;}
+  if(k==='integrate'&&!integrationReason(n)&&dipFree()>0)m.integration={spent:0};
+  if(k==='cancel')delete m.integration;
+  if(k==='release'&&!warsOf(n).length&&!warsOf(G.nat).length){delete G.subj[n];delete G.tributaries[n];delete G.subjectData[n];G.truce[pairKey(n,G.nat)]=monthIdx()+60;relAdd(n,G.nat,-25);}
+  saveGame(true);
+};
+act.offertribute=b=>{const n=b.dataset.n;if(subjectMaster(n)||subjectMaster(G.nat)||!alive(n)||atWar(n,G.nat)||warsOf(n).length||warsOf(G.nat).length||dipFree()<1||G.mana[1]<25)return;
+  if(relGet(n,G.nat)<100||natDev(G.nat)<natDev(n)*1.5){toast('Butuh hubungan +100 dan perkembangan 1,5× target.');return;}
+  if(setSubject(n,G.nat,'tributary')){G.mana[1]-=25;toast(n+' menjadi negara upeti.');saveGame(true);}else toast('Negara ini masih memiliki bawahan sendiri.');
+};
+act.offervassal=b=>{const n=b.dataset.n;
+  if(subjectMaster(n)||subjectMaster(G.nat)||!alive(n)||warsOf(n).length||warsOf(G.nat).length||dipFree()<1||G.mana[1]<25)return;
+  if(!allied(n,G.nat)||relGet(n,G.nat)<190||natDev(G.nat)<natDev(n)*3||natDev(n)>100){toast('Butuh sekutu, hubungan +190, perkembangan 3× target, dan target maksimal 100.');return;}
+  if(setSubject(n,G.nat,'vassal')){G.mana[1]-=25;toast(n+' menerima vasalisasi.');saveGame(true);}else toast('Target masih memiliki bawahan.');
+};
+EVA.tribute=a=>sendTribute(a.n,a.pay);
+function subjectsHTML() {
+  let h=hd('Bawahan & Upeti','Kesetiaan, pajak, upeti, dan integrasi');
+  if(subjectMaster(G.nat)) {
+    h+=subjectPanel(G.nat);
+    h+='<div class="r">'+btn(G.subj[G.nat]?'Perang kemerdekaan…':'Putuskan upeti…','subjectexit',{},!warsOf(G.nat).length && (!G.subj[G.nat] || libertyDesire(G.nat)>=50))+'</div>';
+  }
+  const list=[...subjectsOf(G.nat),...Object.keys(G.tributaries).filter(n=>G.tributaries[n]===G.nat)];
+  for(const n of list)h+='<div class="r">'+btn(n+' · '+(G.subj[n]?'Vasal':'Upeti')+' · '+libertyDesire(n)+'%','dipn',{n})+'</div>';
+  return h+(list.length?'':'<p class="note">Belum memiliki bawahan. Tawarkan hubungan upeti melalui diplomasi atau tuntut vasalisasi dalam perdamaian.</p>');
+}
+act.subjectexit=()=>{
+  const n=G.nat,o=subjectMaster(n);if(!o||warsOf(n).length)return;
+  if(G.subj[n] && libertyDesire(n)<50)return;
+  pushEvent({t:G.subj[n]?'Perang Kemerdekaan':'Putuskan Upeti',x:G.subj[n]?`Melepaskan diri akan memulai perang melawan ${o}. Jika kalah, hubungan vasal dipulihkan.`:`Hubungan dengan ${o} turun 50 dan berlaku gencatan 5 tahun.`,o:[['Lanjutkan','subjectexit',{n,o}],['Batal','ok',{}]]});
+};
+EVA.subjectexit=({n,o})=>{
+  if(n!==G.nat||subjectMaster(n)!==o||warsOf(n).length)return;
+  if(G.subj[n]) {if(libertyDesire(n)<50)return;startIndependence(n);}
+  else {delete G.tributaries[n];delete G.subjectData[n];relAdd(n,o,-50);G.truce[pairKey(n,o)]=monthIdx()+60;}
+  saveGame(true);
+};
+EVA.tribdef=a=>{const w=G.wars.find(w=>w.id===a.w);if(!w)return;if(a.yes){if(!sideOf(w,G.nat))w.def.push(G.nat);for(const s of subjectsOf(G.nat))if(!G.subjectData[s]?.scutage&&!sideOf(w,s))w.def.push(s);}else{const m=G.subjectData[a.n];if(m)m.trust=Math.max(0,m.trust-15);relAdd(a.n,G.nat,-30);}};
+
+/* ---------- Tahap G: jaringan dagang terarah ---------- */
+const TRADE_NODES = [
+ {id:'maluku',n:'Maluku',out:['sulawesi','jawa']},
+ {id:'sulawesi',n:'Sulawesi',out:['jawa']},
+ {id:'borneo',n:'Kalimantan',out:['jawa','malaka']},
+ {id:'siam',n:'Siam–Champa',out:['malaka']},
+ {id:'sumatra',n:'Sumatra',out:['malaka']},
+ {id:'jawa',n:'Laut Jawa',out:['malaka']},
+ {id:'malaka',n:'Selat Malaka',out:[]},
+];
+const TRADE_BY_ID=Object.fromEntries(TRADE_NODES.map(n=>[n.id,n]));
+function tradeNode(p) {
+ const n=p.nat;
+ if(['Bintan','Tumasik','Pahang','Kelantan','Kadaram','Langkasuka'].includes(n))return 'malaka';
+ if(['Siam','Khmer','Champa','Tenasserim'].includes(n))return 'siam';
+ if(['Minahasa','Gorontalo','Luwu','Makassar','Konawe','Banggai','Buton','Visayas','Mindanao','Sulu'].includes(n))return 'sulawesi';
+ if(REGIONAL_STYLE.borneo.includes(n))return 'borneo';
+ if(REGIONAL_STYLE.sumatra.includes(n))return 'sumatra';
+ if(['Maloko','Halmahera','Sran','Ambon','Buru','Gurun','Kei','Aru','Sorong','Wanin','Mamberamo','Papua Tengah','Papua Timur','Papua Selatan'].includes(n))return 'maluku';
+ return 'jawa';
+}
+function fixTrade() {
+ const home=tradeNode(capOf(G.nat)||NATS[G.nat].capital);
+ G.trade ||= {home,merchants:[]};
+ if(!TRADE_BY_ID[G.trade.home])G.trade.home=home;
+ const seen=new Set();G.trade.merchants=(G.trade.merchants||[]).filter(m=>{
+   if(!TRADE_BY_ID[m.node]||seen.has(m.node)||!['collect','steer'].includes(m.mode))return false;
+   if(m.mode==='steer'&&m.node===G.trade.home){m.mode='collect';m.to=null;}
+   if(m.mode==='steer'&&!TRADE_BY_ID[m.node].out.includes(m.to))return false;
+   seen.add(m.node);m.left=Math.max(0,Number(m.left)||0);return true;
+ }).slice(0,2);
+}
+function tradeReach(node) {
+ if(!TRADE_BY_ID[node])return false;
+ const owned=new Set((OWNED[G.nat]||[]).map(id=>tradeNode(PROV[id])));
+ return owned.has(node)||TRADE_NODES.some(n=>owned.has(n.id)&&n.out.includes(node)||n.id===node&&n.out.some(to=>owned.has(to)));
+}
+function tradeDay() { for(const m of G.trade?.merchants||[])if(m.left>0)m.left--; }
+function tradeSnapshot() {
+ const nodes=Object.fromEntries(TRADE_NODES.map(n=>[n.id,{local:0,incoming:0,total:0,powers:{},raw:{},collected:0,forwarded:0,retained:0,bonus:0,player:0,share:0}]));
+ const incomes={},homes={};for(const n of Object.keys(NATS))if(alive(n))homes[n]=n===G.nat?G.trade.home:tradeNode(capOf(n));
+ for(const p of provs) {
+   if(p.k!=='L'||!OWNR[p.id])continue;
+   const node=nodes[tradeNode(p)],owner=OWNR[p.id],controller=CTRL[p.id]||owner;
+   const q=owner===G.nat?G.pv[p.id]:null,dev=q?[q.t,q.p,q.m]:baseDev(p),market=!!q?.bld.includes('pasar');
+   const goods=goodsOf(p);
+   if(goods!=='Emas')node.local+=(dev[1]+(market?1:0))*.2*(GOODS[goods]||2)/12;
+   let power=(.2*(dev[0]+dev[1]+dev[2])+(p.t==='coast'?2:0)+(p.r===1?5:0))*(market?1.5:1);
+   // Pendudukan meniadakan pengaruh pemilik; pengendali mendapat separuh.
+   if(controller!==owner)power*=.5;
+   node.raw[controller]=(node.raw[controller]||0)+power;
+ }
+ const merchants=Object.fromEntries((G.trade.merchants||[]).filter(m=>!m.left).map(m=>[m.node,m]));
+ let playerIncome=0;
+ for(const def of TRADE_NODES) {
+   const node=nodes[def.id],m=merchants[def.id];node.powers={...node.raw};
+   if(m)node.powers[G.nat]=(node.powers[G.nat]||0)+2;
+   if(m?.mode==='collect'&&def.id!==G.trade.home)node.powers[G.nat]=(node.powers[G.nat]||0)*.5;
+   const totalPower=Object.values(node.powers).reduce((a,b)=>a+b,0);
+   node.total=node.local+node.incoming;
+   node.share=totalPower?(node.powers[G.nat]||0)/totalPower:0;
+   const steering=[];
+   for(const [n,power] of Object.entries(node.powers)) {
+     const share=totalPower?power/totalPower:0;
+     const collect=homes[n]===def.id || n===G.nat&&m?.mode==='collect';
+     if(collect) {
+       const value=node.total*share;node.collected+=value;
+       const efficiency=n===G.nat?Math.max(0,1.2+.02*(G.tech[1]-3)+modSum('trade')):1.2;
+       const income=value*efficiency*(n===G.nat&&m?.mode==='collect'?1.1:1);
+       incomes[n]=(incomes[n]||0)+income;if(n===G.nat){node.player=income;playerIncome+=income;}
+     }else steering.push({n,power});
+   }
+   const uncollected=Math.max(0,node.total-node.collected);
+   if(!def.out.length){node.retained=uncollected;continue;}
+   const weights=Object.fromEntries(def.out.map(to=>[to,0]));
+   for(const entry of steering) {
+     const to=entry.n===G.nat&&m?.mode==='steer'?m.to:def.out[0];weights[to]+=entry.power;
+   }
+   const weight=Object.values(weights).reduce((a,b)=>a+b,0);
+   if(!weight)weights[def.out[0]]=1;
+   const denominator=weight||1;
+   for(const to of def.out) {
+     const value=uncollected*weights[to]/denominator;
+     const bonus=m?.mode==='steer'&&m.to===to ? value*.05 : 0;
+     nodes[to].incoming+=value+bonus;node.forwarded+=value;node.bonus+=bonus;
+   }
+ }
+ return {nodes,incomes,income:playerIncome};
+}
+function tradeHTML() {
+ const snap=tradeSnapshot(),free=2-G.trade.merchants.length;
+ let h=hd('Perdagangan',`Pedagang bebas ${free}/2 · +${snap.income.toFixed(2)} dukat/bln`)+row('Pelabuhan utama',TRADE_BY_ID[G.trade.home].n);
+ h+='<p class="note">Ibu kota mengumpulkan otomatis. Pedagang tiba dalam 30 hari; memberi +2 kekuatan. Kumpulkan di luar pelabuhan utama: kekuatan −50%. Arahkan: tambah 5% nilai di rute terpilih.</p>';
+ for(const n of [...TRADE_NODES].sort((a,b)=>Number(b.id===G.trade.home)-Number(a.id===G.trade.home))) {
+   const r=snap.nodes[n.id],m=G.trade.merchants.find(m=>m.node===n.id),reach=tradeReach(n.id);
+   h+='<div class="sec">'+n.n+(n.id===G.trade.home?' · Utama':'')+'</div>'+row('Nilai lokal / masuk',r.local.toFixed(2)+' / '+r.incoming.toFixed(2))+row('Pangsa kekuatan',(r.share*100).toFixed(1)+'%')+row('Pendapatan kerajaan',r.player.toFixed(2))+'<p class="note">Aliran: '+(n.out.map(to=>TRADE_BY_ID[to].n).join(' / ')||'Node akhir')+(m?'<br>Pedagang: '+(m.left?'tiba '+m.left+' hari':m.mode==='collect'?'Mengumpulkan':'Mengarahkan ke '+TRADE_BY_ID[m.to].n):'')+'</p>';
+   h+='<div class="r">'+btn('Kumpulkan','merchant',{node:n.id,mode:'collect'},reach&&(!!m||free>0));
+   if(m)h+=btn('Tarik','merchant',{node:n.id,mode:'recall'});h+='</div>';
+   for(const to of n.out)h+='<div class="r">'+btn('Arahkan → '+TRADE_BY_ID[to].n,'merchant',{node:n.id,mode:'steer',to},n.id!==G.trade.home&&reach&&(!!m||free>0))+'</div>';
+   h+='<div class="r">'+btn('Lihat wilayah','tradelook',{node:n.id})+'</div>';
+ }
+ return h+'<p class="note">Kekuatan: development, provinsi pesisir, pusat kota, dan pasar. Jangkauan awal: node dengan wilayah kerajaan dan node tetangganya. Vasal dan tributary bersaing dengan kekuatan dagangnya sendiri.</p>';
+}
+act.merchant=b=>{
+ const {node,mode,to}=b.dataset,old=G.trade.merchants.find(m=>m.node===node);
+ if(mode==='recall'){G.trade.merchants=G.trade.merchants.filter(m=>m.node!==node);saveGame(true);return;}
+ if(mode==='steer'&&node===G.trade.home)return;
+ if(!TRADE_BY_ID[node]||!tradeReach(node)||!['collect','steer'].includes(mode)||mode==='steer'&&!TRADE_BY_ID[node].out.includes(to)||!old&&G.trade.merchants.length>=2)return;
+ if(old&&old.mode===mode&&(mode==='collect'||old.to===to))return;
+ G.trade.merchants=G.trade.merchants.filter(m=>m.node!==node);G.trade.merchants.push({node,mode,to:mode==='steer'?to:null,left:30});saveGame(true);toast('Pedagang dikirim ke '+TRADE_BY_ID[node].n+' (30 hari).');
+};
+act.tradelook=b=>{const p=provs.find(p=>p.k==='L'&&tradeNode(p)===b.dataset.node&&p.r===1);if(p) {selId=p.id;flyTo(p.lab[0],p.lab[1],Math.max(view.s,1.5),vw*.72,vh/2);}};
+defEvent({id:'dagang_gudang',once:false,mtth:180,t:'Gudang Bersama di Bandar',cond:()=>G.trade.merchants.some(m=>!m.left),x:'Perkumpulan pedagang mengusulkan gudang bersama agar barang lebih cepat ditimbang dan dipindahkan.',o:[{l:'Biayai gudang',tip:'−2 bulan pendapatan; efisiensi dagang +10% selama 36 bulan',fx:()=>{EF.gold(-grossInc()*2);EF.mod('dagang_gudang','Gudang bersama',36,{trade:.1});}},{l:'Tarik bea sewa',tip:'+1 bulan pendapatan',fx:()=>EF.gold(grossInc())}]});
 
 /* ---------- start screen ---------- */
 let anim = 0;

@@ -223,3 +223,9 @@ Keputusan desain yang diasumsikan (belum dikonfirmasi pemilik): event sejarah bo
 - `interceptArmies` menangkap pasukan lawan di ruas berlawanan. `resolveBattles` juga berjalan sebelum gerak harian.
 - Fabrikasi klaim sekarang langsung memakai jaringan, tanpa mana DIP; antrean save lama tetap ditangani `war2Month`.
 - Tes HTTP Chromium tambahan: `tests/t23_missions.py`, `tests/t24_history.py`, `tests/t25_war_events.py`. Jalankan dari root repo.
+
+## Pembaruan hubungan bawahan
+`G.subj` hanya vasal; `G.tributaries` menyimpan penguasa negara upeti; `G.subjectData` metadata. Panggil `setSubject` saat membentuk hubungan, `fixSubjects` pada migrasi. `subjectBudget` diterapkan di wrapper ekonomi terakhir; `subjectsMonth` menangani upeti, LD dan integrasi. `w.independence` menjaga pemulihan vasal saat pemberontak kalah. Akses panel dari Kerajaan → Bawahan. Tambahkan pengujian `tests/t26_subjects.py` saat mengubah diplomasi, ekonomi atau perang. Jangan menggabungkan tributary dalam `subjectsOf` atau syarat kepemilikan misi.
+
+## Pembaruan perdagangan
+`G.trade={home,merchants[]}`; merchant menyimpan node/mode/to/left. `fixTrade` migrasi, `tradeDay` perjalanan, `tradeSnapshot` menghitung seluruh jaringan secara murni tanpa menulis kas. `subjectBudget` menggabungkan e.trade ke e.net; jangan menambah kas dari panel UI. Graph TRADE_NODES harus urutan topologis, rute tanpa siklus. Properti `raw` adalah kekuatan provinsi sebelum merchant/penalti. `trade` pada modifier adalah tambahan efisiensi, bukan nilai lokal produksi. Gunakan tests/t27_trade.py saat mengubah ekonomi/rute/perjalanan. Sistem ini belum punya kapal dagang/blokade.

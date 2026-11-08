@@ -87,3 +87,10 @@ Batas implementasi: Paregreg memberi dampak ekonomi/stabilitas dan belum memuncu
 
 ### Perang dan perluasan event
 Paket lanjutan menambahkan 24 event (total 39 definisi termasuk paket sejarah), persiapan deklarasi perang dengan sasaran, konfirmasi dan panggilan sekutu, klaim langsung memakai jaringan, serta pertempuran ketika pasukan berpapasan. Ticking score untuk sasaran pilihan disimpan dalam perang. Pengujian tests/t25_war_events.py mencakup klaim, batal, konfirmasi, sasaran berubah, perang tanpa alasan, pasukan sekotak/berpapasan, serta 48 pilihan event tambahan.
+
+### Pendalaman hubungan bawahan
+Vasal dan negara upeti kini terpisah: LD, pajak bulanan, upeti tahunan lima jenis, trust/penolakan, scutage, tawaran diplomatik, perlindungan, pelepasan, perang kemerdekaan dan integrasi bertahap. Panel Kerajaan → Bawahan membuka ringkasan; detail di diplomasi negara. Pengujian tambahan tests/t26_subjects.py; batas ekonomi AI dan penyesuaian angka dicatat di RISET.md.
+
+### Tahap G: jaringan perdagangan awal selesai
+Tujuh node, dua merchant dengan perjalanan 30 hari, pengumpulan otomatis di node utama, pengumpulan/steering manual, penalti luar node utama, pasar/pesisir/pusat kota sebagai kekuatan dagang, persaingan AI, pengaruh pendudukan, nilai rempah Maluku, dan pendapatan kas bulanan. Menu Ekonomi → Jaringan perdagangan. Pengujian tests/t27_trade.py: konservasi nilai, income, perhitungan murni, waktu perjalanan, slot merchant, penalti, steering, pasar, pendudukan, save/migrasi dan pembayaran kas.
+Berikutnya Tahap H: angkatan laut dan blokade, lalu pemberontak serta penyeimbangan kampanye.
