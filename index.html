@@ -687,8 +687,75 @@ function majCitySprite(rank,v) {
     }
   });
 }
+// Keluarga bentuk visual, bukan rekonstruksi pasti semua kerajaan abad ke-14.
+const CITY_STYLE_GROUPS={
+ sunda:['Sunda'],bali:['Bali','Lombok'],minang:['Minangkabwa'],batak:['Batak'],
+ melayu:['Bangka','Bintan','Tumasik','Pahang','Kelantan','Kadaram','Langkasuka','Samudra','Lamuri','Haru','Rokan','Kampe','Dharmasraya','Malayu','Palembang','Lampung','Bengkulu','Brunei'],
+ borneo:['Tanjungpura','Sukadana','Landak','Sarawak','Ngaju','Kapuas','Kotawaringin','Tanjungnagara','Kutai','Berau','Sabah'],
+ sulawesi:['Minahasa','Gorontalo','Luwu','Makassar','Konawe','Banggai','Buton'],
+ nusa:['Sumbawa','Dompo','Sumba','Flores','Solor','Timor'],
+ maluku:['Maloko','Halmahera','Ambon','Buru','Gurun','Kei'],
+ papua:['Sran','Aru','Sorong','Wanin','Mamberamo','Papua Tengah','Papua Timur','Papua Selatan'],
+ mainland:['Tenasserim','Siam','Khmer','Champa'],islands:['Visayas','Mindanao','Sulu'],
+};
+function cityStyle(nat){return nat==='Majapahit'?'majapahit':Object.keys(CITY_STYLE_GROUPS).find(k=>CITY_STYLE_GROUPS[k].includes(nat))||'melayu';}
+function regionalHall(g,x,y,k,style,v) {
+ g.save();g.translate(x,y);g.scale(k,k);
+ const roof=['#946746','#ad7c4c','#806447'][v%3],edge='#3f2d23';
+ const raised=['melayu','minang','batak','borneo','sulawesi','islands'].includes(style);
+ const wide=style==='borneo'?12:8;
+ if(style==='papua') {
+   g.fillStyle='#8b6844';g.strokeStyle=edge;g.lineWidth=.7;g.beginPath();g.ellipse(0,-4,7,4,0,0,Math.PI);g.lineTo(-7,-4);g.fill();
+   poly(g,[[-6,-3],[6,-3],[6,-8],[-6,-8]],'#927452',edge);
+   g.fillStyle='#c4a16b';g.beginPath();g.moveTo(-9,-7);g.quadraticCurveTo(-6,-17,0,-18);g.quadraticCurveTo(6,-17,9,-7);g.quadraticCurveTo(0,-4,-9,-7);g.fill();g.stroke();
+   g.fillStyle='#39291e';g.fillRect(-1.5,-6,3,5);g.restore();return;
+ }
+ if(raised) {
+   g.strokeStyle='#503a28';g.lineWidth=1.1;
+   for(const xx of [-wide+2,0,wide-2]){g.beginPath();g.moveTo(xx,0);g.lineTo(xx,-6);g.stroke();}
+ }
+ const base=raised?-5:-1;
+ poly(g,[[-wide,base],[wide,base],[wide,base-6],[-wide,base-6]],'#ad8051',edge);
+ poly(g,[[wide,base],[wide+3,base-2],[wide+3,base-8],[wide,base-6]],'#6d5034',edge);
+ g.fillStyle='#39281e';for(let xx=-wide+3;xx<wide;xx+=5)g.fillRect(xx,base-4,2,3);
+ let points;
+ if(style==='minang')points=[[-wide-3,base-15],[-wide-1,base-7],[0,base-11],[wide+1,base-7],[wide+3,base-15],[wide-2,base-12],[0,base-14],[-wide+2,base-12]];
+ else if(style==='batak')points=[[-wide-2,base-6],[-wide,base-17],[1,base-10],[wide+3,base-18],[wide+1,base-6]];
+ else if(style==='nusa')points=[[-11,base-6],[-5,base-10],[-3,base-23],[3,base-23],[5,base-10],[11,base-6]];
+ else if(style==='sulawesi')points=[[-11,base-6],[-7,base-10],[0,base-19],[7,base-10],[11,base-6]];
+ else if(style==='maluku')points=[[-12,base-6],[-5,base-16],[5,base-16],[12,base-6]];
+ else if(style==='islands')points=[[-wide-3,base-7],[-wide+2,base-14],[wide,base-14],[wide+4,base-7]];
+ else if(style==='sunda')points=[[-11,base-7],[-6,base-12],[6,base-12],[11,base-7],[8,base-5],[-8,base-5]];
+ else points=[[-wide-3,base-6],[0,base-15],[wide+5,base-8],[wide+2,base-5],[-wide,base-5]];
+ poly(g,points,roof,edge);
+ g.strokeStyle='#d5ac73';g.lineWidth=.6;g.beginPath();g.moveTo(points[0][0],points[0][1]);g.lineTo(points.at(-1)[0],points.at(-1)[1]);g.stroke();
+ if(style==='maluku'){g.strokeStyle=edge;for(const xx of [-8,8]){g.beginPath();g.moveTo(xx,base);g.lineTo(xx,base-6);g.stroke();}}
+ if(raised){g.strokeStyle='#d0a06b';g.lineWidth=.6;g.beginPath();g.moveTo(4,base);g.lineTo(8,1);g.moveTo(5,base+2);g.lineTo(8,base+2);g.stroke();}
+ g.restore();
+}
+function regionalCitySprite(rank,v,style) {
+ const key='regional-city-'+rank+'-'+v+'-'+style;if(SPR[key])return SPR[key];
+ const big=rank===1,W=big?40:28,H=big?32:24;
+ return SPR[key]=sprite(W,H,g=>{
+   poly(g,[[2,H-4],[W-8,H-6],[W-1,H-2],[8,H]],'#796246');
+   if(style==='bali') {
+     if(big)majPavilion(g,9,27,.65);
+     meruBlock(g,big?24:16,H-3,big?6.8:5.6,big?3:2);
+     majGate(g,big?33:7,H-1,.48);return;
+   }
+   if(style==='mainland') {
+     if(big)majCandi(g,26,H-3,.92);
+     else meruBlock(g,17,H-2,5.2,2);
+     majPavilion(g,big?9:6,H-2,big?.8:.5);return;
+   }
+   if(big)regionalHall(g,8,23,.43,style,(v+1)%3);
+   regionalHall(g,big?24:17,H-3,big?.95:.72,style,v);
+   regionalHall(g,big?9:6,H-1,big?.55:.42,style,(v+2)%3);
+ });
+}
 function citySprite(rank, v, style) {
   if(style === 'majapahit') return majCitySprite(rank,v);
+  if(CITY_STYLE_GROUPS[style]) return regionalCitySprite(rank,v,style);
   // kota mungil ala EU3: gugusan kecil rapat, tanpa bayangan lebar
   const key = 'c' + rank + v + style; if (SPR[key]) return SPR[key];
   const big = rank === 1, W = big ? 30 : 20, H = big ? 22 : 15, r = rng(v*977 + rank*131 + 5);
@@ -721,7 +788,7 @@ function centerPts() {
 function cityDY(p, s, fs) { const k = cityK(p, s); return k ? (p.r === 1 ? (p.nat==='Majapahit'?9:7) : 5)*k + fs*.55 : 0; }
 function cityK(p, s) { if (p.r === 1) return s >= .8 ? Math.min(1.25, .8 + s*.1) : 0; return s >= 2.0 ? Math.min(1.2, .85 + s*.05) : 0; }
 function drawCity(x, y, k, rank, seed, nat) {
-  const c = citySprite(rank, seed % 3, nat === 'Majapahit' ? 'majapahit' : regionalStyle(nat)), w = c.width/2*k, h = c.height/2*k;
+  const c = citySprite(rank, seed % 3, cityStyle(nat)), w = c.width/2*k, h = c.height/2*k;
   ctx.drawImage(c, x - w/2, y - h*.85, w, h);
 }
 function crownPoleSprite(col) {
@@ -2177,9 +2244,21 @@ function fxDraw() {
   ctx.restore();
 }
 
+const UNIT_OUTLINES=new WeakMap();
+function outlinedUnit(c) {
+ if(UNIT_OUTLINES.has(c))return UNIT_OUTLINES.get(c);
+ const result=mkc(c.width,c.height),g=result.getContext('2d');
+ for(const [radius,color] of [[3,'rgba(20,16,12,.9)'],[1.5,'rgba(255,239,195,.85)']]) {
+   const edge=mkc(c.width,c.height),e=edge.getContext('2d');
+   for(let i=0;i<8;i++){const a=i*Math.PI/4;e.drawImage(c,Math.cos(a)*radius,Math.sin(a)*radius);}
+   e.globalCompositeOperation='source-in';e.fillStyle=color;e.fillRect(0,0,c.width,c.height);g.drawImage(edge,0,0);
+ }
+ g.drawImage(c,0,0);UNIT_OUTLINES.set(c,result);return result;
+}
+function armyVisualScale(s=view.s){return .6*Math.pow(Math.max(.01,s/fitS),.6);}
 /* ---------- sprite & figur ---------- */
 function figureOn(g, x, y, u, col, o) {
-  o = o || {}; const c = soldierSprite(col, regionalStyle(o.nat));
+  o = o || {}; const c = o.plain?soldierSprite(col,regionalStyle(o.nat)):outlinedUnit(soldierSprite(col, regionalStyle(o.nat)));
   g.save(); g.translate(x + (o.dx || 0), y - (o.bob || 0));
   if (o.lean) g.rotate(o.lean);
   if (o.flip) g.scale(-1, 1);
@@ -2250,11 +2329,12 @@ function drawSieges() {
 /* ---------- pertempuran di peta ---------- */
 function drawBattles() {
   if (!G.battles) return;
-  const u = Math.max(.34, Math.min(.56, .26 + view.s*.05)), k = zf();
+  const u = .42, k = zf(), battleScale=armyVisualScale();
   for (const bt of G.battles) {
     if (bt.done) continue;
     const P = PROV[bt.loc], cx = sxw(P.lab[0]) + 6, by = syw(P.lab[1]) + 25;
     if (cx < -50 || by < -60 || cx > vw + 50 || by > vh + 50) continue;
+    ctx.save();ctx.translate(cx,by);ctx.scale(battleScale,battleScale);ctx.translate(-cx,-by);
     const fire = bt.phase === 'fire', A = bt.A, B = bt.B, mine = A.nats.includes(G.nat) || B.nats.includes(G.nat);
     ctx.fillStyle = 'rgba(60,36,14,.32)'; ctx.beginPath(); ctx.ellipse(cx, by + 1, 31, 8.5, 0, 0, 7); ctx.fill();
     if (mine) { ctx.strokeStyle = `rgba(255,70,50,${.5 + .35*Math.sin(fxT*6)})`; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.ellipse(cx, by + 1, 33, 10, 0, 0, 7); ctx.stroke(); }
@@ -2294,18 +2374,19 @@ function drawBattles() {
       const m = lim(S.dr ?? S.mor, 0, 1); ctx.fillStyle = '#140603'; ctx.fillRect(xa, y0 + h + 2, xb - xa, 3.5);
       ctx.fillStyle = m > .5 ? '#5fbf4f' : m > .25 ? '#e0b530' : '#d8442c'; ctx.fillRect(xa + .5, y0 + h + 2.5, (xb - xa - 1)*m, 2.5);
     }
-    BT_HIT.push({ bt, x0:cx - 42, y0:y0 - 4, x1:cx + 42, y1:by + 8 });
+    ctx.restore();
+    BT_HIT.push({ bt, x0:cx - 42*battleScale, y0:by+(y0-4-by)*battleScale, x1:cx + 42*battleScale, y1:by + 8*battleScale });
   }
 }
 
 function drawArmies() {
   ARM_HIT = []; BT_HIT = [];
   if (!G || phase !== 'game') return;
-  const s = view.s, u = Math.max(.27, Math.min(.4, .2 + s*.06));
-  const armyScale = Math.min(1, Math.max(.4, s/(fitS*2)));
+  const s = view.s, u = .34;
+  const armyScale = armyVisualScale(s);
   drawRoutes(); drawSieges();
   const stack = {}, list = [];
-  for (const a of G.armies) { if (a.bt) continue; const q = armyPos(a); if (q[0] < -30 || q[1] < -50 || q[0] > vw + 30 || q[1] > vh + 30) continue; list.push({ a, q }); }
+  for (const a of G.armies) { if (a.bt) continue; const q = armyPos(a); if (q[0] < -80*armyScale || q[1] < -80*armyScale || q[0] > vw + 80*armyScale || q[1] > vh + 80*armyScale) continue; list.push({ a, q }); }
   list.sort((m, n) => m.q[1] - n.q[1]);
   for (const { a, q } of list) {
     const [x, y] = q, moving = a.path.length > 0, key = a.loc + (moving ? 'm' : 's'), idx = stack[key] = (stack[key] ?? -1) + 1;
@@ -2514,7 +2595,7 @@ function bpScene(bt) {
     const men = S.dm ?? S.men, n = 1 + (men > 5000) + (men > 11000), col = natColor[S.nat] || '#aaa';
     for (let i = 0; i < n; i++) {
       const t = fxT*(fire ? 2.4 : 4.6) + i*1.9 + (dir > 0 ? 0 : 1.3) + bt.id, lunge = Math.pow(Math.max(0, Math.sin(t)), 2), x = W/2 - dir*((fire ? 26 : 16) + i*9) + dir*lunge*(fire ? 2 : 8), y = 52 - i*3.2 + (i % 2)*2;
-      figureOn(g, x, y, u, col, { nat:S.nat, flip:dir < 0, lean:dir*lunge*.14, bob:Math.abs(Math.sin(t*.5))*1.4 });
+      figureOn(g, x, y, u, col, { plain:true, nat:S.nat, flip:dir < 0, lean:dir*lunge*.14, bob:Math.abs(Math.sin(t*.5))*1.4 });
     }
   }
   if (fire) { g.strokeStyle = '#2a1a0a'; g.lineWidth = 1; for (let i = 0; i < 4; i++) for (const [dir, p0] of [[1, 0], [-1, .13]]) { const uu = (fxT*1.2 + i/4 + p0) % 1, x0 = W/2 - dir*36, x1 = W/2 + dir*36, px = x0 + (x1 - x0)*uu, py = 34 - 16*Math.sin(Math.PI*uu); g.beginPath(); g.moveTo(px, py); g.lineTo(px - dir*5, py + 3*Math.cos(Math.PI*uu)*dir*-1 - 1.5); g.stroke(); } }
