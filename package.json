@@ -1,0 +1,22 @@
+{
+  "name": "nusantara-1350",
+  "version": "1.0.0",
+  "description": "Game strategi gaya Europa Universalis 4 di Nusantara era Majapahit (1350). Satu file HTML canvas.",
+  "main": "index.js",
+  "scripts": {
+    "build": "node tools/make.mjs",
+    "build:map": "node tools/build-map.mjs",
+    "test": "for t in tests/t17.py tests/t18.py tests/t19.py tests/t20.py tests/t21.py tests/t22.py; do python3 $t || exit 1; done"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "d3-delaunay": "^6.0.6",
+    "d3-geo": "^3.1.2",
+    "polygon-clipping": "^0.15.7",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  },
+  "type": "module"
+}
