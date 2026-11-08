@@ -25,6 +25,7 @@ canvas#map{position:absolute;left:0;top:0;display:block;touch-action:none;cursor
 #crest svg{width:40px;height:40px}
 .res{display:flex;align-items:center;gap:4px;height:26px;padding:0 6px 0 3px;background:linear-gradient(#2c1f10,#150f08);border:1px solid var(--gd);border-radius:13px;font:600 11px system-ui,sans-serif;white-space:nowrap}
 .res i{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font:700 10px Georgia,serif;color:#241607;border:1px solid #000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
+.res i{flex:none}.res i svg{width:14px;height:14px;display:block}.res{color:var(--paper);cursor:pointer}.res:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .res em{font-style:normal;opacity:.55;font-weight:500;font-size:10px}
 .sp{flex:1}
 #time{display:flex;align-items:center;gap:6px;height:30px;padding:0 5px 0 9px;background:linear-gradient(#2c1f10,#150f08);border:1px solid var(--gd);border-radius:6px}
@@ -284,7 +285,7 @@ button,.btn{touch-action:manipulation}
 
 
 /* v21 event */
-.mbox .mo.col{flex-direction:column;align-items:stretch}.mbox .mo.col button{text-align:left;width:100%;line-height:1.25}.mbox .mo.col small{display:block;opacity:.7;font-weight:400;font-size:10.5px;margin-top:2px}
+.mbox .mo.col{flex-direction:column;align-items:stretch}.mbox .mo.col button{display:block;text-align:left;width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.25}.mbox .mo.col small{display:block;opacity:.7;font-weight:400;font-size:10.5px;margin-top:2px}
 .mbox .src{font:10px system-ui,sans-serif;opacity:.55;text-align:center;margin:-4px 0 6px}
 /* v20 kontrol waktu HP */
 #desel{left:50%;bottom:14px;transform:translateX(-50%);z-index:9;height:40px;padding:0 20px;font-size:14px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,.6)}
@@ -1176,8 +1177,19 @@ function saveGame(silent) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(
 function loadSave() { try { const j = localStorage.getItem(SAVE_KEY); const g = j ? JSON.parse(j) : null; return g && g.v === 2 ? g : null; } catch (e) { return null; } }
 
 /* ---------- top bar ---------- */
-const CHIPS = [['D','#e2b84f','Dukat'],['T','#9ccb6b','Tenaga'],['A','#d9d3b8','Daya Administrasi'],['P','#7fb2e0','Daya Diplomasi'],['M','#e08a7a','Daya Militer'],['S','#8fc6e8','Stabilitas'],['★','#d98b5f','Prestise'],['L','#c79be0','Legitimasi']];
-$('resbar').innerHTML = CHIPS.map((c, i) => `<div class="res${i > 5 ? ' opt' : ''}" title="${c[2]}"><i style="background:${c[1]}">${c[0]}</i><b id="rv${i}"></b><em id="rn${i}"></em></div>`).join('');
+const RESOURCE_ICONS = {
+  coins:'<ellipse cx="9" cy="6" rx="6" ry="3"/><path d="M3 6v5c0 4 12 4 12 0V6M3 10c0 4 12 4 12 0"/><path d="M16 10c3 0 5 1 5 3v5c0 4-12 4-12 0v-3M15 16c2 .3 6-.4 6-3"/>',
+  people:'<circle cx="9" cy="7" r="3"/><path d="M3 21v-5a6 6 0 0 1 12 0v5M16 4a3 3 0 0 1 0 6M18 13c3 0 4 2 4 4v4"/>',
+  scroll:'<path d="M6 3h12v16a2 2 0 0 1-4 0V6H6a2 2 0 1 1 2-2M6 6v14a2 2 0 0 0 2 2h8M10 9h5M10 13h5"/>',
+  diplomacy:'<path d="M2 6h20v14H2zM2 7l10 8L22 7"/><path d="M7 3h10"/>',
+  swords:'<path d="M4 2l9 9-2 2-9-9V2zM20 2l-9 9 2 2 9-9V2zM3 15l6 6M15 15l6 6M6 18l-4 4M18 18l4 4"/>',
+  scales:'<path d="M12 2v19M6 22h12M3 7h18M5 7l-4 8h8L5 7zM19 7l-4 8h8l-4-8z"/>',
+  star:'<path d="M12 2l3 6 7 1-5 5 1 8-6-4-6 4 1-8-5-5 7-1z"/>',
+  crown:'<path d="M3 6l4 4 5-7 5 7 4-4-2 13H5L3 6zM5 22h14"/>',
+};
+const CHIPS = [['coins','#e2b84f','Dukat'],['people','#9ccb6b','Tenaga manusia'],['scroll','#d9d3b8','Daya Administrasi'],['diplomacy','#7fb2e0','Daya Diplomasi'],['swords','#e08a7a','Daya Militer'],['scales','#8fc6e8','Stabilitas'],['star','#d98b5f','Prestise'],['crown','#c79be0','Legitimasi']];
+$('resbar').innerHTML = CHIPS.map((c, i) => `<button type="button" class="res${i > 5 ? ' opt' : ''}" title="${c[2]}" aria-label="${c[2]}"><i style="background:${c[1]}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${RESOURCE_ICONS[c[0]]}</svg></i><b id="rv${i}"></b><em id="rn${i}"></em></button>`).join('');
+$('resbar').addEventListener('click', e => { const chip=e.target.closest('.res'); if (chip) toast(chip.title); });
 const SPD_NAME = ['Lambat', 'Normal', 'Cepat', 'Sangat cepat', 'Maks'];
 $('pips').innerHTML = [1,2,3,4,5].map(i => `<button class="pip" data-act="spd" data-s="${i}">×${i} · ${SPD_NAME[i-1]}</button>`).join('');
 $('spdBtn').onclick = e => { e.stopPropagation(); $('pips').classList.toggle('open'); };
@@ -1215,6 +1227,7 @@ function renderWin() {
   else if (winMode === 'peace') h = peaceHTML();
   else if (winMode === 'dip') h = dipListHTML();
   else if (winMode === 'dipn') h = dipNatHTML(winProv);
+  else if (winMode === 'declare') h = declarationHTML();
   else if (winMode === 'nation') {
     const n = NATS[G.nat], tot = Object.values(G.pv).reduce((a, q) => a + q.t + q.p + q.m, 0);
     h = hd(G.nat, n.gov) + row('Penguasa', `${n.title} ${n.ruler.name}`) + row('Kemampuan', `ADM ${n.ruler.a} · DIP ${n.ruler.d} · MIL ${n.ruler.m}`)
@@ -1272,7 +1285,7 @@ function provHTML(p, e) {
 /* ---------- actions ---------- */
 const act = {
   win: b => { if (winMode === b.dataset.w) { winMode = null; } else winMode = b.dataset.w; selId = null; renderWin(); request(); },
-  back: () => { const parent = { rel:'nation', ide:'tech', missions:'nation', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
+  back: () => { const parent = { rel:'nation', ide:'tech', missions:'nation', declare:'dipn', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
   close: () => { winMode = null; selId = null; renderWin(); request(); },
   dev: b => { const q = G.pv[b.dataset.id], i = +b.dataset.i, k = ['t','p','m'][i], c = devCost(q[k]); if (G.mana[i] < c) return; G.mana[i] -= c; q[k]++; toast(`${DEV_NAME[i]} ${PROV[b.dataset.id].n} naik ke ${q[k]}.`); },
   build: b => { const q = G.pv[b.dataset.id], B = BUILD[b.dataset.k]; if (G.treasury < bCost(B) || q.bld.length + q.cons.length >= slotsOf(q)) return; G.treasury -= bCost(B); q.cons.push({ type:b.dataset.k, left:B.months }); toast(`Membangun ${B.n} di ${PROV[b.dataset.id].n} (${B.months} bln).`); },
@@ -1449,8 +1462,22 @@ function orderMove(a, to, quiet) {
 }
 const hostile = (a, b) => a.nat !== b.nat && atWar(a.nat, b.nat);
 
+function interceptArmies(arrived) {
+  const movers=G.armies.filter(a=>a.path.length && !a.bt && a.regs>0);
+  for (let i=0;i<movers.length;i++) for(let j=i+1;j<movers.length;j++) {
+    const a=movers[i], b=movers[j];
+    if(a.bt || b.bt || !a.path.length || !b.path.length || !hostile(a,b)) continue;
+    if(a.path[0]!==b.loc || b.path[0]!==a.loc) continue;
+    const pa=(a.prog+1)/stepDays(a.loc,a.path[0]), pb=(b.prog+1)/stepDays(b.loc,b.path[0]);
+    if(pa+pb<1) continue;
+    a.loc=b.loc; a.prog=b.prog=0; a.path=[]; b.path=[]; arrived.add(a.id);
+    resolveBattles(arrived);
+  }
+}
 function armiesDay() {
   const arrived = new Set();
+  resolveBattles(arrived); // tangkap musuh sekotak sebelum keduanya bergerak
+  interceptArmies(arrived);
   for (const a of G.armies) {
     if (!a.path.length || a.bt) continue;
     const nxt = a.path[0];
@@ -1550,7 +1577,7 @@ function declareWar(att, def, cb) {
     (side === 'att' ? w.att : w.def).push(nat);
   };
   for (const [lead, side] of [[att, 'att'], [def, 'def']]) {
-    for (const k of G.al) { const [x, y] = k.split('|'); const o = x === lead ? y : y === lead ? x : null; if (o && alive(o) && !G.subj[o] && (isMe(o) ? true : Math.random() < .8) && !(side === 'att' ? w.def : w.att).includes(o)) join(o, side); }
+    for (const k of G.al) { const [x, y] = k.split('|'); const o = x === lead ? y : y === lead ? x : null; if (o && alive(o) && (side !== 'att' || !cb.callAllies || cb.callAllies.includes(o)) && !G.subj[o] && (isMe(o) ? true : Math.random() < .8) && !(side === 'att' ? w.def : w.att).includes(o)) join(o, side); }
     for (const s of subjectsOf(lead)) { if (isMe(s)) { if (!sideOf(w, s)) (side === 'att' ? w.att : w.def).push(s); } else if (!sideOf(w, s)) (side === 'att' ? w.att : w.def).push(s); }
   }
   addLog(`${att} menyatakan perang kepada ${def}.`);
@@ -1701,12 +1728,42 @@ function canDeclare(t) {
 }
 function availableCBs(t) {
   const cbs = [];
-  const claimed = G.claims.filter(id => OWNR[id] === t);
-  if (claimed.length) cbs.push({ k:'claim', n:`Klaim: ${claimed.map(i => PROV[i].n).join(', ')}` });
+  const claimed = G.claims.map(Number).filter(id => OWNR[id] === t);
+  if (claimed.length) cbs.push({ k:'claim', ids:claimed, n:`Klaim: ${claimed.map(i => PROV[i].n).join(', ')}` });
   const cores = (OWNED[t] || []).filter(id => BASE_OWN[id] === G.nat);
-  if (cores.length) cbs.push({ k:'core', n:`Rebut inti: ${cores.map(i => PROV[i].n).join(', ')}` });
+  if (cores.length) cbs.push({ k:'core', ids:cores, n:`Rebut inti: ${cores.map(i => PROV[i].n).join(', ')}` });
   return cbs;
 }
+let WAR_DRAFT=null;
+const warAllies = t => G.al.map(k=>k.split('|')).filter(p=>p.includes(t)).map(p=>p.find(n=>n!==t)).filter(alive);
+function openDeclaration(t) {
+  if(canDeclare(t)) return;
+  const cb=availableCBs(t)[0];
+  WAR_DRAFT={target:t,kind:cb?cb.k:'nocb',goal:cb?cb.ids[0]:null,allies:warAllies(G.nat).filter(n=>n!==t && !truceLeft(n,t))};
+  paused=true; winProv=t; winMode='declare'; renderWin(); updateTop();
+}
+function declarationHTML() {
+  const d=WAR_DRAFT; if(!d) return hd('Deklarasi perang');
+  let h=hd('Deklarasi Perang',G.nat+' → '+d.target);
+  for(const cb of [...availableCBs(d.target),{k:'nocb',n:'Tanpa alasan',ids:[]}]) {
+    h+='<div class="r">'+btn((d.kind===cb.k?'● ':'○ ')+(cb.k==='claim'?'Penaklukan (klaim)':cb.k==='core'?'Rebut kembali inti':'Tanpa alasan'),'warcb',{kind:cb.k})+'</div>';
+    if(d.kind===cb.k) for(const id of cb.ids) h+='<div class="r">'+btn((d.goal===id?'✓ ':'')+'Rebut '+PROV[id].n,'wargoal',{id})+'</div>';
+  }
+  h+=row('Tujuan',d.goal!=null?'Duduki '+PROV[d.goal].n:'Menangkan pertempuran')+'<p class="note">'+(d.kind==='nocb'?'Tanpa alasan: −2 stabilitas, −10 prestise, +6 ekspansi agresif.':'Pertahankan sasaran untuk skor perang bertahap, hingga ±25. Klaim tidak langsung memindahkan kepemilikan.')+'</p>';
+  h+='<div class="sec">Pihak lawan</div><p class="note">'+[d.target,...subjectsOf(d.target)].join(', ')+'<br>Sekutu yang mungkin membantu: '+(warAllies(d.target).join(', ')||'Tidak ada')+'</p><div class="sec">Panggil sekutu</div>';
+  for(const n of warAllies(G.nat).filter(n=>n!==d.target)) h+='<div class="r">'+btn((d.allies.includes(n)?'☑ ':'☐ ')+n,'warally',{n},!truceLeft(n,d.target))+'</div>';
+  return h+'<p class="note">Vasal otomatis ikut. Sekutu dapat menolak panggilan.</p><div class="r">'+btn('Batal','back',{})+btn('Konfirmasi perang','warconfirm',{},!canDeclare(d.target))+'</div>';
+}
+act.warcb=b=>{const d=WAR_DRAFT,cb=availableCBs(d.target).find(c=>c.k===b.dataset.kind); d.kind=cb?cb.k:'nocb';d.goal=cb?cb.ids[0]:null;};
+act.wargoal=b=>{WAR_DRAFT.goal=+b.dataset.id;};
+act.warally=b=>{const d=WAR_DRAFT,n=b.dataset.n;d.allies=d.allies.includes(n)?d.allies.filter(x=>x!==n):[...d.allies,n];};
+act.warconfirm=()=>{
+  const d=WAR_DRAFT;if(!d || canDeclare(d.target)) return;
+  const cb=availableCBs(d.target).find(c=>c.k===d.kind);
+  if(d.kind!=='nocb' && (!cb || !cb.ids.includes(d.goal))) {toast('Sasaran atau klaim berubah. Pilih ulang.');return;}
+  if(d.kind==='nocb'){G.stab=Math.max(-3,G.stab-2);G.prestige=Math.max(-100,G.prestige-10);}
+  declareWar(G.nat,d.target,{k:d.kind,goal:d.goal,callAllies:d.allies}); WAR_DRAFT=null;winMode='war'; saveGame(true);
+};
 function claimCost(id) { return 15 + provDev(id)*2; }
 function claimable(t) {
   const mineIds = new Set(OWNED[G.nat] || []); const out = new Set();
@@ -1843,13 +1900,13 @@ function dipNatHTML(t) {
   const why = canDeclare(t);
   if (why) h += `<div class="r"><span>Perang</span><b style="opacity:.6">${why}</b></div>`;
   else {
-    for (const [i, cb] of availableCBs(t).entries()) h += `<div class="r"><span>${cb.n}</span>${btn('Perang', 'dact', { k:'war', n:t, c:i })}</div>`;
-    h += `<div class="r"><span>Tanpa alasan (−1 stab, −10 prestise)</span>${btn('Perang', 'dact', { k:'war', n:t, c:-1 })}</div>`;
+    h += btn('Deklarasi perang…', 'dact', { k:'war', n:t });
+    if (!availableCBs(t).length) h += '<p class="note">Belum ada klaim selesai atau inti yang dapat dijadikan alasan perang.</p>';
   }
   const cl = claimable(t).slice(0, 6);
   h += `<div class="r"><span>Jaringan diplomat</span><b class="${netOf(t) >= netCost(t) ? 'pos' : ''}">${netOf(t)} / ${netCost(t)}</b></div>` + `<div class="r"><span>Bangun jaringan (diplomat tinggal)</span>${btn((G.mis || []).some(m => m.k === 'net' && m.n === t) ? 'Tarik' : 'Kirim', 'dact', { k:'net', n:t }, (G.mis || []).some(m => m.k === 'net' && m.n === t) || dipFree() > 0)}</div>`;
-  for (const id of cl) h += `<div class="r"><span>Klaim ${PROV[id].n}</span>${btn(claimCost(id) + ' DIP', 'dact', { k:'claim', n:t, id }, G.mana[1] >= claimCost(id) && netOf(t) >= netCost(t))}</div>`;
-  const mine = G.claims.filter(id => OWNR[id] === t); if (mine.length) h += `<p class="note">Klaim Anda: ${mine.map(i => PROV[i].n).join(', ')}</p>`;
+  for (const id of cl) h += `<div class="r"><span>Klaim ${PROV[id].n}</span>${btn(netCost(t) + ' jaringan', 'dact', { k:'claim', n:t, id }, netOf(t) >= netCost(t))}</div>`;
+  const mine = G.claims.map(Number).filter(id => OWNR[id] === t); if (mine.length) h += `<p class="note">Klaim Anda: ${mine.map(i => PROV[i].n).join(', ')}</p>`;
   return h + `<div class="r"><span></span>${btn('Daftar', 'win', { w:'dip' })}</div>`;
 }
 function foreignProvHTML(p) {
@@ -1863,7 +1920,7 @@ function foreignProvHTML(p) {
   else if (G.claims.includes(p.id)) h += row('Klaim', 'Anda punya klaim');
   else if (fabOf(p.id)) h += row('Klaim', `Fabrikasi ${fabOf(p.id).left} bln`);
   h += `<div class="r"><span>Diplomasi</span>${btn('Buka ' + o, 'dipn', { n:o })}</div>`;
-  if (!G.claims.includes(p.id) && !fabOf(p.id) && BASE_OWN[p.id] !== G.nat && claimable(o).includes(p.id)) h += `<div class="r"><span>Fabrikasi klaim</span>${btn(claimCost(p.id) + ' DIP', 'dact', { k:'claim', n:o, id:p.id }, G.mana[1] >= claimCost(p.id) && netOf(o) >= netCost(o))}</div>` + `<div class="r"><span>Jaringan di ${o}</span><b>${netOf(o)} / ${netCost(o)}</b></div>`;
+  if (!G.claims.includes(p.id) && !fabOf(p.id) && BASE_OWN[p.id] !== G.nat && claimable(o).includes(p.id)) h += `<div class="r"><span>Fabrikasi klaim</span>${btn(netCost(o) + ' jaringan', 'dact', { k:'claim', n:o, id:p.id }, netOf(o) >= netCost(o))}</div>` + `<div class="r"><span>Jaringan di ${o}</span><b>${netOf(o)} / ${netCost(o)}</b></div>`;
   return h;
 }
 
@@ -1919,9 +1976,7 @@ Object.assign(act, {
     else if (k === 'integ') { const c = natDev(t)*3; if (G.mana[1] >= c) { G.mana[1] -= c; for (const id of [...(OWNED[t] || [])]) transferProv(id, G.nat); delete G.subj[t]; rebuildOwned(); finishNationCheck(t); refreshWorld(); toast(`${t} diintegrasikan.`); } }
     else if (k === 'claim') { const id = +b.dataset.id, c = claimCost(id); if (G.mana[1] >= c && !G.claims.includes(id)) { G.mana[1] -= c; G.claims.push(id); toast(`Klaim atas ${PROV[id].n} dibuat.`); } }
     else if (k === 'war') {
-      const ci = +b.dataset.c; if (canDeclare(t)) return; let cb = { k:'nocb' };
-      if (ci >= 0) cb = availableCBs(t)[ci]; else { G.stab = Math.max(-3, G.stab - 1); G.prestige -= 10; }
-      declareWar(G.nat, t, cb); winMode = 'war';
+      openDeclaration(t);
     }
   },
 });
@@ -2430,7 +2485,7 @@ const demandable = (w, id, taker) => (CTRL[id] && sameSide(CTRL[id], taker)) || 
 /* ---------- skor perang & biaya perdamaian (lebih mahal, harus menduduki) ---------- */
 function occVal(id, owner) { const tot = natDev(owner) || 1; let v = 100*provDev(id)/tot*.9; if (PROV[id] === capOf(owner)) v = v*1.25 + 6; return v; }
 function warScore(w) {          // sudut pandang penyerang, -100..100
-  let sc = w.bp, occ = 0;
+  let sc = w.bp + (w.goalScore || 0), occ = 0;
   for (const id in CTRL) {
     const o = OWNR[id], c = CTRL[id]; if (o === c) continue;
     if (sideOf(w, o) === 'def' && sideOf(w, c) === 'att') occ += occVal(+id, o);
@@ -2541,6 +2596,10 @@ function coalitionMonth() {
   }
 }
 function war2Month() {
+  for (const w of G.wars) if (w.goal != null) {
+    const ctl=CTRL[w.goal] || OWNR[w.goal], side=sideOf(w,ctl);
+    if(side) w.goalScore=lim((w.goalScore || 0)+(side==='att'?.4:-.4),-25,25);
+  }
   attritionMonth();
   for (const n of Object.keys(NATS)) {
     if (!alive(n)) continue; const ws = warsOf(n);
@@ -2571,6 +2630,7 @@ function war2Month() {
     if (w && w.aL === att && w.dL === def) {
       if (cb && cb.k === 'claim' && isMe(att)) w.goals = G.claims.filter(id => OWNR[id] === def);
       else if (cb && cb.k === 'core' && isMe(att)) w.goals = (OWNED[def] || []).filter(id => BASE_OWN[id] === att);
+      if (cb && cb.goal != null) { w.goal=cb.goal; w.goalScore=0; }
       if (cb && cb.k === 'nocb') aeAdd(att, 6);
     }
     return r;
@@ -2604,7 +2664,7 @@ const aeRowHTML = () => { const ae = Math.round(aeOf(G.nat)), c = G.coal && G.co
 /* ================= DIPLOMAT ala EU4 (v20): kirim diplomat dulu, tunggu tiba, baru perjanjian/klaim ================= */
 const MIS_KIND = { ally:'Aliansi', marry:'Pernikahan', access:'Akses militer', gift:'Hadiah', improve:'Perbaiki hubungan', net:'Jaringan diplomat' };
 const netOf = t => Math.floor((G.net ||= {})[t] || 0);
-const netCost = t => 30 + 10*G.claims.filter(id => OWNR[id] === t).length;
+const netCost = t => 20 + 5*G.claims.filter(id => OWNR[id] === t).length;
 function travelDays(t) { const a = capOf(G.nat), b = capOf(t); return lim(Math.round(Math.hypot(a.lab[0] - b.lab[0], a.lab[1] - b.lab[1])/4) + 8, 12, 90); }
 function sendDiplomat(k, t, pid) { const d = travelDays(t); (G.mis ||= []).push({ id:G.nid++, k, n:t, pid, left:d, tot:d, st:'go' }); return d; }
 function misArrive(m) {
@@ -2653,12 +2713,11 @@ function drawEnvoys() {
     const k = b.dataset.k, t = b.dataset.n;
     G.mis ||= []; G.net ||= {};
     if (k === 'claim') {
-      const id = +b.dataset.id, c = claimCost(id), nc = netCost(t);
-      if (G.claims.includes(id) || fabOf(id)) return;
-      if (netOf(t) < nc) { toast(`Jaringan diplomat di ${t} baru ${netOf(t)}/${nc}. Kirim diplomat dulu.`); SFX.play('no'); return; }
-      if (G.mana[1] < c) return;
-      G.mana[1] -= c; G.net[t] -= nc; const mo = lim(Math.round(6 + provDev(id)*.6), 8, 30); (G.fab ||= []).push({ id, left:mo, tot:mo });
-      toast(`Fabrikasi klaim atas ${PROV[id].n} dimulai (${mo} bulan).`); SFX.play('open'); return;
+      const id = +b.dataset.id, nc = netCost(t);
+      if (!PROV[id] || OWNR[id]!==t || !claimable(t).includes(id) || G.claims.includes(id)) return;
+      if (netOf(t) < nc) { toast(`Jaringan diplomat belum cukup: ${netOf(t)}/${nc}.`); return; }
+      G.net[t] -= nc; G.claims.push(id); G.fab=(G.fab || []).filter(f=>f.id!==id);
+      toast(`Klaim atas ${PROV[id].n} selesai. Kini dapat dipakai sebagai alasan perang.`); saveGame(true); return;
     }
     if (!MIS_KIND[k]) return _d3(b);
     if (k === 'net') { const m = G.mis.find(x => x.k === 'net' && x.n === t); if (m) { m.st = 'back'; m.left = Math.max(6, Math.round(m.tot*.6)); return; } }
@@ -2686,6 +2745,7 @@ const loanSize = dev => Math.max(20, Math.floor(dev*.5));
 const loanRate = () => Math.max(1, 4 + Math.max(0, -G.stab) + (G.bank > 0 ? 5 : 0) + modSum('int'));
 function syncLoans() { G.loans = G.ln.reduce((a, l) => a + l.a, 0); }
 function fixSave() {
+  G.claims=[...new Set((G.claims || []).map(Number).filter(id=>PROV[id] && PROV[id].k==='L'))];
   G.missions ||= []; G.flags ||= {}; G.mod ||= []; G.fired ||= []; G.evq ||= []; G.infl ||= 0; G.bank ||= 0;
   G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel();
 }
@@ -2757,6 +2817,7 @@ const EF = {
 const grossInc = () => { const e = econ(); return Math.max(5, e.tax + e.prod); };
 function fireEvent(id) {
   const d = EVT[id]; if (!d || !G) return false;
+  if (d.historical && d.cond && !d.cond()) return false;
   if (d.once !== false && G.fired.includes(id)) return false;
   if (d.once !== false) G.fired.push(id);
   const x = typeof d.x === 'function' ? d.x() : d.x;
@@ -2789,6 +2850,85 @@ defEvent({ id:'saudagar_asing', t:'Saudagar dari Seberang', once:false, mtth:110
 defEvent({ id:'keluhan_bupati', t:'Keluhan Para Bupati', once:false, mtth:130, x:'Para bupati mengeluh pajak terlalu berat dan meminta keringanan di hadapan istana.',
   o:[{ l:'Beri keringanan', tip:'Stabilitas +1, pajak −5% selama 12 bulan', fx:() => { EF.stab(1); EF.mod('ringan', 'Keringanan pajak', 12, { tax:-.05 }); } },
      { l:'Tegakkan pajak', tip:'+2 bulan pendapatan, stabilitas −1', fx:() => { EF.gold(Math.round(grossInc()*2)); EF.stab(-1); } }] });
+
+/* ---------- Tahap F: sejarah dinamis ---------- */
+// Rentang tahun adalah jendela skenario, bukan pemaksaan hasil sejarah.
+const historyMaj = () => G.nat === 'Majapahit';
+const historyYear = (a,b) => G.y >= a && G.y <= b;
+const historyExists = n => (OWNED[n] || []).length > 0;
+const historyCoast = () => Object.keys(G.pv).some(id => PROV[id].t === 'coast');
+defEvent({ id:'sej_bubat', historical:true, mtth:6, t:'Rombongan dari Sunda',
+ cond:() => historyMaj() && historyYear(1355,1360) && historyExists('Sunda') && !atWar(G.nat,'Sunda') && G.subj.Sunda !== G.nat,
+ x:'Rencana pernikahan kerajaan membawa rombongan Sunda ke Jawa. Dalam kisah Bubat (1357), perbedaan tuntutan berakhir tragis. Di istanamu, keputusan masih terbuka.',
+ o:[{l:'Hormati Sunda sebagai kerajaan setara',tip:'Hubungan Sunda +40, prestise +5; tuntutan tunduk ditinggalkan',fx:()=>{relAdd(G.nat,'Sunda',40);EF.prestige(5);EF.flag('bubat_damai',-1);}},
+ {l:'Tuntut pengakuan kekuasaan Majapahit',tip:'Hubungan Sunda −60, stabilitas −1, +25 MIL; sengketa istana menyusul',fx:()=>{relAdd(G.nat,'Sunda',-60);EF.stab(-1);EF.mana(2,25);EF.flag('bubat_sengketa',-1);EF.fireIn('sej_dewan',1);}}] });
+defEvent({ id:'sej_dewan', historical:true, t:'Dewan Meminta Pertanggungjawaban', cond:()=>historyMaj() && hasFlag('bubat_sengketa'),
+ x:'Ketegangan dengan Sunda membelah para pembesar. Dewan menuntut perubahan cara kerajaan menjalankan ambisinya.',
+ o:[{l:'Batasi kuasa panglima',tip:'+1 stabilitas, biaya pasukan +10% selama 24 bulan',fx:()=>{EF.stab(1);EF.mod('dewan','Pengawasan dewan',24,{army:.1});}},
+ {l:'Pertahankan kebijakan keras',tip:'−10 legitimasi, +5% tenaga maksimal selama 24 bulan',fx:()=>{EF.legit(-10);EF.mod('dewan','Dukungan panglima',24,{mpmax:.05});}}] });
+defEvent({ id:'sej_mada', historical:true, mtth:6, t:'Warisan Gajah Mada', cond:()=>historyMaj() && historyYear(1364,1368),
+ x:'Wafatnya Gajah Mada pada 1364 meninggalkan pertanyaan tentang pembagian wewenang mahapatih. Para pembesar menawarkan dua arah untuk meneruskan pekerjaannya.',
+ o:[{l:'Bagi tugas kepada dewan',tip:'+25 ADM, −5 prestise',fx:()=>{EF.mana(0,25);EF.prestige(-5);}},
+ {l:'Tegaskan kembali cita-cita penyatuan',tip:'+25 MIL, biaya pasukan +5% selama 36 bulan',fx:()=>{EF.mana(2,25);EF.mod('warisan_mada','Cita-cita penyatuan',36,{army:.05});}}] });
+defEvent({ id:'sej_prapanca', historical:true, mtth:6, t:'Naskah Nagarakretagama', cond:()=>historyMaj() && historyYear(1365,1370) && G.tech[0] >= 4,
+ x:'Pada 1365, Prapanca menyusun kakawin tentang perjalanan raja, pusat suci, dan dunia politik Majapahit. Istana dapat mendukung karya serupa untuk merawat ingatan kerajaan.',
+ o:[{l:'Danai pujangga dan penyalinan naskah',tip:'−2 bulan pendapatan, +15 prestise, +25 ADM',fx:()=>{EF.gold(-Math.round(grossInc()*2));EF.prestige(15);EF.mana(0,25);}},
+ {l:'Utamakan pencatatan administrasi',tip:'+25 ADM',fx:()=>EF.mana(0,25)}] });
+defEvent({ id:'sej_palembang', historical:true, mtth:6, t:'Tuntutan Palembang', cond:()=>historyMaj() && historyYear(1375,1382) && G.subj.Palembang === G.nat && historyExists('Palembang'),
+ x:'Hubungan dengan Palembang menegang. Terinspirasi pergolakan sekitar 1377, para pembesar setempat meminta ruang lebih besar untuk mengatur perdagangan.',
+ o:[{l:'Berikan kelonggaran',tip:'Hubungan +30; pajak −5% selama 36 bulan',fx:()=>{relAdd(G.nat,'Palembang',30);EF.mod('palembang','Kelonggaran mandala',36,{tax:-.05});}},
+ {l:'Tegakkan kendali pusat',tip:'Hubungan −40; +1 bulan pendapatan, legitimasi −5',fx:()=>{relAdd(G.nat,'Palembang',-40);EF.gold(Math.round(grossInc()));EF.legit(-5);}}] });
+defEvent({ id:'sej_suksesi', historical:true, mtth:6, t:'Pergantian Generasi Istana', cond:()=>historyMaj() && historyYear(1389,1395),
+ x:'Wafatnya Hayam Wuruk pada 1389 menjadi penanda pergantian generasi. Para pembesar memperdebatkan pembagian kekuasaan dan landasan legitimasi istana.',
+ o:[{l:'Rangkul para cabang keluarga',tip:'Legitimasi +10, pajak −5% selama 60 bulan',fx:()=>{EF.legit(10);EF.mod('suksesi','Kompromi keluarga',60,{tax:-.05});}},
+ {l:'Pusatkan wewenang istana',tip:'Legitimasi −10, +50 ADM; risiko sengketa dicatat',fx:()=>{EF.legit(-10);EF.mana(0,50);EF.flag('suksesi_tegang',-1);}}] });
+defEvent({ id:'sej_paregreg', historical:true, mtth:6, t:'Perselisihan Dua Istana', cond:()=>historyMaj() && historyYear(1404,1410) && (G.legit < 70 || G.stab < 1 || hasFlag('suksesi_tegang')),
+ x:'Perang Paregreg sekitar 1404–1406 mengilhami perselisihan dua pusat kekuasaan ini. Ketegangan dalam kerajaanmu membuka peluang perdamaian atau perebutan wewenang.',
+ o:[{l:'Damaikan para pembesar',tip:'−4 bulan pendapatan, +1 stabilitas, legitimasi +5',fx:()=>{EF.gold(-Math.round(grossInc()*4));EF.stab(1);EF.legit(5);}},
+ {l:'Paksa mereka mengakui istana',tip:'−1 stabilitas, pajak −10% dan biaya pasukan +15% selama 36 bulan',fx:()=>{EF.stab(-1);EF.mod('paregreg','Perselisihan istana',36,{tax:-.1,army:.15});}}] });
+defEvent({ id:'sej_zheng', historical:true, mtth:18, t:'Utusan Armada Ming', cond:()=>historyMaj() && historyYear(1405,1433) && historyCoast(),
+ x:'Pelayaran Zheng He menghubungkan pelabuhan Jawa dengan jaringan diplomasi samudra pada awal abad ke-15. Utusan menawarkan pertukaran hadiah dan kabar pelayaran.',
+ o:[{l:'Sambut dan tukarkan hadiah',tip:'−1 bulan pendapatan, +25 DIP, produksi +5% selama 60 bulan',fx:()=>{EF.gold(-Math.round(grossInc()));EF.mana(1,25);EF.mod('ming','Pertukaran samudra',60,{prod:.05});}},
+ {l:'Batasi kunjungan pada urusan dagang',tip:'+1 bulan pendapatan',fx:()=>EF.gold(Math.round(grossInc()))}] });
+defEvent({ id:'musyawarah_desa', once:false, mtth:100, t:'Musyawarah Desa', cond:()=>G.stab < 3,
+ x:'Para tetua mengusulkan perbaikan lumbung dan pembagian air. Mereka memohon dukungan kerajaan.',
+ o:[{l:'Biayai perbaikan',tip:'−2 bulan pendapatan, stabilitas +1',fx:()=>{EF.gold(-Math.round(grossInc()*2));EF.stab(1);}}, {l:'Serahkan kepada masyarakat',tip:'+10 ADM, prestise −5',fx:()=>{EF.mana(0,10);EF.prestige(-5);}}] });
+defEvent({ id:'prajurit_pulang', once:false, mtth:120, t:'Prajurit Ingin Pulang', cond:()=>warsOf(G.nat).length > 0,
+ x:'Kampanye panjang membuat para prajurit merindukan desa. Panglima meminta bekal tambahan untuk menjaga kesetiaan mereka.',
+ o:[{l:'Tambah bekal',tip:'−1 bulan pendapatan, +10 MIL',fx:()=>{EF.gold(-Math.round(grossInc()));EF.mana(2,10);}}, {l:'Tuntut pengabdian',tip:'Stabilitas −1',fx:()=>EF.stab(-1)}] });
+
+/* ---------- Peristiwa kehidupan kerajaan dan sejarah alternatif ---------- */
+// Pilihan adalah skenario fiktif; tema bertolak dari pertanian, jaringan pelabuhan,
+// penyalinan naskah, hubungan mandala, dan peralihan kekuasaan Nusantara.
+const EXTRA_EVENTS = [
+ ['irigasi','Saluran Air Rusak','Petani meminta perbaikan bendung sebelum musim tanam berikutnya.','Biayai bendung','−2 bulan pendapatan; pajak +10% selama 36 bulan',()=>{EF.gold(-grossInc()*2);EF.mod('irigasi','Bendung diperbaiki',36,{tax:.1});},'Tunda pekerjaan','Pajak −5% selama 24 bulan',()=>EF.mod('irigasi','Saluran rusak',24,{tax:-.05})],
+ ['kemarau','Musim Kering','Musim tanam terancam kekurangan air.','Buka lumbung','−2 bulan pendapatan; stabilitas +1',()=>{EF.gold(-grossInc()*2);EF.stab(1);},'Pertahankan cadangan istana','Produksi −10% selama 18 bulan',()=>EF.mod('kemarau','Musim kering',18,{prod:-.1})],
+ ['banjir','Banjir di Lembah','Air merusak jalan pengangkut hasil bumi.','Perbaiki jalan','−1 bulan pendapatan; +10 ADM',()=>{EF.gold(-grossInc());EF.mana(0,10);},'Biarkan desa memperbaiki','Pajak −8% selama 12 bulan',()=>EF.mod('banjir','Jalan terputus',12,{tax:-.08})],
+ ['lumbung','Perselisihan Lumbung','Pejabat desa saling menuduh menyembunyikan padi.','Kirim pemeriksa','−15 ADM; inflasi −0,5%',()=>{EF.mana(0,-15);EF.infl(-.5);},'Percayai laporan pejabat','+1 bulan pendapatan; legitimasi −5',()=>{EF.gold(grossInc());EF.legit(-5);}],
+ ['pengrajin','Perkumpulan Pengrajin','Para pengrajin menawarkan pelatihan jika istana membantu membeli alat.','Sediakan alat','−2 bulan pendapatan; produksi +10% selama 36 bulan',()=>{EF.gold(-grossInc()*2);EF.mod('pengrajin','Pengrajin terlatih',36,{prod:.1});},'Tarik bea perkumpulan','+1 bulan pendapatan',()=>EF.gold(grossInc())],
+ ['penimbang','Timbangan Pasar','Pedagang memperselisihkan ukuran dan timbangan.','Seragamkan ukuran','−20 ADM; produksi +5% selama 60 bulan',()=>{EF.mana(0,-20);EF.mod('penimbang','Ukuran baku',60,{prod:.05});},'Biarkan aturan setempat','+10 DIP; inflasi +0,5%',()=>{EF.mana(1,10);EF.infl(.5);}],
+ ['pemalsu','Uang Palsu Beredar','Saudagar melaporkan campuran logam pada uang yang beredar.','Tarik uang bermasalah','−2 bulan pendapatan; inflasi −1%',()=>{EF.gold(-grossInc()*2);EF.infl(-1);},'Terima untuk sementara','+1 bulan pendapatan; inflasi +1%',()=>{EF.gold(grossInc());EF.infl(1);}],
+ ['sastra','Pujangga Keliling','Seorang pujangga menawarkan karya untuk memuliakan kerajaan.','Lindungi sang pujangga','−1 bulan pendapatan; prestise +10',()=>{EF.gold(-grossInc());EF.prestige(10);},'Minta catatan perjalanan','+15 DIP',()=>EF.mana(1,15)],
+ ['naskah','Naskah yang Terlupakan','Juru tulis menemukan salinan lama tentang pengelolaan tanah.','Salin dan pelajari','−15 ADM; biaya teknologi −5% selama 36 bulan',()=>{EF.mana(0,-15);EF.mod('naskah','Pengetahuan naskah',36,{tech:-.05});},'Persembahkan ke pusat suci','Prestise +5, legitimasi +5',()=>{EF.prestige(5);EF.legit(5);}],
+ ['hakim','Hakim dan Kerabat Raja','Seorang kerabat berpengaruh dituduh mengambil tanah desa.','Tegakkan keputusan hakim','Legitimasi −5; stabilitas +1',()=>{EF.legit(-5);EF.stab(1);},'Lindungi keluarga','+2 bulan pendapatan; stabilitas −1',()=>{EF.gold(grossInc()*2);EF.stab(-1);}],
+ ['upah','Upah Penjaga','Penjaga istana menuntut bekal lebih besar.','Naikkan bekal','Biaya pasukan +10% selama 24 bulan; legitimasi +10',()=>{EF.mod('upah','Bekal penjaga',24,{army:.1});EF.legit(10);},'Tolak tuntutan','Legitimasi −10; +15 MIL',()=>{EF.legit(-10);EF.mana(2,15);}],
+ ['latihan','Latihan Panglima','Panglima mengusulkan latihan bersama pasukan daerah.','Danai latihan','−2 bulan pendapatan; +30 MIL',()=>{EF.gold(-grossInc()*2);EF.mana(2,30);},'Panggil tenaga ke sawah','Pemulihan tenaga +10% selama 24 bulan',()=>EF.mod('latihan','Prajurit kembali ke desa',24,{mp:.1})],
+ ['bekal','Bekal Hilang','Rombongan pembawa bekal terlambat dan persediaan berkurang.','Beli bekal darurat','−2 bulan pendapatan; +10 MIL',()=>{EF.gold(-grossInc()*2);EF.mana(2,10);},'Kurangi jatah','Biaya pasukan −10%, pemulihan tenaga −10% selama 18 bulan',()=>EF.mod('bekal','Jatah dikurangi',18,{army:-.1,mp:-.1})],
+ ['veteran','Para Veteran','Prajurit berpengalaman meminta tanah atau kedudukan.','Beri tunjangan','−2 bulan pendapatan; legitimasi +10',()=>{EF.gold(-grossInc()*2);EF.legit(10);},'Angkat sebagai pelatih','+25 MIL; biaya pasukan +5% selama 24 bulan',()=>{EF.mana(2,25);EF.mod('veteran','Pelatih veteran',24,{army:.05});}],
+ ['rempah','Permintaan Rempah','Kapal dagang mencari pasokan lebih besar dari bandar setempat.','Perluas gudang','−2 bulan pendapatan; produksi +10% selama 24 bulan',()=>{EF.gold(-grossInc()*2);EF.mod('rempah','Gudang rempah',24,{prod:.1});},'Lelang persediaan','+2 bulan pendapatan; inflasi +0,5%',()=>{EF.gold(grossInc()*2);EF.infl(.5);}],
+ ['pelaut','Pelaut Membawa Kabar','Pelaut kembali dengan kabar jalur dan kerajaan seberang.','Dengarkan dan catat','+25 DIP',()=>EF.mana(1,25),'Tarik pungutan pelabuhan','+1 bulan pendapatan; prestise −5',()=>{EF.gold(grossInc());EF.prestige(-5);}],
+ ['bandar','Bandar yang Terbuka','Pemuka bandar meminta kebebasan bagi komunitas pedagang.','Beri perlindungan','Produksi +8%, pajak −5% selama 36 bulan',()=>EF.mod('bandar','Bandar terbuka',36,{prod:.08,tax:-.05}),'Tegakkan pungutan pusat','+2 bulan pendapatan; −10 DIP',()=>{EF.gold(grossInc()*2);EF.mana(1,-10);}],
+ ['tabib','Tabib dari Seberang','Seorang tabib menawarkan pengajaran dan perawatan.','Biayai pengajaran','−1 bulan pendapatan; pemulihan tenaga +10% selama 36 bulan',()=>{EF.gold(-grossInc());EF.mod('tabib','Pengajaran tabib',36,{mp:.1});},'Undang hanya ke istana','Legitimasi +5',()=>EF.legit(5)],
+ ['ziarah','Jalan Ziarah','Pengelola pusat suci meminta jalan dan tempat singgah.','Bangun tempat singgah','−2 bulan pendapatan; toleransi iman +1 selama 60 bulan',()=>{EF.gold(-grossInc()*2);EF.mod('ziarah','Jalan ziarah',60,{tolT:1});},'Minta sumbangan pembesar','Prestise +5; legitimasi −5',()=>{EF.prestige(5);EF.legit(-5);}],
+ ['pendakwah','Perdebatan di Bandar','Pedagang dan pemuka agama memperdebatkan kebiasaan baru.','Lindungi perdebatan damai','Toleransi agama lain +1 selama 36 bulan; −10 ADM',()=>{EF.mod('pendakwah','Perdebatan damai',36,{tolN:1});EF.mana(0,-10);},'Tegaskan tradisi istana','Legitimasi +5; produksi −5% selama 24 bulan',()=>{EF.legit(5);EF.mod('pendakwah','Pembatasan bandar',24,{prod:-.05});}],
+ ['dewan_mandala','Dewan Mandala','Para pembesar mengusulkan agar daerah dilibatkan dalam keputusan pusat.','Perluas dewan','+1 diplomat, pajak −5% selama 60 bulan',()=>EF.mod('dewan_mandala','Dewan mandala',60,{dipl:1,tax:-.05}),'Perkuat juru tulis istana','+25 ADM; legitimasi −5',()=>{EF.mana(0,25);EF.legit(-5);}],
+ ['warisan_bubat','Jika Bubat Berakhir Damai','Hubungan baik dengan Sunda membuka pertukaran pujangga dan utusan.','Pelihara pertukaran','−1 bulan pendapatan; +25 DIP, hubungan Sunda +20',()=>{EF.gold(-grossInc());EF.mana(1,25);relAdd(G.nat,'Sunda',20);},'Utamakan martabat setara','Prestise +10',()=>EF.prestige(10)],
+ ['mandala_mada','Penerus Cita-cita Mahapatih','Dewan memperdebatkan cara meneruskan gagasan penyatuan setelah Gajah Mada.','Utamakan perundingan','+25 DIP; +1 diplomat selama 36 bulan',()=>{EF.mana(1,25);EF.mod('mandala_mada','Utusan mandala',36,{dipl:1});},'Utamakan kesiapan pasukan','+25 MIL; biaya pasukan +10% selama 36 bulan',()=>{EF.mana(2,25);EF.mod('mandala_mada','Kesiapan mandala',36,{army:.1});}],
+ ['damai_istana','Jika Dua Istana Berdamai','Para pembesar mempertimbangkan pembagian tugas yang dapat mencegah perselisihan baru.','Kukuhkan kesepakatan','Legitimasi +10; pajak −5% selama 60 bulan',()=>{EF.legit(10);EF.mod('damai_istana','Kesepakatan istana',60,{tax:-.05});},'Satukan administrasi','+40 ADM; stabilitas −1',()=>{EF.mana(0,40);EF.stab(-1);}]
+];
+for(const e of EXTRA_EVENTS) defEvent({id:'tamb_'+e[0],t:e[1],x:e[2],once:e[0].startsWith('warisan')||['mandala_mada','damai_istana'].includes(e[0]),mtth:180,
+ cond:()=> e[0]==='warisan_bubat' ? G.nat==='Majapahit' && hasFlag('bubat_damai') && historyExists('Sunda') : e[0]==='mandala_mada' ? G.nat==='Majapahit' && G.fired.includes('sej_mada') : e[0]==='damai_istana' ? G.nat==='Majapahit' && G.fired.includes('sej_paregreg') && G.stab>=1 : ['rempah','pelaut','bandar','pendakwah'].includes(e[0]) ? historyCoast() : ['bekal','veteran'].includes(e[0]) ? warsOf(G.nat).length>0 : true,
+ o:[{l:e[3],tip:e[4],fx:e[5]},{l:e[6],tip:e[7],fx:e[8]}]});
 
 /* ---------- Tahap C: agama ---------- */
 const RELS = {
