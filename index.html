@@ -594,17 +594,27 @@ function drawTree(x, y, z) {
 }
 /* ===== sprite kota & prajurit (digambar sekali, di-cache, resolusi 2x) ===== */
 const SPR = {};
+// Gaya regional sementara berdasarkan negara asal provinsi; bukan data suku.
+const REGIONAL_STYLE = {
+  sumatra:['Samudra','Lamuri','Haru','Batak','Rokan','Kampe','Minangkabwa','Dharmasraya','Malayu','Palembang','Lampung','Bengkulu','Bangka','Bintan','Tumasik','Pahang','Kelantan','Kadaram','Langkasuka'],
+  borneo:['Tanjungpura','Sukadana','Landak','Sarawak','Ngaju','Kapuas','Kotawaringin','Tanjungnagara','Kutai','Berau','Brunei','Sabah'],
+  timur:['Minahasa','Gorontalo','Luwu','Makassar','Konawe','Banggai','Buton','Maloko','Halmahera','Sran','Ambon','Buru','Gurun','Kei','Aru','Sorong','Wanin','Mamberamo','Papua Tengah','Papua Timur','Papua Selatan','Sumba','Flores','Solor','Timor'],
+};
+function regionalStyle(nat) { return Object.keys(REGIONAL_STYLE).find(k => REGIONAL_STYLE[k].includes(nat)) || 'jawa'; }
+
 function sprite(w, h, fn) { const c = mkc(w*2, h*2), g = c.getContext('2d'); g.scale(2, 2); g.lineJoin = 'round'; fn(g); return c; }
 function poly(g, pts, fill, stroke) { g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.fillStyle = fill; g.fill(); if (stroke) { g.strokeStyle = stroke; g.lineWidth = .6; g.stroke(); } }
-function house(g, cx, cy, w, d, h, rh, roof, wall) {
+function house(g, cx, cy, w, d, h, rh, roof, wall, style) {
   // rumah miring 3/4 ala EU4: dinding depan, dinding samping gelap, atap pelana
   const L = cx - w/2, R = cx + w/2;
+  if (style === 'borneo' || style === 'timur') { g.strokeStyle = '#50351e'; g.lineWidth = .8; g.beginPath(); g.moveTo(L + 1, cy); g.lineTo(L + 1, cy + 2); g.moveTo(R - 1, cy); g.lineTo(R - 1, cy + 2); g.stroke(); }
   poly(g, [[R, cy], [R + d, cy - d*.5], [R + d, cy - h - d*.5], [R, cy - h]], wall[1], 'rgba(40,24,10,.7)');
   poly(g, [[L, cy], [R, cy], [R, cy - h], [L, cy - h]], wall[0], 'rgba(40,24,10,.7)');
   g.fillStyle = 'rgba(50,30,12,.85)'; g.fillRect(cx - w*.14, cy - h*.55, w*.28, h*.55);
   poly(g, [[L, cy - h], [cx, cy - h - rh], [R, cy - h]], wall[0], 'rgba(40,24,10,.7)');
   poly(g, [[cx, cy - h - rh], [R + .6, cy - h + .3], [R + d + .6, cy - h - d*.5 + .3], [cx + d, cy - h - rh - d*.5]], roof[0], 'rgba(30,14,6,.8)');
   poly(g, [[L - .6, cy - h + .3], [cx, cy - h - rh], [cx + d, cy - h - rh - d*.5], [L + d - .6, cy - h - d*.5 + .3]], roof[1], 'rgba(30,14,6,.8)');
+  if (style === 'sumatra') { g.strokeStyle = roof[0]; g.lineWidth = 1; g.beginPath(); g.moveTo(L, cy-h); g.lineTo(L-1.7, cy-h-rh*.75); g.moveTo(R, cy-h); g.lineTo(R+1.7, cy-h-rh*.75); g.stroke(); }
 }
 function meruBlock(g, cx, cy, w, tiers) {
   const wall = ['#e8d9ae', '#b7a173'];
@@ -621,17 +631,17 @@ function meruBlock(g, cx, cy, w, tiers) {
   g.strokeStyle = '#d9a82c'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(cx + 1, top + 1); g.lineTo(cx + 1, top - w*.42); g.stroke();
   g.fillStyle = '#f2c94c'; g.beginPath(); g.arc(cx + 1, top - w*.42, 1.4, 0, 7); g.fill();
 }
-function citySprite(rank, v) {
+function citySprite(rank, v, style) {
   // kota mungil ala EU3: gugusan kecil rapat, tanpa bayangan lebar
-  const key = 'c' + rank + v; if (SPR[key]) return SPR[key];
+  const key = 'c' + rank + v + style; if (SPR[key]) return SPR[key];
   const big = rank === 1, W = big ? 30 : 20, H = big ? 22 : 15, r = rng(v*977 + rank*131 + 5);
   return SPR[key] = sprite(W, H, g => {
-    const roofs = [['#b8482a', '#8a3820'], ['#a9603a', '#7a4828'], ['#9d4028', '#722c1a']], walls = [['#e9dcb6', '#b9a478'], ['#dccb9e', '#ab9668']];
+    const roofs = style === 'timur' ? [['#b49a60','#806b43'],['#c2a76b','#8d7343'],['#a78c55','#705c3c']] : style === 'borneo' ? [['#8b693d','#59452b'],['#a38751','#715736'],['#795c39','#564128']] : [['#b8482a', '#8a3820'], ['#a9603a', '#7a4828'], ['#9d4028', '#722c1a']], walls = [['#e9dcb6', '#b9a478'], ['#dccb9e', '#ab9668']];
     const spots = big ? [[.22, .46], [.62, .4], [.14, .72], [.4, .8], [.74, .74]] : [[.28, .5], [.68, .55], [.46, .84]];
-    if (big) meruBlock(g, W*.46, H*.56, 4.4, 2);
+    if (big && style === 'jawa') meruBlock(g, W*.46, H*.56, 4.4, 2);
     for (const [fx, fy] of spots) {
       const w = (big ? 4.6 : 4.2) + r()*1.2, h = (big ? 3.2 : 3) + r(), rh = 2.2 + r();
-      house(g, W*fx, H*fy, w, 2.2, h, rh, roofs[(r()*3)|0], walls[(r()*2)|0]);
+      house(g, W*fx, H*fy, w, 2.2, h, rh, roofs[(r()*3)|0], walls[(r()*2)|0], style);
     }
   });
 }
@@ -653,8 +663,8 @@ function centerPts() {
 }
 function cityDY(p, s, fs) { const k = cityK(p, s); return k ? (p.r === 1 ? 7 : 5)*k + fs*.55 : 0; }
 function cityK(p, s) { if (p.r === 1) return s >= .8 ? Math.min(1.25, .8 + s*.1) : 0; return s >= 2.0 ? Math.min(1.2, .85 + s*.05) : 0; }
-function drawCity(x, y, k, rank, seed) {
-  const c = citySprite(rank, seed % 3), w = c.width/2*k, h = c.height/2*k;
+function drawCity(x, y, k, rank, seed, nat) {
+  const c = citySprite(rank, seed % 3, regionalStyle(nat)), w = c.width/2*k, h = c.height/2*k;
   ctx.drawImage(c, x - w/2, y - h*.85, w, h);
 }
 function crownPoleSprite(col) {
@@ -672,8 +682,8 @@ function crownPoleSprite(col) {
     g.fillStyle = '#c3382a'; g.beginPath(); g.arc(5, 7, 1.3, 0, 7); g.fill();
   });
 }
-function soldierSprite(col) {
-  const key = 's' + col; if (SPR[key]) return SPR[key];
+function soldierSprite(col, style = 'jawa') {
+  const key = 's' + col + style; if (SPR[key]) return SPR[key];
   return SPR[key] = sprite(46, 78, g => {
     const ol = '#1c1006';
     const lg = (x0, y0, x1, y1, a, b) => { const q = g.createLinearGradient(x0, y0, x1, y1); q.addColorStop(0, a); q.addColorStop(1, b); return q; };
@@ -709,6 +719,10 @@ function soldierSprite(col) {
     g.fillStyle = col; g.strokeStyle = ol; g.beginPath(); g.moveTo(16, 11.6); g.quadraticCurveTo(23, 3.6, 30, 11.6); g.lineTo(30.4, 9.4); g.quadraticCurveTo(23, 0, 15.6, 9.4); g.closePath(); g.fill(); g.stroke();
     g.fillStyle = '#e8c25a'; g.fillRect(15.6, 9.6, 14.8, 1.2);
     g.fillStyle = '#1a0f06'; g.fillRect(20, 14, 1.5, 1.5); g.fillRect(25, 14, 1.5, 1.5);
+    // Aksen busana regional yang dibedakan secara sederhana.
+    if (style === 'sumatra') { poly(g, [[15,10],[18,3],[23,6],[28,3],[31,10]], col, ol); g.fillStyle='#e8c25a'; g.fillRect(16,10,14,1.5); }
+    if (style === 'borneo') { g.fillStyle='#f0d39a'; for (let y=25; y<39; y+=4) g.fillRect(15,y,16,1); g.fillStyle='#d7bf87'; poly(g, [[17,8],[22,0],[24,8]], '#e9d9aa', ol); }
+    if (style === 'timur') { g.strokeStyle='#efd18a'; g.lineWidth=1.2; for (let y=48; y<60; y+=4) { g.beginPath(); g.moveTo(12,y); g.lineTo(34,y); g.stroke(); } g.fillStyle='#e5d5ac'; g.fillRect(16,8,14,2); }
     // perisai
     g.fillStyle = lg(4, 0, 14, 0, '#8b5a2e', '#5b381a'); g.strokeStyle = ol; g.lineWidth = .9;
     g.beginPath(); g.ellipse(9, 38, 6.4, 13, 0, 0, 7); g.fill(); g.stroke();
@@ -833,7 +847,7 @@ function paintStatic(c, k, tx, ty, sEff, full) {
         }
       }
     }
-    for (const p of L) { const ck = cityK(p, s); if (ck) { const q = on(p); if (q) drawCity(q[0], q[1], ck, p.r, hv(p.n, 31)); } }
+    for (const p of L) { const ck = cityK(p, s); if (ck) { const q = on(p); if (q) drawCity(q[0], q[1], ck, p.r, hv(p.n, 31), p.nat); } }
 
     // detail vektor tambahan: makin dekat makin rapat (selalu tajam)
     if (s >= 2.4) {
@@ -1189,7 +1203,7 @@ function updateTop() {
 let winMode = null, winProv = null;
 const row = (a, b) => `<div class="r"><span>${a}</span><b>${b}</b></div>`;
 function btn(label, act, data, enabled = true) { return `<button class="btn ab" data-act="${act}" ${Object.entries(data || {}).map(([k, v]) => `data-${k}="${v}"`).join(' ')} ${enabled ? '' : 'disabled'}>${label}</button>`; }
-function hd(title, sub) { return `<div class="hd"><div style="min-width:0;flex:1"><h2>${title}</h2>${sub ? `<div class="sub">${sub}</div>` : ''}</div><button class="btn" style="width:24px;height:24px;border-radius:50%;font-size:11px" data-act="close">✕</button></div>`; }
+function hd(title, sub) { return `<div class="hd"><button class="btn" style="width:32px;height:32px;border-radius:50%;font-size:16px;flex:none" data-act="back" aria-label="Kembali" title="Kembali">‹</button><div style="min-width:0;flex:1"><h2>${title}</h2>${sub ? `<div class="sub">${sub}</div>` : ''}</div><button class="btn" style="width:24px;height:24px;border-radius:50%;font-size:11px" data-act="close">✕</button></div>`; }
 function renderWin() {
   const w = $('win');
   if (!winMode) { w.classList.remove('open'); if (G && G.sel) G.sel = null; updDesel(); return; }
@@ -1258,6 +1272,7 @@ function provHTML(p, e) {
 /* ---------- actions ---------- */
 const act = {
   win: b => { if (winMode === b.dataset.w) { winMode = null; } else winMode = b.dataset.w; selId = null; renderWin(); request(); },
+  back: () => { const parent = { rel:'nation', ide:'tech', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
   close: () => { winMode = null; selId = null; renderWin(); request(); },
   dev: b => { const q = G.pv[b.dataset.id], i = +b.dataset.i, k = ['t','p','m'][i], c = devCost(q[k]); if (G.mana[i] < c) return; G.mana[i] -= c; q[k]++; toast(`${DEV_NAME[i]} ${PROV[b.dataset.id].n} naik ke ${q[k]}.`); },
   build: b => { const q = G.pv[b.dataset.id], B = BUILD[b.dataset.k]; if (G.treasury < bCost(B) || q.bld.length + q.cons.length >= slotsOf(q)) return; G.treasury -= bCost(B); q.cons.push({ type:b.dataset.k, left:B.months }); toast(`Membangun ${B.n} di ${PROV[b.dataset.id].n} (${B.months} bln).`); },
@@ -1990,7 +2005,7 @@ function fxDraw() {
 
 /* ---------- sprite & figur ---------- */
 function figureOn(g, x, y, u, col, o) {
-  o = o || {}; const c = soldierSprite(col);
+  o = o || {}; const c = soldierSprite(col, regionalStyle(o.nat));
   g.save(); g.translate(x + (o.dx || 0), y - (o.bob || 0));
   if (o.lean) g.rotate(o.lean);
   if (o.flip) g.scale(-1, 1);
@@ -2075,7 +2090,7 @@ function drawBattles() {
       for (let i = 0; i < n; i++) {
         const t = fxT*(fire ? 2.4 : 4.6) + i*1.9 + (dir > 0 ? 0 : 1.3) + bt.id, l = Math.max(0, Math.sin(t)), lunge = l*l;
         const x = cx - dir*(gap + i*5.5) + dir*lunge*(fire ? 1.5 : 6), y = by + (i - (n - 1)/2)*4.5;
-        figs.push({ y, f:() => figure(x, y, u, col, { flip:dir < 0, lean:dir*lunge*.14, bob:Math.abs(Math.sin(t*.5))*1.1 }) });
+        figs.push({ y, f:() => figure(x, y, u, col, { nat:S.nat, flip:dir < 0, lean:dir*lunge*.14, bob:Math.abs(Math.sin(t*.5))*1.1 }) });
         if (!fire && lunge > .93 && Math.random() < .35) fxAt(cx + (Math.random() - .5)*6, by - 12*u/.3, { k:'spark', vx:(Math.random() - .5)*80, vy:-20 - Math.random()*50, g:140, max:.3 + Math.random()*.2, col:'#fff1b0' });
       }
     }
@@ -2126,12 +2141,12 @@ function drawArmies() {
     if (moving) {
       const nf = a.regs >= 11 ? 3 : a.regs >= 5 ? 2 : 1;
       drawPole(bx - sg*(5 + (nf - 1)*3), by + 1, u, col, ph*1.8, -sg);
-      for (let k = nf - 1; k >= 0; k--) { const t = fxT*9 + k*1.9 + a.id; figure(bx + sg*(3 - k*6.5), by + (k % 2)*1.6, u, col, { flip:sg < 0, bob:Math.abs(Math.sin(t))*2.4*(u/.3), lean:Math.sin(t)*.05*sg }); }
+      for (let k = nf - 1; k >= 0; k--) { const t = fxT*9 + k*1.9 + a.id; figure(bx + sg*(3 - k*6.5), by + (k % 2)*1.6, u, col, { nat:a.nat, flip:sg < 0, bob:Math.abs(Math.sin(t))*2.4*(u/.3), lean:Math.sin(t)*.05*sg }); }
       for (let n = rate('d' + a.id, 15, fxDt); n--;) fxAt(bx - sg*(8 + Math.random()*10), by - 1, { k:'dust', vx:-sg*(5 + Math.random()*8), vy:-3 - Math.random()*5, max:.6 + Math.random()*.5, s:1.5 + Math.random()*1.2 });
     } else {
       drawPole(bx - 9*u*1.2, by, u, col, ph, 1);
-      figure(bx + 7*u, by, u, col, { dx:Math.sin(fxT*1.3 + a.id)*.35 });
-      if (a.regs >= 8) figure(bx + 7*u - 6, by + 1.5, u, col, { dx:Math.sin(fxT*1.1 + a.id*2)*.35 });
+      figure(bx + 7*u, by, u, col, { nat:a.nat, dx:Math.sin(fxT*1.3 + a.id)*.35 });
+      if (a.regs >= 8) figure(bx + 7*u - 6, by + 1.5, u, col, { nat:a.nat, dx:Math.sin(fxT*1.1 + a.id*2)*.35 });
     }
     counterSm(bx - 1, by + 7, String(a.regs), col);
     ctx.restore();
@@ -2325,7 +2340,7 @@ function bpScene(bt) {
     const men = S.dm ?? S.men, n = 1 + (men > 5000) + (men > 11000), col = natColor[S.nat] || '#aaa';
     for (let i = 0; i < n; i++) {
       const t = fxT*(fire ? 2.4 : 4.6) + i*1.9 + (dir > 0 ? 0 : 1.3) + bt.id, lunge = Math.pow(Math.max(0, Math.sin(t)), 2), x = W/2 - dir*((fire ? 26 : 16) + i*9) + dir*lunge*(fire ? 2 : 8), y = 52 - i*3.2 + (i % 2)*2;
-      figureOn(g, x, y, u, col, { flip:dir < 0, lean:dir*lunge*.14, bob:Math.abs(Math.sin(t*.5))*1.4 });
+      figureOn(g, x, y, u, col, { nat:S.nat, flip:dir < 0, lean:dir*lunge*.14, bob:Math.abs(Math.sin(t*.5))*1.4 });
     }
   }
   if (fire) { g.strokeStyle = '#2a1a0a'; g.lineWidth = 1; for (let i = 0; i < 4; i++) for (const [dir, p0] of [[1, 0], [-1, .13]]) { const uu = (fxT*1.2 + i/4 + p0) % 1, x0 = W/2 - dir*36, x1 = W/2 + dir*36, px = x0 + (x1 - x0)*uu, py = 34 - 16*Math.sin(Math.PI*uu); g.beginPath(); g.moveTo(px, py); g.lineTo(px - dir*5, py + 3*Math.cos(Math.PI*uu)*dir*-1 - 1.5); g.stroke(); } }
