@@ -1491,13 +1491,13 @@ function access(nat, id) {
   if (hasAccess(nat, o)) return true; if (G.subj[nat] === o || G.subj[o] === nat) return true;
   return false;
 }
-function distMap(nat, from) {
+function distMap(nat, from, returning = false) {
   const dist = { [from]:0 }, prev = {}, open = [from], done = new Set();
   while (open.length) {
     let bi = 0; for (let i = 1; i < open.length; i++) if (dist[open[i]] < dist[open[bi]]) bi = i;
     const u = open.splice(bi, 1)[0]; if (done.has(u)) continue; done.add(u);
     for (const l of LINK[u]) {
-      if (!access(nat, l.to)) continue;
+      if (!returning && !access(nat, l.to)) continue;
       const nd = dist[u] + stepDays(u, l.to);
       if (dist[l.to] === undefined || nd < dist[l.to]) { dist[l.to] = nd; prev[l.to] = u; open.push(l.to); }
     }
@@ -1519,7 +1519,7 @@ function orderMove(a, to, quiet) {
   if (!(a.path.length && a.prog > 0)) a.prog = 0;
   a.path = p; return true;
 }
-const hostile = (a, b) => a.nat !== b.nat && atWar(a.nat, b.nat);
+const hostile = (a, b) => !a.exiled && !b.exiled && a.nat !== b.nat && atWar(a.nat, b.nat);
 
 function interceptArmies(arrived) {
   const movers=G.armies.filter(a=>a.path.length && !a.bt && a.regs>0);
@@ -1534,13 +1534,15 @@ function interceptArmies(arrived) {
   }
 }
 function armiesDay() {
+  repairBattleLocks();
   const arrived = new Set();
   resolveBattles(arrived); // tangkap musuh sekotak sebelum keduanya bergerak
   interceptArmies(arrived);
   for (const a of G.armies) {
+    if(a.exiled && OWNR[a.loc]===a.nat && a.prog===0)a.exiled=false;
     if (!a.path.length || a.bt) continue;
     const nxt = a.path[0];
-    if (!access(a.nat, nxt)) { a.path = []; a.prog = 0; if (isMe(a.nat)) toast(`Akses ke ${PROV[nxt].n} ditolak.`); continue; }
+    if (!a.exiled && !access(a.nat, nxt)) { a.path = []; a.prog = 0; if (isMe(a.nat)) toast(`Akses ke ${PROV[nxt].n} ditolak.`); continue; }
     a.prog++;
     if (a.prog >= stepDays(a.loc, nxt)) { a.loc = nxt; a.path.shift(); a.prog = 0; arrived.add(a.id); }
   }
@@ -1595,33 +1597,73 @@ function occupy(id, nat) {
 }
 
 /* ---------- AI pasukan ---------- */
+function repairBattleLocks() {
+  for(const bt of G.battles||[])if(!bt.done) {
+    const A=sideArmies(bt,'A'),B=sideArmies(bt,'B');
+    if(!A.some(a=>B.some(b=>atWar(a.nat,b.nat))))endBattle(bt,null);
+  }
+  const active=new Set((G.battles||[]).filter(b=>!b.done).map(b=>b.id));
+  for(const a of G.armies)if(a.bt&&!active.has(a.bt))delete a.bt;
+}
+function aiReturnHome(a) {
+  if(isMe(a.nat)||a.bt)return false;
+  const own=(OWNED[a.nat]||[]).filter(id=>!CTRL[id]||CTRL[id]===a.nat);
+  if(!own.length)return false;
+  let route=distMap(a.nat,a.loc),exiled=false;
+  if(!own.some(id=>route.dist[id]!==undefined)){route=distMap(a.nat,a.loc,true);exiled=true;}
+  let target=null,score=Infinity;
+  for(const id of own) {
+    if(route.dist[id]===undefined)continue;
+    const stack=G.armies.filter(b=>b.id!==a.id&&(b.loc===id&&!b.path.length||b.path.at(-1)===id)).reduce((n,b)=>n+b.regs,0);
+    const excess=Math.max(0,stack+a.regs-supplyLim(id)*2);
+    const v=route.dist[id]+excess*12+(PROV[id]===capOf(a.nat)?-3:0);
+    if(v<score){score=v;target=id;}
+  }
+  if(target===null){a.aiTask='Menunggu rute pulang';return false;}
+  if(target===a.loc){a.exiled=false;a.returning=false;a.aiTask='Bertahan di tanah air';return true;}
+  const path=[];for(let cur=target;cur!==a.loc;cur=route.prev[cur])path.unshift(cur);
+  a.path=path;a.prog=0;a.exiled=exiled;a.returning=true;a.aiTask='Pulang ke '+PROV[target].n;return true;
+}
 function aiArmies() {
+  repairBattleLocks();
   for (const a of G.armies) {
-    if (isMe(a.nat) || a.path.length || (a.id + G.d) % 2) continue;
-    if(G.subj[a.nat] && libertyDesire(a.nat)>=50)continue;
-    const myWars = warsOf(a.nat);
-    if (!myWars.length) {
-      const h = capOf(a.nat); if (h && a.loc !== h.id && OWNR[a.loc] !== a.nat && !access(a.nat, a.loc)) orderMove(a, h.id, true);
-      continue;
+    if(isMe(a.nat)||a.bt||a.regs<=0)continue;
+    const myWars=warsOf(a.nat);
+    if(!myWars.length) {
+      if(a.path.length&&a.returning)continue;
+      a.path=[];a.prog=0;aiReturnHome(a);continue;
     }
-    if (G.siege[a.loc] && G.siege[a.loc].by === a.nat) continue;
-    const { dist } = distMap(a.nat, a.loc);
-    let best = null, bs = 1e9;
-    const myPow = powerOf([a], a.loc, false);
-    for (const id in dist) {
-      const pid = +id; if (pid === a.loc) continue;
-      const ctl = CTRL[pid] || OWNR[pid];
-      const enemyHere = G.armies.filter(x => x.loc === pid && atWar(a.nat, x.nat));
-      const ep = powerOf(enemyHere, pid, true);
-      const hostileTarget = atWar(a.nat, ctl) || enemyHere.length;
-      if (!hostileTarget) continue;
-      if (ep > myPow*1.1) continue;
-      let sc = dist[id] + fortOf(pid)*6 - provDev(pid)*.25 + (enemyHere.length ? -8 : 0);
-      if (OWNR[pid] === a.nat && CTRL[pid] && atWar(a.nat, CTRL[pid])) sc -= 15;
-      if (G.siege[pid] && atWar(a.nat, G.siege[pid].by) && sameSide(a.nat, CTRL[pid] || OWNR[pid])) sc -= 20;
-      if (sc < bs) { bs = sc; best = pid; }
+    if(a.exiled){if(!a.path.length)aiReturnHome(a);continue;}
+    if(G.subj[a.nat]&&libertyDesire(a.nat)>=50) {
+      if(!a.returning){a.path=[];a.prog=0;aiReturnHome(a);}continue;
     }
-    if (best !== null) orderMove(a, best, true);
+    if(a.path.length)continue;
+    a.returning=false;
+    const siege=G.siege[a.loc];
+    if(siege&&siege.by===a.nat){a.aiTask='Mengepung '+PROV[a.loc].n;continue;}
+    const {dist}=distMap(a.nat,a.loc);let best=null,bs=Infinity;
+    const myPow=powerOf([a],a.loc,false);
+    for(const id in dist) {
+      const pid=+id;if(pid===a.loc)continue;
+      const ctl=CTRL[pid]||OWNR[pid];
+      const enemies=G.armies.filter(x=>!x.exiled&&x.loc===pid&&atWar(a.nat,x.nat));
+      if(!atWar(a.nat,ctl)&&!enemies.length)continue;
+      const allies=G.armies.filter(x=>x.id!==a.id&&!x.exiled&&(x.nat===a.nat||sameSide(x.nat,a.nat))&&(x.loc===pid||x.path.at(-1)===pid));
+      const supporting=powerOf(allies,pid,false),ep=powerOf(enemies,pid,true);
+      if(ep>(myPow+supporting*.75)*1.1)continue;
+      const assigned=allies.reduce((n,x)=>n+x.regs,0);
+      // Satu kepungan yang cukup kuat tidak perlu menarik seluruh sekutu.
+      if(!enemies.length&&assigned>=fortLv(pid)*2.2)continue;
+      let sc=dist[id]+fortOf(pid)*6-provDev(pid)*.25+assigned*4;
+      if(enemies.length)sc-=10;
+      if(OWNR[pid]===a.nat&&CTRL[pid])sc-=35;
+      if(myWars.some(w=>w.goal===pid))sc-=25;
+      if(sc<bs){bs=sc;best=pid;}
+    }
+    if(best!==null){a.aiTask='Menuju '+PROV[best].n;orderMove(a,best,true);continue;}
+    const friend=G.armies.filter(b=>b.id!==a.id&&!b.bt&&!b.exiled&&!b.path.length&&b.nat===a.nat&&(b.regs>a.regs||b.regs===a.regs&&b.id<a.id)&&b.loc!==a.loc&&dist[b.loc]!==undefined).sort((x,y)=>dist[x.loc]-dist[y.loc])[0];
+    if(friend){a.aiTask='Berkumpul dengan pasukan sendiri';orderMove(a,friend.loc,true);}
+    else {a.aiTask='Memulihkan posisi';aiReturnHome(a);}
   }
 }
 
@@ -1688,8 +1730,10 @@ function applyPeace(w, winner, opts) {
     const o = OWNR[id], c = CTRL[id];
     if (!atWar(o, c)) { delete CTRL[id]; PROV[id]._pf = null; }
   }
-  // usir pasukan dari wilayah tanpa akses
+  repairBattleLocks();
+  // Pasukan AI pulang meski masih memiliki akses ke wilayah sekutu.
   for (const a of G.armies) {
+    if(!isMe(a.nat)&&!warsOf(a.nat).length){a.path=[];a.prog=0;aiReturnHome(a);continue;}
     if (a.path.length && !access(a.nat, a.path[0])) a.path = [];
     if (!access(a.nat, a.loc)) { const h = capOf(a.nat); if (h) { a.loc = h.id; a.path = []; a.prog = 0; } }
   }
@@ -1747,13 +1791,13 @@ function aiMonth() {
     const atw = warsOf(n).length > 0, fl = Math.round(aiFl(n)*(atw ? 1.4 : 1)), have = regsOf(n);
     if (have < fl && Math.random() < (atw ? .8 : .35)) {
       const h = capOf(n); if ((CTRL[h.id] && CTRL[h.id] !== n) || G.armies.some(x => x.loc === h.id && atWar(n, x.nat))) continue;
-      const idle = G.armies.find(a => a.nat === n && a.loc === h.id && !a.path.length);
+      const idle = G.armies.find(a => a.nat === n && a.loc === h.id && !a.path.length && !a.bt && !a.exiled);
       if (idle) idle.regs++; else mkArmy(n, 1, h.id);
     }
   }
   // gabung pasukan menganggur di provinsi sama
   const seen = {};
-  for (const a of G.armies) { if (isMe(a.nat) || a.path.length) continue; const k = a.nat + '@' + a.loc; if (seen[k]) { seen[k].regs += a.regs; a.regs = 0; } else seen[k] = a; }
+  for (const a of G.armies) { if (isMe(a.nat) || a.path.length || a.bt || a.exiled) continue; const k = a.nat + '@' + a.loc; if (seen[k]) { seen[k].regs += a.regs; a.regs = 0; } else seen[k] = a; }
   G.armies = G.armies.filter(a => a.regs > 0);
   if (monthIdx() < 6) return;
   const activeAIWars = G.wars.filter(w => !involvesMe(w)).length;
@@ -2604,7 +2648,7 @@ function claimCost(id) { return 20 + provDev(id)*3; }
 /* ---------- kepungan berfase (tiap 10 hari lempar dadu) ---------- */
 function siegeNeed() { return 100; }
 function sieges() {
-  const by = {}; for (const a of G.armies) if (!a.path.length && !a.bt) (by[a.loc] ||= []).push(a);
+  const by = {}; for (const a of G.armies) if (!a.path.length && !a.bt && !a.exiled) (by[a.loc] ||= []).push(a);
   for (const id in G.siege) if (!by[id]) delete G.siege[id];
   for (const loc in by) {
     const L = by[loc], owner = OWNR[loc], ctl = CTRL[loc] || owner;
@@ -2631,7 +2675,7 @@ function sieges() {
 
 /* ---------- bulanan: atrisi suplai, kelelahan perang, AE, koalisi, klaim, inti ---------- */
 function attritionMonth() {
-  const by = {}; for (const a of G.armies) if (!a.bt) (by[a.loc + '|' + a.nat] ||= []).push(a);
+  const by = {}; for (const a of G.armies) if (!a.bt && !a.exiled) (by[a.loc + '|' + a.nat] ||= []).push(a);
   for (const key in by) {
     const L = by[key], loc = L[0].loc, nat = L[0].nat; if (!OWNR[loc]) continue;
     const home = supplyHome(nat, loc), tot = L.reduce((s, a) => s + a.regs, 0), lm = supplyLim(loc)*(home ? 2 : 1), over = Math.max(0, tot - lm), tr = PROV[loc].t;
@@ -3302,7 +3346,7 @@ function startIndependence(n) {
 }
 function subjectsMonth() {
   fixSubjects();
-  for(const a of G.armies)if(a.nat!==G.nat && G.subj[a.nat] && libertyDesire(a.nat)>=50 && !a.bt){a.path=[];a.prog=0;}
+  for(const a of G.armies)if(a.nat!==G.nat && G.subj[a.nat] && libertyDesire(a.nat)>=50 && !a.bt && !a.returning && warsOf(a.nat).length){a.path=[];a.prog=0;}
   for(const n of Object.keys(G.subjectData)) {
     const m=G.subjectData[n];m.extra=(m.extra||0)*.99;
     if(G.tributaries[n] && m.lastYear<G.y && !m.pending) {
