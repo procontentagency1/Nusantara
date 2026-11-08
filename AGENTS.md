@@ -216,3 +216,10 @@ Keputusan desain yang diasumsikan (belum dikonfirmasi pemilik): event sejarah bo
 
 ## 12. Deploy (GitHub Pages)
 `index.html` di root adalah situs. Aktifkan Settings -> Pages -> Deploy from branch `main` / folder `/ (root)`. Update = `node tools/make.mjs`, commit, push.
+
+## Pembaruan sesi: event dan deklarasi perang
+- Misi sudah tersedia (12 Majapahit / 6 generik). Event berjumlah 39: 8 sejarah sekali, 7 generik awal, 24 tambahan. Rincian skenario dan batas ada di docs/RISET.md.
+- `WAR_DRAFT`, `openDeclaration`, `declarationHTML`: persiapan terpisah dari konfirmasi. `w.goal` adalah sasaran tunggal ticking score; `w.goals` tetap daftar tuntutan berklaim untuk biaya perdamaian.
+- `interceptArmies` menangkap pasukan lawan di ruas berlawanan. `resolveBattles` juga berjalan sebelum gerak harian.
+- Fabrikasi klaim sekarang langsung memakai jaringan, tanpa mana DIP; antrean save lama tetap ditangani `war2Month`.
+- Tes HTTP Chromium tambahan: `tests/t23_missions.py`, `tests/t24_history.py`, `tests/t25_war_events.py`. Jalankan dari root repo.

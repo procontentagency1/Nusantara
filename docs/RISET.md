@@ -388,3 +388,19 @@ Penelusuran mengonfirmasi peralihan ke pohon misi. Akses langsung ke halaman Mis
 Penerapan: tiga cabang paralel, misi prasyarat wajib sudah diambil, syarat diperiksa ulang saat klaim hadiah, sekali per kampanye, hadiah mana/klaim/modifier 25 tahun. Ada 12 misi Majapahit dan enam generik. Sasaran memakai provinsi asal sehingga tidak berubah saat pemilik berganti; vasal memenuhi misi wilayah tetapi pendudukan musuh tidak. Syarat kas/stabilitas tidak dikonsumsi. Save lama memakai ID kas/bangun/stabil yang sama.
 
 Batas: klaim dalam mesin sekarang belum membedakan klaim biasa dan permanen maupun biaya coring EU4; hadiah memakai sistem klaim yang tersedia. Belum ada angkatan laut, perdagangan ber-node, atau hubungan tributari terpisah; misi tidak mensyaratkan sistem yang belum ada. Tombol sasaran memusatkan peta dan menyorot satu provinsi yang belum dipenuhi. Tampilan cabang memakai tab agar muat di HP.
+
+## Penerapan event sejarah Tahap F
+Paket awal menggunakan kronologi dan catatan ketidakpastian pada bagian sejarah dokumen ini. Bubat diperlakukan sebagai kisah yang mengilhami pilihan diplomatik; tahun 1355–1360 adalah jendela skenario, bukan tanggal kejadian baru. Pergantian generasi, Paregreg, dan kunjungan Ming dapat terpicu hanya pada jendela tahun serta kondisi yang sesuai. Pilihan alternatif adalah fiksi sejarah untuk kampanye pemain.
+
+Mesin mengikuti pola trigger, event sekali, pilihan berakibat, modifier berdurasi, dan rantai tertunda. Efek hanya memakai sistem yang telah ada. MTTH tetap menggunakan peluang bulanan 1−0,5^(1/bulan), sehingga parameter ini adalah waktu median; bukan jaminan event muncul pada tanggal tertentu. Riset daring tambahan untuk kronologi tidak memberikan sumber baru yang dapat diverifikasi pada sesi ini; paket tidak mengklaim menambah temuan sejarah baru. Rujukan pola EU4 tetap catatan developer pada bagian sebelumnya.
+
+## Riset perang dan event lanjutan
+Sumber primer: manual resmi Europa Universalis IV, bagian Warfare, Casus Belli dan War Goal:
+https://forumcontent.paradoxplaza.com/public/79250/EuropaUniversalisIV_Manual.pdf
+Hasil penelusuran menampilkan penjelasan bahwa panel deklarasi memisahkan CB dan tujuan perang serta bahwa tujuan memberi ticking warscore. Dokumen penuh terlalu besar untuk dibaca lewat pembuka web pada sesi ini. Halaman wiki tetap terbatas aksesnya. Klaim kesetaraan angka di seluruh sistem tidak dibuat.
+
+Penerapan: layar persiapan, konfirmasi, pilihan provinsi klaim/inti, daftar pihak lawan dan pilihan sekutu. Penaklukan memakai satu sasaran untuk ticking score ±0,4/bulan sampai ±25, terpisah dari daftar klaim untuk biaya perdamaian. Perang tanpa alasan mengurangi stabilitas 2 dan prestise 10 serta menambah AE 6; angka AE adalah rancangan lokal. AI masih memakai sistem alasan perang sederhana.
+
+Fabrikasi sekarang langsung menambahkan klaim dengan jaringan 20 + 5 per klaim di negara target, tanpa biaya DIP. Ini menggantikan pengerjaan lokal 8–30 bulan; antrean save lama tetap dapat selesai. Label menunjukkan biaya jaringan. Klaim save dinormalisasi ke ID angka. Pasukan bermusuhan berhadapan di jalur yang sama ditangkap pada hari pertemuan; pertempuran ditambatkan ke provinsi tujuan penyerang, sesuai mesin berbasis provinsi.
+
+Tambahan 24 event memakai konteks kehidupan agraris, perkumpulan pengrajin, jaringan bandar, budaya naskah, dewan mandala, dan pembiayaan pasukan sebagai bahan fiksi. Bukan klaim bahwa kejadian spesifik tersebut tercatat pada tahun tertentu. Tiga skenario alternatif bergantung pada pilihan Bubat, warisan Gajah Mada, dan penyelesaian Paregreg dari paket sejarah. Efek memakai ekonomi, mana, inflasi, legitimasi, toleransi, diplomat dan modifier yang benar-benar dibaca mesin game. Belum ada simulasi kapal/perdagangan node/pemberontak baru.
