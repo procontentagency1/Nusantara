@@ -3478,7 +3478,7 @@ function tradeHTML() {
  const snap=tradeSnapshot(),free=2-G.trade.merchants.length;
  let h=hd('Perdagangan',`Pedagang bebas ${free}/2 · +${snap.income.toFixed(2)} dukat/bln`)+row('Pelabuhan utama',TRADE_BY_ID[G.trade.home].n);
  h+='<p class="note">Ibu kota mengumpulkan otomatis. Pedagang tiba dalam 30 hari; memberi +2 kekuatan. Kumpulkan di luar pelabuhan utama: kekuatan −50%. Arahkan: tambah 5% nilai di rute terpilih.</p>';
- for(const n of TRADE_NODES) {
+ for(const n of [...TRADE_NODES].sort((a,b)=>Number(b.id===G.trade.home)-Number(a.id===G.trade.home))) {
    const r=snap.nodes[n.id],m=G.trade.merchants.find(m=>m.node===n.id),reach=tradeReach(n.id);
    h+='<div class="sec">'+n.n+(n.id===G.trade.home?' · Utama':'')+'</div>'+row('Nilai lokal / masuk',r.local.toFixed(2)+' / '+r.incoming.toFixed(2))+row('Pangsa kekuatan',(r.share*100).toFixed(1)+'%')+row('Pendapatan kerajaan',r.player.toFixed(2))+'<p class="note">Aliran: '+(n.out.map(to=>TRADE_BY_ID[to].n).join(' / ')||'Node akhir')+(m?'<br>Pedagang: '+(m.left?'tiba '+m.left+' hari':m.mode==='collect'?'Mengumpulkan':'Mengarahkan ke '+TRADE_BY_ID[m.to].n):'')+'</p>';
    h+='<div class="r">'+btn('Kumpulkan','merchant',{node:n.id,mode:'collect'},reach&&(!!m||free>0));
