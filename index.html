@@ -25,6 +25,7 @@ canvas#map{position:absolute;left:0;top:0;display:block;touch-action:none;cursor
 #crest svg{width:40px;height:40px}
 .res{display:flex;align-items:center;gap:4px;height:26px;padding:0 6px 0 3px;background:linear-gradient(#2c1f10,#150f08);border:1px solid var(--gd);border-radius:13px;font:600 11px system-ui,sans-serif;white-space:nowrap}
 .res i{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font:700 10px Georgia,serif;color:#241607;border:1px solid #000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
+.res i{flex:none}.res i svg{width:14px;height:14px;display:block}.res{color:var(--paper);cursor:pointer}.res:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .res em{font-style:normal;opacity:.55;font-weight:500;font-size:10px}
 .sp{flex:1}
 #time{display:flex;align-items:center;gap:6px;height:30px;padding:0 5px 0 9px;background:linear-gradient(#2c1f10,#150f08);border:1px solid var(--gd);border-radius:6px}
@@ -1176,8 +1177,19 @@ function saveGame(silent) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(
 function loadSave() { try { const j = localStorage.getItem(SAVE_KEY); const g = j ? JSON.parse(j) : null; return g && g.v === 2 ? g : null; } catch (e) { return null; } }
 
 /* ---------- top bar ---------- */
-const CHIPS = [['D','#e2b84f','Dukat'],['T','#9ccb6b','Tenaga'],['A','#d9d3b8','Daya Administrasi'],['P','#7fb2e0','Daya Diplomasi'],['M','#e08a7a','Daya Militer'],['S','#8fc6e8','Stabilitas'],['★','#d98b5f','Prestise'],['L','#c79be0','Legitimasi']];
-$('resbar').innerHTML = CHIPS.map((c, i) => `<div class="res${i > 5 ? ' opt' : ''}" title="${c[2]}"><i style="background:${c[1]}">${c[0]}</i><b id="rv${i}"></b><em id="rn${i}"></em></div>`).join('');
+const RESOURCE_ICONS = {
+  coins:'<ellipse cx="9" cy="6" rx="6" ry="3"/><path d="M3 6v5c0 4 12 4 12 0V6M3 10c0 4 12 4 12 0"/><path d="M16 10c3 0 5 1 5 3v5c0 4-12 4-12 0v-3M15 16c2 .3 6-.4 6-3"/>',
+  people:'<circle cx="9" cy="7" r="3"/><path d="M3 21v-5a6 6 0 0 1 12 0v5M16 4a3 3 0 0 1 0 6M18 13c3 0 4 2 4 4v4"/>',
+  scroll:'<path d="M6 3h12v16a2 2 0 0 1-4 0V6H6a2 2 0 1 1 2-2M6 6v14a2 2 0 0 0 2 2h8M10 9h5M10 13h5"/>',
+  diplomacy:'<path d="M2 6h20v14H2zM2 7l10 8L22 7"/><path d="M7 3h10"/>',
+  swords:'<path d="M4 2l9 9-2 2-9-9V2zM20 2l-9 9 2 2 9-9V2zM3 15l6 6M15 15l6 6M6 18l-4 4M18 18l4 4"/>',
+  scales:'<path d="M12 2v19M6 22h12M3 7h18M5 7l-4 8h8L5 7zM19 7l-4 8h8l-4-8z"/>',
+  star:'<path d="M12 2l3 6 7 1-5 5 1 8-6-4-6 4 1-8-5-5 7-1z"/>',
+  crown:'<path d="M3 6l4 4 5-7 5 7 4-4-2 13H5L3 6zM5 22h14"/>',
+};
+const CHIPS = [['coins','#e2b84f','Dukat'],['people','#9ccb6b','Tenaga manusia'],['scroll','#d9d3b8','Daya Administrasi'],['diplomacy','#7fb2e0','Daya Diplomasi'],['swords','#e08a7a','Daya Militer'],['scales','#8fc6e8','Stabilitas'],['star','#d98b5f','Prestise'],['crown','#c79be0','Legitimasi']];
+$('resbar').innerHTML = CHIPS.map((c, i) => `<button type="button" class="res${i > 5 ? ' opt' : ''}" title="${c[2]}" aria-label="${c[2]}"><i style="background:${c[1]}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${RESOURCE_ICONS[c[0]]}</svg></i><b id="rv${i}"></b><em id="rn${i}"></em></button>`).join('');
+$('resbar').addEventListener('click', e => { const chip=e.target.closest('.res'); if (chip) toast(chip.title); });
 const SPD_NAME = ['Lambat', 'Normal', 'Cepat', 'Sangat cepat', 'Maks'];
 $('pips').innerHTML = [1,2,3,4,5].map(i => `<button class="pip" data-act="spd" data-s="${i}">×${i} · ${SPD_NAME[i-1]}</button>`).join('');
 $('spdBtn').onclick = e => { e.stopPropagation(); $('pips').classList.toggle('open'); };
