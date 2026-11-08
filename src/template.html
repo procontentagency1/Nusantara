@@ -1207,10 +1207,12 @@ function renderWin() {
       + `<div class="sec">Stabilitas & Legitimasi</div>` + row('Stabilitas', (G.stab > 0 ? '+' : '') + G.stab + ' / +3') + row('Prestise', G.prestige + ' / 100') + row('Legitimasi', G.legit + '%')
       + `<div class="r"><span>Naikkan stabilitas</span>${btn('+1 · ' + stabCost() + ' ADM', 'stab', {}, G.stab < 3 && G.mana[0] >= stabCost())}</div>`
       + `<div class="r"><span>Agama ${RELS[G.rs].n} · kesatuan ${unity()}%</span>${btn('Agama ›', 'win', { w:'rel' })}</div>`
+      + `<div class="r"><span>Misi kerajaan</span>${btn('Misi ›', 'win', { w:'missions' })}</div>`
       + `<p class="note">Stabilitas memberi ±3% pajak & produksi per poin. Efek penuh (pemberontak, event) menyusul.${n.ruler.real ? '' : '<br>Nama & kemampuan penguasa negara ini masih contoh.'}</p>`;
   } else if (winMode === 'econ') {
     h = econHTML(e);
   } else if (winMode === 'rel') { h = relHTML(e);
+  } else if (winMode === 'missions') { h = missionsHTML();
   } else if (winMode === 'ide') { h = ideHTML();
   } else if (winMode === 'tech') {
     h = techHTML(); if (0) {
@@ -1265,6 +1267,7 @@ const act = {
   infl: () => reduceInfl(),
   miss: b => sendMiss(+b.dataset.id), unmiss: b => { G.miss = G.miss.filter(m => m.pid !== +b.dataset.id); },
   chrel: b => chRel(b.dataset.k), emb: b => embrace(b.dataset.k), idea: () => buyIdea(),
+  mission: b => completeMission(b.dataset.id),
   save: () => saveGame(false),
   quit: () => { winMode = null; paused = true; showStart(); },
   spd: b => { if (b.dataset.s) { speed = +b.dataset.s; paused = false; $('pips').classList.remove('open'); } else speed = Math.max(1, Math.min(5, speed + +b.dataset.d)); },
@@ -2663,7 +2666,7 @@ const loanSize = dev => Math.max(20, Math.floor(dev*.5));
 const loanRate = () => Math.max(1, 4 + Math.max(0, -G.stab) + (G.bank > 0 ? 5 : 0) + modSum('int'));
 function syncLoans() { G.loans = G.ln.reduce((a, l) => a + l.a, 0); }
 function fixSave() {
-  G.flags ||= {}; G.mod ||= []; G.fired ||= []; G.evq ||= []; G.infl ||= 0; G.bank ||= 0;
+  G.missions ||= []; G.flags ||= {}; G.mod ||= []; G.fired ||= []; G.evq ||= []; G.infl ||= 0; G.bank ||= 0;
   G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel();
 }
 function takeLoan(auto) {
@@ -2944,6 +2947,28 @@ function ideHTML() {
     h += `<div class="r"><span>${ideaName(n)}<br><small style="opacity:.6">${I.d}</small></span>${right}</div>`;
   }
   return h + `<div class="r"><span>Ambisi<br><small style="opacity:.6">+1 ADM/DIP/MIL per bulan</small></span><b>${G.ideas.length === 7 ? '✓' : '—'}</b></div><p class="note">Tiap ide: biaya teknologi −2%. Slot baru tiap 3 tingkat teknologi (total). Ide dibuka berurutan.</p>`;
+}
+
+/* ---------- Tahap E: misi kerajaan (awal) ---------- */
+const MISSIONS = [
+  { id:'kas', name:'Kuatkan Kas', maj:'Perkuat Kas Majapahit', condition:'Miliki 100 dukat', reward:'+25 ADM', ready:() => G.treasury >= 100, grant:() => { G.mana[0] += 25; } },
+  { id:'bangun', name:'Bangun Negeri', maj:'Bangun Candi Agung', prev:'kas', condition:'Selesaikan satu kuil', reward:'+5% pajak selama 25 tahun', ready:() => Object.values(G.pv).some(q => q.bld.includes('kuil')), grant:() => addMod('mission_kuil', 'Pembangunan kerajaan', 300, { tax:.05 }) },
+  { id:'stabil', name:'Kerajaan Makmur', maj:'Wibawa Majapahit', prev:'bangun', condition:'Stabilitas minimal +2', reward:'+10 prestise', ready:() => G.stab >= 2, grant:() => { G.prestige = Math.min(100, G.prestige + 10); } },
+];
+function completeMission(id) {
+  const m = MISSIONS.find(x => x.id === id);
+  if (!m || G.missions.includes(id) || (m.prev && !G.missions.includes(m.prev)) || !m.ready()) return;
+  G.missions.push(id); m.grant(); saveGame(true); toast(`Misi selesai: ${G.nat === 'Majapahit' ? m.maj : m.name}.`);
+}
+function missionsHTML() {
+  let h = hd('Misi Kerajaan', 'Cabang pembangunan');
+  for (const m of MISSIONS) {
+    const done = G.missions.includes(m.id), locked = m.prev && !G.missions.includes(m.prev);
+    const status = done ? '<b class="pos">✓ Selesai</b>' : locked ? '<b>Terkunci</b>' : btn('Ambil', 'mission', { id:m.id }, m.ready());
+    h += `<div class="sec">${G.nat === 'Majapahit' ? m.maj : m.name}</div><div class="r"><span>${m.condition}<br><small style="opacity:.75">Hadiah: ${m.reward}</small></span>${status}</div>`;
+    if (m !== MISSIONS[MISSIONS.length - 1]) h += '<div style="text-align:center;opacity:.6">↓</div>';
+  }
+  return h + '<p class="note">Selesaikan misi sebelumnya untuk membuka misi berikutnya. Misi lain akan menyusul.</p>';
 }
 
 /* ---------- start screen ---------- */
