@@ -1,5 +1,7 @@
 # Rencana pembangunan Tahap A–H
 
+> **Status 2026-11-09:** Tahap A–D SUDAH selesai (angka final yang diimplementasikan ada di `AGENTS.md` bagian 6; beberapa berbeda dari rencana awal di bawah, mis. inflasi per pinjaman +0,5, institusi = Pelayaran/Mesiu/Pasar, biaya embrace 0,8/dev). Tahap E–H BELUM dikerjakan: itulah pekerjaan berikutnya.
+
 Prinsip: bangun bertahap, tiap tahap bisa dimainkan dan dites sendiri, UI kecil dan rapi, tiru EU4 bila ragu. Urutan dipilih supaya tahap awal jadi fondasi tahap berikutnya.
 
 ### Tahap A — Mesin event dan misi (fondasi)
