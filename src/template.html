@@ -284,7 +284,7 @@ button,.btn{touch-action:manipulation}
 
 
 /* v21 event */
-.mbox .mo.col{flex-direction:column;align-items:stretch}.mbox .mo.col button{text-align:left;width:100%;line-height:1.25}.mbox .mo.col small{display:block;opacity:.7;font-weight:400;font-size:10.5px;margin-top:2px}
+.mbox .mo.col{flex-direction:column;align-items:stretch}.mbox .mo.col button{display:block;text-align:left;width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.25}.mbox .mo.col small{display:block;opacity:.7;font-weight:400;font-size:10.5px;margin-top:2px}
 .mbox .src{font:10px system-ui,sans-serif;opacity:.55;text-align:center;margin:-4px 0 6px}
 /* v20 kontrol waktu HP */
 #desel{left:50%;bottom:14px;transform:translateX(-50%);z-index:9;height:40px;padding:0 20px;font-size:14px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,.6)}
@@ -2757,6 +2757,7 @@ const EF = {
 const grossInc = () => { const e = econ(); return Math.max(5, e.tax + e.prod); };
 function fireEvent(id) {
   const d = EVT[id]; if (!d || !G) return false;
+  if (d.historical && d.cond && !d.cond()) return false;
   if (d.once !== false && G.fired.includes(id)) return false;
   if (d.once !== false) G.fired.push(id);
   const x = typeof d.x === 'function' ? d.x() : d.x;
@@ -2789,6 +2790,52 @@ defEvent({ id:'saudagar_asing', t:'Saudagar dari Seberang', once:false, mtth:110
 defEvent({ id:'keluhan_bupati', t:'Keluhan Para Bupati', once:false, mtth:130, x:'Para bupati mengeluh pajak terlalu berat dan meminta keringanan di hadapan istana.',
   o:[{ l:'Beri keringanan', tip:'Stabilitas +1, pajak −5% selama 12 bulan', fx:() => { EF.stab(1); EF.mod('ringan', 'Keringanan pajak', 12, { tax:-.05 }); } },
      { l:'Tegakkan pajak', tip:'+2 bulan pendapatan, stabilitas −1', fx:() => { EF.gold(Math.round(grossInc()*2)); EF.stab(-1); } }] });
+
+/* ---------- Tahap F: sejarah dinamis ---------- */
+// Rentang tahun adalah jendela skenario, bukan pemaksaan hasil sejarah.
+const historyMaj = () => G.nat === 'Majapahit';
+const historyYear = (a,b) => G.y >= a && G.y <= b;
+const historyExists = n => (OWNED[n] || []).length > 0;
+const historyCoast = () => Object.keys(G.pv).some(id => PROV[id].t === 'coast');
+defEvent({ id:'sej_bubat', historical:true, mtth:6, t:'Rombongan dari Sunda',
+ cond:() => historyMaj() && historyYear(1355,1360) && historyExists('Sunda') && !atWar(G.nat,'Sunda') && G.subj.Sunda !== G.nat,
+ x:'Rencana pernikahan kerajaan membawa rombongan Sunda ke Jawa. Dalam kisah Bubat (1357), perbedaan tuntutan berakhir tragis. Di istanamu, keputusan masih terbuka.',
+ o:[{l:'Hormati Sunda sebagai kerajaan setara',tip:'Hubungan Sunda +40, prestise +5; tuntutan tunduk ditinggalkan',fx:()=>{relAdd(G.nat,'Sunda',40);EF.prestige(5);EF.flag('bubat_damai',-1);}},
+ {l:'Tuntut pengakuan kekuasaan Majapahit',tip:'Hubungan Sunda −60, stabilitas −1, +25 MIL; sengketa istana menyusul',fx:()=>{relAdd(G.nat,'Sunda',-60);EF.stab(-1);EF.mana(2,25);EF.flag('bubat_sengketa',-1);EF.fireIn('sej_dewan',1);}}] });
+defEvent({ id:'sej_dewan', historical:true, t:'Dewan Meminta Pertanggungjawaban', cond:()=>historyMaj() && hasFlag('bubat_sengketa'),
+ x:'Ketegangan dengan Sunda membelah para pembesar. Dewan menuntut perubahan cara kerajaan menjalankan ambisinya.',
+ o:[{l:'Batasi kuasa panglima',tip:'+1 stabilitas, biaya pasukan +10% selama 24 bulan',fx:()=>{EF.stab(1);EF.mod('dewan','Pengawasan dewan',24,{army:.1});}},
+ {l:'Pertahankan kebijakan keras',tip:'−10 legitimasi, +5% tenaga maksimal selama 24 bulan',fx:()=>{EF.legit(-10);EF.mod('dewan','Dukungan panglima',24,{mpmax:.05});}}] });
+defEvent({ id:'sej_mada', historical:true, mtth:6, t:'Warisan Gajah Mada', cond:()=>historyMaj() && historyYear(1364,1368),
+ x:'Wafatnya Gajah Mada pada 1364 meninggalkan pertanyaan tentang pembagian wewenang mahapatih. Para pembesar menawarkan dua arah untuk meneruskan pekerjaannya.',
+ o:[{l:'Bagi tugas kepada dewan',tip:'+25 ADM, −5 prestise',fx:()=>{EF.mana(0,25);EF.prestige(-5);}},
+ {l:'Tegaskan kembali cita-cita penyatuan',tip:'+25 MIL, biaya pasukan +5% selama 36 bulan',fx:()=>{EF.mana(2,25);EF.mod('warisan_mada','Cita-cita penyatuan',36,{army:.05});}}] });
+defEvent({ id:'sej_prapanca', historical:true, mtth:6, t:'Naskah Nagarakretagama', cond:()=>historyMaj() && historyYear(1365,1370) && G.tech[0] >= 4,
+ x:'Pada 1365, Prapanca menyusun kakawin tentang perjalanan raja, pusat suci, dan dunia politik Majapahit. Istana dapat mendukung karya serupa untuk merawat ingatan kerajaan.',
+ o:[{l:'Danai pujangga dan penyalinan naskah',tip:'−2 bulan pendapatan, +15 prestise, +25 ADM',fx:()=>{EF.gold(-Math.round(grossInc()*2));EF.prestige(15);EF.mana(0,25);}},
+ {l:'Utamakan pencatatan administrasi',tip:'+25 ADM',fx:()=>EF.mana(0,25)}] });
+defEvent({ id:'sej_palembang', historical:true, mtth:6, t:'Tuntutan Palembang', cond:()=>historyMaj() && historyYear(1375,1382) && G.subj.Palembang === G.nat && historyExists('Palembang'),
+ x:'Hubungan dengan Palembang menegang. Terinspirasi pergolakan sekitar 1377, para pembesar setempat meminta ruang lebih besar untuk mengatur perdagangan.',
+ o:[{l:'Berikan kelonggaran',tip:'Hubungan +30; pajak −5% selama 36 bulan',fx:()=>{relAdd(G.nat,'Palembang',30);EF.mod('palembang','Kelonggaran mandala',36,{tax:-.05});}},
+ {l:'Tegakkan kendali pusat',tip:'Hubungan −40; +1 bulan pendapatan, legitimasi −5',fx:()=>{relAdd(G.nat,'Palembang',-40);EF.gold(Math.round(grossInc()));EF.legit(-5);}}] });
+defEvent({ id:'sej_suksesi', historical:true, mtth:6, t:'Pergantian Generasi Istana', cond:()=>historyMaj() && historyYear(1389,1395),
+ x:'Wafatnya Hayam Wuruk pada 1389 menjadi penanda pergantian generasi. Para pembesar memperdebatkan pembagian kekuasaan dan landasan legitimasi istana.',
+ o:[{l:'Rangkul para cabang keluarga',tip:'Legitimasi +10, pajak −5% selama 60 bulan',fx:()=>{EF.legit(10);EF.mod('suksesi','Kompromi keluarga',60,{tax:-.05});}},
+ {l:'Pusatkan wewenang istana',tip:'Legitimasi −10, +50 ADM; risiko sengketa dicatat',fx:()=>{EF.legit(-10);EF.mana(0,50);EF.flag('suksesi_tegang',-1);}}] });
+defEvent({ id:'sej_paregreg', historical:true, mtth:6, t:'Perselisihan Dua Istana', cond:()=>historyMaj() && historyYear(1404,1410) && (G.legit < 70 || G.stab < 1 || hasFlag('suksesi_tegang')),
+ x:'Perang Paregreg sekitar 1404–1406 mengilhami perselisihan dua pusat kekuasaan ini. Ketegangan dalam kerajaanmu membuka peluang perdamaian atau perebutan wewenang.',
+ o:[{l:'Damaikan para pembesar',tip:'−4 bulan pendapatan, +1 stabilitas, legitimasi +5',fx:()=>{EF.gold(-Math.round(grossInc()*4));EF.stab(1);EF.legit(5);}},
+ {l:'Paksa mereka mengakui istana',tip:'−1 stabilitas, pajak −10% dan biaya pasukan +15% selama 36 bulan',fx:()=>{EF.stab(-1);EF.mod('paregreg','Perselisihan istana',36,{tax:-.1,army:.15});}}] });
+defEvent({ id:'sej_zheng', historical:true, mtth:18, t:'Utusan Armada Ming', cond:()=>historyMaj() && historyYear(1405,1433) && historyCoast(),
+ x:'Pelayaran Zheng He menghubungkan pelabuhan Jawa dengan jaringan diplomasi samudra pada awal abad ke-15. Utusan menawarkan pertukaran hadiah dan kabar pelayaran.',
+ o:[{l:'Sambut dan tukarkan hadiah',tip:'−1 bulan pendapatan, +25 DIP, produksi +5% selama 60 bulan',fx:()=>{EF.gold(-Math.round(grossInc()));EF.mana(1,25);EF.mod('ming','Pertukaran samudra',60,{prod:.05});}},
+ {l:'Batasi kunjungan pada urusan dagang',tip:'+1 bulan pendapatan',fx:()=>EF.gold(Math.round(grossInc()))}] });
+defEvent({ id:'musyawarah_desa', once:false, mtth:100, t:'Musyawarah Desa', cond:()=>G.stab < 3,
+ x:'Para tetua mengusulkan perbaikan lumbung dan pembagian air. Mereka memohon dukungan kerajaan.',
+ o:[{l:'Biayai perbaikan',tip:'−2 bulan pendapatan, stabilitas +1',fx:()=>{EF.gold(-Math.round(grossInc()*2));EF.stab(1);}}, {l:'Serahkan kepada masyarakat',tip:'+10 ADM, prestise −5',fx:()=>{EF.mana(0,10);EF.prestige(-5);}}] });
+defEvent({ id:'prajurit_pulang', once:false, mtth:120, t:'Prajurit Ingin Pulang', cond:()=>warsOf(G.nat).length > 0,
+ x:'Kampanye panjang membuat para prajurit merindukan desa. Panglima meminta bekal tambahan untuk menjaga kesetiaan mereka.',
+ o:[{l:'Tambah bekal',tip:'−1 bulan pendapatan, +10 MIL',fx:()=>{EF.gold(-Math.round(grossInc()));EF.mana(2,10);}}, {l:'Tuntut pengabdian',tip:'Stabilitas −1',fx:()=>EF.stab(-1)}] });
 
 /* ---------- Tahap C: agama ---------- */
 const RELS = {

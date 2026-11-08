@@ -79,3 +79,8 @@ A → B → C → D → E → F → G → H. Tiap tahap kira-kira satu sesi kerj
 
 ### Pembaruan implementasi Tahap E
 Pohon awal sekarang berisi 12 misi Majapahit (Ekspansi, Diplomasi, Istana) dan enam generik. Prasyarat, klaim hadiah sekali, sasaran wilayah, vasal, serta kompatibilitas save sudah diuji. Berikutnya Tahap F (event sejarah), lalu G (dagang). Penyempurnaan E: sorot seluruh wilayah, lebih banyak misi khusus negara, dan penyeimbangan melalui permainan panjang.
+
+### Tahap F: paket awal event sejarah
+Delapan event sekali per kampanye: rombongan Sunda/Bubat, dewan setelah sengketa, warisan Gajah Mada, Nagarakretagama, tuntutan Palembang, suksesi istana, Paregreg, utusan Ming. Dua event generik berulang: musyawarah desa dan prajurit ingin pulang. Pemicu sejarah memeriksa negara, rentang tahun, dan kondisi aktual. Tes: tests/t24_history.py (16 pilihan, kondisi, rantai, save). Berikutnya Tahap G: perdagangan.
+
+Batas implementasi: Paregreg memberi dampak ekonomi/stabilitas dan belum memunculkan pasukan pemberontak; suksesi belum mengganti penguasa karena belum ada sistem dinasti. Event Palembang belum menciptakan negara Malaka baru. Angka efek adalah rancangan game untuk diuji keseimbangannya.
