@@ -229,3 +229,9 @@ Keputusan desain yang diasumsikan (belum dikonfirmasi pemilik): event sejarah bo
 
 ## Pembaruan perdagangan
 `G.trade={home,merchants[]}`; merchant menyimpan node/mode/to/left. `fixTrade` migrasi, `tradeDay` perjalanan, `tradeSnapshot` menghitung seluruh jaringan secara murni tanpa menulis kas. `subjectBudget` menggabungkan e.trade ke e.net; jangan menambah kas dari panel UI. Graph TRADE_NODES harus urutan topologis, rute tanpa siklus. Properti `raw` adalah kekuatan provinsi sebelum merchant/penalti. `trade` pada modifier adalah tambahan efisiensi, bukan nilai lokal produksi. Gunakan tests/t27_trade.py saat mengubah ekonomi/rute/perjalanan. Sistem ini belum punya kapal dagang/blokade.
+
+## Pemulihan pasukan AI
+`repairBattleLocks` berjalan sebelum gerak harian dan setelah damai. `aiReturnHome` memilih wilayah sendiri dan merencanakan rute, termasuk `distMap(...,true)` khusus pulang tanpa akses. `a.exiled` mencegah pertempuran, kepungan dan atrisi selama pulang; dihapus saat masuk wilayah sendiri. Jangan memberi akses militer global dari flag ini. `a.returning` mencegah pembatalan rute oleh logika vasal tak setia. Penggabungan/rekrut bulanan harus mengecualikan `a.bt`. Pengujian: tests/t28_ai_recovery.py.
+
+## Skala pasukan dan bangunan regional
+Gunakan armyVisualScale untuk pasukan peta dan pertempuran; ARM_HIT/BT_HIT harus mengikuti transformasi yang sama. outlinedUnit memakai WeakMap dari sprite asli ke sprite ber-outline. CITY_STYLE_GROUPS/cityStyle hanya untuk arsitektur; jangan mengganti REGIONAL_STYLE karena dipakai busana dan klasifikasi perdagangan. tests/t29_visual_scale.py mengukur lebar gambar aktual dan hitbox pada enam zoom serta memastikan seluruh negara mendapat gaya eksplisit.
