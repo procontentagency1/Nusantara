@@ -1272,7 +1272,7 @@ function provHTML(p, e) {
 /* ---------- actions ---------- */
 const act = {
   win: b => { if (winMode === b.dataset.w) { winMode = null; } else winMode = b.dataset.w; selId = null; renderWin(); request(); },
-  back: () => { const parent = { rel:'nation', ide:'tech', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
+  back: () => { const parent = { rel:'nation', ide:'tech', missions:'nation', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
   close: () => { winMode = null; selId = null; renderWin(); request(); },
   dev: b => { const q = G.pv[b.dataset.id], i = +b.dataset.i, k = ['t','p','m'][i], c = devCost(q[k]); if (G.mana[i] < c) return; G.mana[i] -= c; q[k]++; toast(`${DEV_NAME[i]} ${PROV[b.dataset.id].n} naik ke ${q[k]}.`); },
   build: b => { const q = G.pv[b.dataset.id], B = BUILD[b.dataset.k]; if (G.treasury < bCost(B) || q.bld.length + q.cons.length >= slotsOf(q)) return; G.treasury -= bCost(B); q.cons.push({ type:b.dataset.k, left:B.months }); toast(`Membangun ${B.n} di ${PROV[b.dataset.id].n} (${B.months} bln).`); },
@@ -2975,20 +2975,46 @@ const MISSIONS = [
   { id:'bangun', name:'Bangun Negeri', maj:'Bangun Candi Agung', prev:'kas', condition:'Selesaikan satu kuil', reward:'+5% pajak selama 25 tahun', ready:() => Object.values(G.pv).some(q => q.bld.includes('kuil')), grant:() => addMod('mission_kuil', 'Pembangunan kerajaan', 300, { tax:.05 }) },
   { id:'stabil', name:'Kerajaan Makmur', maj:'Wibawa Majapahit', prev:'bangun', condition:'Stabilitas minimal +2', reward:'+10 prestise', ready:() => G.stab >= 2, grant:() => { G.prestige = Math.min(100, G.prestige + 10); } },
 ];
+// Misi memakai syarat saat ini, prasyarat yang sudah diklaim, dan hadiah sekali.
+const missionTargets = names => provs.filter(p => p.k === 'L' && names.includes(p.nat));
+const missionHeld = p => (OWNR[p.id] === G.nat || G.subj[OWNR[p.id]] === G.nat) && (!CTRL[p.id] || CTRL[p.id] === OWNR[p.id] || CTRL[p.id] === G.nat);
+const missionClaims = names => { for (const p of missionTargets(names)) if (OWNR[p.id] !== G.nat && !G.claims.includes(p.id)) G.claims.push(p.id); };
+MISSIONS.forEach(m => { m.branch = 'Istana'; });
+MISSIONS.push(
+  { id:'prajurit', branch:'Ekspansi', name:'Siapkan Pasukan', condition:'Pasukan mencapai 90% batas resimen', reward:'+25 MIL', ready:() => G.regs >= Math.ceil(econ().fl*.9), grant:() => { G.mana[2] += 25; } },
+  { id:'perbatasan', branch:'Ekspansi', prev:'prajurit', name:'Amankan Perbatasan', condition:'Pasukan siap dan stabilitas minimal +1', reward:'Klaim provinsi darat yang berbatasan', ready:() => G.regs >= Math.ceil(econ().fl*.9) && G.stab >= 1, grant:() => { for (const id of Object.keys(G.pv)) for (const l of LINK[id] || []) if (PROV[l.to].k === 'L' && OWNR[l.to] !== G.nat && !G.claims.includes(l.to)) G.claims.push(l.to); } },
+  { id:'utusan', branch:'Diplomasi', name:'Jalin Persahabatan', condition:'Miliki satu aliansi', reward:'+25 DIP', ready:() => G.al.some(k => k.split('|').includes(G.nat)), grant:() => { G.mana[1] += 25; } }
+);
+const MAJ_MISSIONS = [
+  { id:'palapa', branch:'Ekspansi', prev:'prajurit', name:'Sumpah Palapa', condition:'Stabilitas +1 dan prestise 20', reward:'Klaim atas Sunda dan Bali', targets:['Sunda','Bali'], ready:() => G.stab >= 1 && G.prestige >= 20, grant:() => missionClaims(['Sunda','Bali']) },
+  { id:'jawa', branch:'Ekspansi', prev:'palapa', name:'Satukan Jawa dan Bali', condition:'Miliki atau kuasai lewat vasal seluruh Sunda dan Bali; bebas pendudukan musuh', reward:'+50 MIL, klaim Lombok dan Sumbawa', targets:['Sunda','Bali'], ready:() => missionTargets(['Sunda','Bali']).every(missionHeld), grant:() => { G.mana[2] += 50; missionClaims(['Lombok','Sumbawa']); } },
+  { id:'nusa', branch:'Ekspansi', prev:'jawa', name:'Jalur Nusa Tenggara', condition:'Miliki atau kuasai lewat vasal seluruh Lombok dan Sumbawa', reward:'+10% produksi selama 25 tahun', targets:['Lombok','Sumbawa'], ready:() => missionTargets(['Lombok','Sumbawa']).every(missionHeld), grant:() => addMod('mission_nusa','Jalur Nusa Tenggara',300,{prod:.1}) },
+  { id:'mandala', branch:'Diplomasi', prev:'utusan', name:'Mandala Nusantara', condition:'Miliki minimal tiga kerajaan vasal', reward:'+1 diplomat selama 25 tahun', ready:() => Object.values(G.subj).filter(n=>n===G.nat).length >= 3, grant:() => addMod('mission_mandala','Mandala Nusantara',300,{dipl:1}) },
+  { id:'selat', branch:'Diplomasi', prev:'mandala', name:'Jalan ke Selat', condition:'Teknologi DIP minimal 4', reward:'Klaim atas Palembang dan Tumasik', targets:['Palembang','Tumasik'], ready:() => G.tech[1] >= 4, grant:() => missionClaims(['Palembang','Tumasik']) },
+  { id:'malaka', branch:'Diplomasi', prev:'selat', name:'Kuasai Gerbang Selat', condition:'Miliki atau kuasai lewat vasal Palembang dan Tumasik', reward:'+50 DIP dan +10 prestise', targets:['Palembang','Tumasik'], ready:() => missionTargets(['Palembang','Tumasik']).every(missionHeld), grant:() => { G.mana[1] += 50; G.prestige = Math.min(100,G.prestige+10); } },
+  { id:'dharma', branch:'Istana', prev:'stabil', name:'Pelindung Dharma', condition:'Kesatuan agama minimal 90% dan tidak bangkrut', reward:'+1 toleransi iman selama 25 tahun', ready:() => unity() >= 90 && !G.bank, grant:() => addMod('mission_dharma','Pelindung Dharma',300,{tolT:1}) },
+];
+function activeMissions() { return G.nat === 'Majapahit' ? [...MISSIONS.filter(m=>m.id!=='perbatasan'),...MAJ_MISSIONS] : MISSIONS; }
 function completeMission(id) {
-  const m = MISSIONS.find(x => x.id === id);
+  const m = activeMissions().find(x => x.id === id);
   if (!m || G.missions.includes(id) || (m.prev && !G.missions.includes(m.prev)) || !m.ready()) return;
-  G.missions.push(id); m.grant(); saveGame(true); toast(`Misi selesai: ${G.nat === 'Majapahit' ? m.maj : m.name}.`);
+  G.missions.push(id); m.grant(); saveGame(true); toast(`Misi selesai: ${G.nat === 'Majapahit' ? (m.maj || m.name) : m.name}.`);
 }
+let missionBranch = 'Istana';
+act.mbranch = b => { missionBranch = b.dataset.branch; };
+act.mtarget = b => { const m=activeMissions().find(m=>m.id===b.dataset.id); if (!m || !m.targets) return; const p=missionTargets(m.targets).find(p=>!missionHeld(p)) || missionTargets(m.targets)[0]; if (p) { selId=p.id; winProv=p.id; flyTo(p.lab[0],p.lab[1],Math.max(view.s,1.8),vw*.72,vh/2); } };
 function missionsHTML() {
-  let h = hd('Misi Kerajaan', 'Cabang pembangunan');
-  for (const m of MISSIONS) {
-    const done = G.missions.includes(m.id), locked = m.prev && !G.missions.includes(m.prev);
-    const status = done ? '<b class="pos">✓ Selesai</b>' : locked ? '<b>Terkunci</b>' : btn('Ambil', 'mission', { id:m.id }, m.ready());
-    h += `<div class="sec">${G.nat === 'Majapahit' ? m.maj : m.name}</div><div class="r"><span>${m.condition}<br><small style="opacity:.75">Hadiah: ${m.reward}</small></span>${status}</div>`;
-    if (m !== MISSIONS[MISSIONS.length - 1]) h += '<div style="text-align:center;opacity:.6">↓</div>';
+  const all=activeMissions(), list=all.filter(m=>m.branch===missionBranch);
+  let h = hd('Misi Kerajaan', `${G.missions.filter(id=>all.some(m=>m.id===id)).length}/${all.length} selesai`) + '<div style="display:flex;gap:3px;padding:5px">' + ['Ekspansi','Diplomasi','Istana'].map(branch=>btn(branch,'mbranch',{branch},branch!==missionBranch)).join('') + '</div>';
+  for (const m of list) {
+    const done = G.missions.includes(m.id), locked = m.prev && !G.missions.includes(m.prev), ready=m.ready();
+    const status = done ? '<b class="pos">✓ Selesai</b>' : locked ? '<b>Terkunci</b>' : btn('Ambil', 'mission', { id:m.id }, ready);
+    const parent=all.find(x=>x.id===m.prev);
+    h += `<div class="sec">${G.nat === 'Majapahit' ? (m.maj || m.name) : m.name}</div><div class="r"><span>${ready?'✓':'○'} ${m.condition}<br><small style="opacity:.75">Hadiah: ${m.reward}${locked && parent?'<br>Prasyarat: '+(parent.maj && G.nat==='Majapahit'?parent.maj:parent.name):''}</small></span>${status}</div>`;
+    if (m.targets) h += '<div style="padding:3px 10px">'+btn('Lihat sasaran','mtarget',{id:m.id})+'</div>';
+    if (m !== list[list.length-1]) h += '<div style="text-align:center;opacity:.6">↓</div>';
   }
-  return h + '<p class="note">Selesaikan misi sebelumnya untuk membuka misi berikutnya. Misi lain akan menyusul.</p>';
+  return h + '<p class="note">Hadiah diambil sekali saat semua syarat terpenuhi. Misi tidak membelanjakan sumber daya syarat. Tiap cabang dapat dikerjakan bersamaan.</p>';
 }
 
 /* ---------- start screen ---------- */
