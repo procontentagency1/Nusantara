@@ -90,3 +90,7 @@ Paket lanjutan menambahkan 24 event (total 39 definisi termasuk paket sejarah), 
 
 ### Pendalaman hubungan bawahan
 Vasal dan negara upeti kini terpisah: LD, pajak bulanan, upeti tahunan lima jenis, trust/penolakan, scutage, tawaran diplomatik, perlindungan, pelepasan, perang kemerdekaan dan integrasi bertahap. Panel Kerajaan → Bawahan membuka ringkasan; detail di diplomasi negara. Pengujian tambahan tests/t26_subjects.py; batas ekonomi AI dan penyesuaian angka dicatat di RISET.md.
+
+### Tahap G: jaringan perdagangan awal selesai
+Tujuh node, dua merchant dengan perjalanan 30 hari, pengumpulan otomatis di node utama, pengumpulan/steering manual, penalti luar node utama, pasar/pesisir/pusat kota sebagai kekuatan dagang, persaingan AI, pengaruh pendudukan, nilai rempah Maluku, dan pendapatan kas bulanan. Menu Ekonomi → Jaringan perdagangan. Pengujian tests/t27_trade.py: konservasi nilai, income, perhitungan murni, waktu perjalanan, slot merchant, penalti, steering, pasar, pendudukan, save/migrasi dan pembayaran kas.
+Berikutnya Tahap H: angkatan laut dan blokade, lalu pemberontak serta penyeimbangan kampanye.
