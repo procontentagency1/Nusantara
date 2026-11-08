@@ -376,3 +376,15 @@ A → B → C → D → E → F → G → H. Tiap tahap kira-kira satu sesi kerj
 - Misi paralel per cabang, bukan berurutan satu garis.
 - Hadiah kecil dan seimbang: klaim, modifier 25 tahun, sedikit mana.
 - Institusi hanya 3–4 buatan sendiri, bukan 8 seperti EU4.
+
+## Riset lanjutan: pohon misi EU4 dan penerapan Tahap E
+
+Sumber primer: catatan pengembang Paradox 30 Januari dan 13 Februari 2018 tentang sistem misi versi 1.25, diterbitkan ulang di Steam:
+- https://store.steampowered.com/news/posts/?appids=236850&enddate=1517932923
+- https://store.steampowered.com/news/posts/?appids=236850&enddate=1519912880
+
+Penelusuran mengonfirmasi peralihan ke pohon misi. Akses langsung ke halaman Missions, Generic missions, dan Majapahit missions di wiki Paradox mengembalikan 401 pada sesi riset ini; angka syarat dan hadiah di bawah adalah rancangan Nusantara, bukan kutipan angka EU4 atau salinan pohon DLC Majapahit.
+
+Penerapan: tiga cabang paralel, misi prasyarat wajib sudah diambil, syarat diperiksa ulang saat klaim hadiah, sekali per kampanye, hadiah mana/klaim/modifier 25 tahun. Ada 12 misi Majapahit dan enam generik. Sasaran memakai provinsi asal sehingga tidak berubah saat pemilik berganti; vasal memenuhi misi wilayah tetapi pendudukan musuh tidak. Syarat kas/stabilitas tidak dikonsumsi. Save lama memakai ID kas/bangun/stabil yang sama.
+
+Batas: klaim dalam mesin sekarang belum membedakan klaim biasa dan permanen maupun biaya coring EU4; hadiah memakai sistem klaim yang tersedia. Belum ada angkatan laut, perdagangan ber-node, atau hubungan tributari terpisah; misi tidak mensyaratkan sistem yang belum ada. Tombol sasaran memusatkan peta dan menyorot satu provinsi yang belum dipenuhi. Tampilan cabang memakai tab agar muat di HP.

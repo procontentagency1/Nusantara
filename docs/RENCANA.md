@@ -76,3 +76,6 @@ A → B → C → D → E → F → G → H. Tiap tahap kira-kira satu sesi kerj
 - Misi paralel per cabang, bukan berurutan satu garis.
 - Hadiah kecil dan seimbang: klaim, modifier 25 tahun, sedikit mana.
 - Institusi hanya 3–4 buatan sendiri, bukan 8 seperti EU4.
+
+### Pembaruan implementasi Tahap E
+Pohon awal sekarang berisi 12 misi Majapahit (Ekspansi, Diplomasi, Istana) dan enam generik. Prasyarat, klaim hadiah sekali, sasaran wilayah, vasal, serta kompatibilitas save sudah diuji. Berikutnya Tahap F (event sejarah), lalu G (dagang). Penyempurnaan E: sorot seluruh wilayah, lebih banyak misi khusus negara, dan penyeimbangan melalui permainan panjang.
