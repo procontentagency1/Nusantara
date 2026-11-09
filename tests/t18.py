@@ -15,5 +15,6 @@ with sync_playwright() as p:
     print(pg.evaluate("() => JSON.stringify({mis:G.mis.map(m=>[m.k,m.left]), free:dipFree(), max:dipMax()})"))
     pg.evaluate("() => { for(let i=0;i<100;i++) dayTick(); }")
     print(pg.evaluate("() => JSON.stringify({mis:G.mis.map(m=>[m.k,m.st,m.left]), al:G.al.length, free:dipFree()})"))
+    pg.evaluate("() => { let guard=0;while(G.ev.length&&guard++<20){showEvent();const e=G.ev[0];act.ev({dataset:{event:String(e.uid),i:'0'}});}paused=true; }")
     pg.evaluate("() => { openWin('dip'); }") if False else pg.click('#rail button[data-w=dip]'); pg.wait_for_timeout(800); pg.screenshot(path='z_win.png')
     print(errs); b.close()

@@ -7,7 +7,7 @@ with sync_playwright() as p:
  page.goto('http://127.0.0.1:%d/'%s.server_port);page.wait_for_timeout(1500)
  page.evaluate("newGame('Majapahit'); beginGame(); paused=true")
  result=page.evaluate("""() => { const n=activeMissions().length; completeMission('jawa'); const locked=!G.missions.includes('jawa'); G.regs=Math.ceil(econ().fl); completeMission('prajurit'); G.prestige=20; completeMission('palapa'); const claims=missionTargets(['Sunda','Bali']).every(p=>G.claims.includes(p.id)||OWNR[p.id]===G.nat); const before=G.claims.length; completeMission('palapa'); const once=G.claims.length===before; G.subj.Sunda=G.nat; G.subj.Bali=G.nat; completeMission('jawa'); const subject=G.missions.includes('jawa'); saveGame(true); const saved=JSON.parse(localStorage.getItem(SAVE_KEY)).missions.includes('jawa'); newGame('Sunda'); const generic=activeMissions().length; completeMission('palapa'); const exclusive=!G.missions.includes('palapa'); return {n,locked,claims,once,subject,saved,generic,exclusive}; }""")
- print(result); assert result['n']==12 and result['generic']==6 and all(result[k] for k in ['locked','claims','once','subject','saved','exclusive'])
+ print(result); assert result['n']==12 and result['generic']==8 and all(result[k] for k in ['locked','claims','once','subject','saved','exclusive'])
  page.evaluate("winMode='missions'; missionBranch='Ekspansi'; renderWin()")
  page.screenshot(path='/tmp/missions-expanded.png')
  assert not errors,errors
