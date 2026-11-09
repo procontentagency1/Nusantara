@@ -53,21 +53,20 @@ canvas#map{position:absolute;left:0;top:0;display:block;touch-action:none;cursor
 #prov .r span{opacity:.65}#prov .r b{font-weight:600;text-align:right}
 #prov .note{margin:0;padding:6px 9px 8px;font:10px system-ui,sans-serif;opacity:.55;line-height:1.4}
 
-/* minimap & controls */
-#mini{right:6px;bottom:6px;padding:4px;z-index:4;width:184px}
-#mini.compact{width:auto}
-#mini.compact #mm{display:none}
-#mini.compact #modes{margin-bottom:0}
-#mm{display:block;width:174px;border:1px solid #000;background:#0f2e42;touch-action:none}
-#modes{display:flex;gap:3px;margin-bottom:4px}
-#modes button{flex:1;height:26px;font-size:13px;position:relative}
+/* View peta: satu dropdown, tanpa minimap. */
+#mapviews{right:8px;bottom:8px;z-index:6;max-width:220px}
+#mapViewToggle{min-height:38px;padding:7px 13px;font-size:13px}
+#mapViewMenu{position:absolute;bottom:46px;right:0;min-width:185px;max-height:calc(100vh - 145px);overflow:auto;padding:5px}
+#mapViewMenu[hidden]{display:none}
+#mapViewMenu button{display:block;width:100%;min-height:36px;text-align:left;padding:7px 10px;margin:2px 0;font-size:12px}
+#mapLegend{font:10px/1.4 system-ui,sans-serif;padding:7px;color:#efd9a0}
 #zoom{right:6px;top:50%;transform:translateY(-60%);display:flex;flex-direction:column;gap:4px;z-index:4}
 #zoom button{width:30px;height:30px;border-radius:50%;font-size:16px}
 #hint{left:50%;bottom:8px;transform:translateX(-50%);font:11px system-ui,sans-serif;background:rgba(15,9,3,.78);padding:5px 10px;border-radius:5px;border:1px solid rgba(156,122,60,.6);transition:opacity .6s;pointer-events:none;z-index:3;white-space:nowrap}
 #hint.gone{opacity:0}
 
 /* phase toggles */
-#app[data-phase=start] #top,#app[data-phase=start] #rail,#app[data-phase=start] #paused,#app[data-phase=start] #mini,#app[data-phase=start] #crest{display:none}
+#app[data-phase=start] #top,#app[data-phase=start] #rail,#app[data-phase=start] #paused,#app[data-phase=start] #mapviews,#app[data-phase=start] #crest{display:none}
 #app[data-phase=game] #start{display:none}
 #app[data-phase=start] #zoom{top:50px;transform:none}
 #start{position:absolute;inset:0;pointer-events:none;z-index:7}
@@ -351,14 +350,13 @@ button,.btn{touch-action:manipulation}
   <button id="zreset" class="btn" title="Ibu kota">◎</button><button id="zfull" class="btn" title="Layar penuh">⛶</button>
 </div>
 
-<div id="mini" class="abs wood">
-  <div id="modes">
-    <button id="m-pol" class="btn on" title="Politik">⚑</button>
-    <button id="m-ter" class="btn" title="Medan">▲</button>
-    <button class="btn" disabled>◈</button><button class="btn" disabled>⬢</button><button class="btn" disabled>⚔</button>
-    <button id="mmToggle" class="btn" title="Sembunyikan / tampilkan minimap" style="flex:none;width:28px">▾</button>
-  </div>
-  <canvas id="mm"></canvas>
+<div id="mapviews" class="abs">
+ <button id="mapViewToggle" class="btn" aria-haspopup="true" aria-expanded="false" aria-controls="mapViewMenu">Peta: Politik ▾</button>
+ <div id="mapViewMenu" class="wood" hidden>
+  <button class="btn" data-mapmode="pol">Politik</button><button class="btn" data-mapmode="ter">Medan</button>
+  <button class="btn" data-mapmode="religion">Agama</button><button class="btn" data-mapmode="resources">Sumber daya</button><button class="btn" data-mapmode="trade">Perdagangan</button>
+  <div id="mapLegend"></div>
+ </div>
 </div>
 <div id="hint" class="abs">Geser · cubit zoom · ketuk provinsi</div>
 </div>
@@ -368,7 +366,6 @@ const DATA = {"W":1600,"H":692.1,"coast":"M22.8 25.8 L22.9 27.1 L23.8 28.2 L25.3
 const app = document.getElementById('app');
 const cvs = document.getElementById('map'), mainCtx = cvs.getContext('2d');
 let ctx = mainCtx;
-const mmc = document.getElementById('mm'), mctx = mmc.getContext('2d');
 const WATER = '#14405a', WATER_T = '#17475f';
 const COL = { core:'#c04a36', vassal:'#e8b68a', rival:'#5f93b8' };
 const TERR = { plains:'#9aaa58', jungle:'#3d6b3a', mountain:'#86714f', coast:'#c4b77a', sea:WATER };
@@ -390,7 +387,7 @@ function natCol(nat) {
 const natColor = {}; provs.forEach(p => { if (p.k === 'L' && !natColor[p.nat]) natColor[p.nat] = natCol(p.nat); });
 const BASE_OWN = Object.fromEntries(provs.filter(p => p.k === 'L').map(p => [p.id, p.nat]));
 let OWNR = { ...BASE_OWN }, CTRL = {};
-function polFillRaw(p) { return p.k === 'S' ? WATER : (natColor[OWNR[p.id]] || '#888'); }
+function polFillRaw(p) { return p.k === 'S' ? WATER : (mode==='pol'||phase==='start'?natColor[OWNR[p.id]]||'#888':mapFilterColor(p)); }
 function polFill(p) { return p._pf || (p._pf = polFillRaw(p)); }
 const HATCH = {};
 function hatchFor(col) {
@@ -428,7 +425,7 @@ function clampView() {
 function centerOn(wx, wy, s) { view.s = clampS(s); view.tx = vw/2 - wx*view.s; view.ty = vh/2 - wy*view.s; clampView(); request(); }
 function zoomAt(x, y, ns) { ns = clampS(ns); const wx=(x-view.tx)/view.s, wy=(y-view.ty)/view.s; view.s = ns; view.tx = x-wx*ns; view.ty = y-wy*ns; clampView(); request(); }
 const home = () => Math.max(fitS*1.5, vw/(WW*.4));
-function request() { if (!raf) raf = requestAnimationFrame(() => { raf = 0; draw(); drawMini(); }); }
+function request() { if (!raf) raf = requestAnimationFrame(() => { raf = 0; draw(); }); }
 
 function makePatterns() {
   const mk = (n, f) => { const c = document.createElement('canvas'); c.width = c.height = n; f(c.getContext('2d')); return ctx.createPattern(c, 'repeat'); };
@@ -936,7 +933,7 @@ function paintStatic(c, k, tx, ty, sEff, full) {
     c.strokeStyle = '#5aaed4'; c.lineWidth = Math.max(1.1/sEff, .3);
     for (const r of rivers) c.stroke(r);
 
-    if (!ter) for (const p of L) {
+    if (mode==='pol') for (const p of L) {
       c.save(); c.clip(p.path); c.strokeStyle = natColor[OWNR[p.id]] || '#888';
       const bd = p.edges.filter(e => OWNR[e.a] !== OWNR[e.b]);
       for (const [al, lw] of [[.22, 14], [.38, 6]]) { c.globalAlpha = al; c.lineWidth = lw/sEff; c.stroke(p.cp); for (const e of bd) c.stroke(e.path); }
@@ -1079,34 +1076,11 @@ function frame() {
     const n = nats.find(n => n.nat === selNat); if (n) { ctx.strokeStyle = '#ffe08a'; ctx.lineWidth = 3/s; ctx.stroke(n.path); }
   }
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  drawArmies(); if (phase === 'game' && G) fxDraw();
+  drawArmies(); drawFleets(); if (phase === 'game' && G) fxDraw();
   ctx.setTransform(1,0,0,1,0,0); vignette();
 }
 function draw() { frame(); }
 const PROVBYID = Object.fromEntries(provs.map(p => [p.id, p]));
-
-function drawMini() {
-  if ($('mini').classList.contains('compact')) return;
-  const mw = mmc.width, mh = mmc.height;
-  if (!drawMini.base || drawMini.mode !== mode) {
-    const b = document.createElement('canvas'); b.width = mw; b.height = mh; const c = b.getContext('2d');
-    c.fillStyle = '#0f2e42'; c.fillRect(0,0,mw,mh); c.scale(mw/WW, mw/WW);
-    for (const p of provs) if (p.k==='L') { c.fillStyle = mode==='ter' ? (TERR[p.t]||'#888') : polFill(p); c.fill(p.path); }
-    c.strokeStyle = 'rgba(0,0,0,.7)'; c.lineWidth = 1.2; c.stroke(coast);
-    drawMini.base = b; drawMini.mode = mode;
-  }
-  mctx.setTransform(1,0,0,1,0,0); mctx.drawImage(drawMini.base, 0, 0);
-  const k = mw/WW, s = view.s;
-  const x0 = Math.max(0, -view.tx/s*k), y0 = Math.max(0, -view.ty/s*k);
-  const x1 = Math.min(mw, (vw-view.tx)/s*k), y1 = Math.min(mh, (vh-view.ty)/s*k);
-  mctx.strokeStyle = '#fff'; mctx.lineWidth = 1.5; mctx.strokeRect(x0, y0, Math.max(2,x1-x0), Math.max(2,y1-y0));
-}
-function sizeMini() { mmc.width = 174*2; mmc.height = Math.round(174*2*WH/WW); mmc.style.height = (174*WH/WW) + 'px'; drawMini.base = null; }
-let mmDrag = false;
-function mmGo(e) { const r = mmc.getBoundingClientRect(); const lx = e.offsetX / 174, ly = e.offsetY / (174*WH/WW); centerOn(lx*WW, ly*WH, view.s); }
-mmc.addEventListener('pointerdown', e => { mmDrag = true; mmc.setPointerCapture(e.pointerId); mmGo(e); });
-mmc.addEventListener('pointermove', e => { if (mmDrag) mmGo(e); });
-mmc.addEventListener('pointerup', () => mmDrag = false);
 
 function pick(x, y) {
   const wx = (x-view.tx)/view.s, wy = (y-view.ty)/view.s;
@@ -1160,8 +1134,13 @@ $('zfull').onclick = async () => {
   try { const el = document.documentElement; if (!document.fullscreenElement) await el.requestFullscreen(); else await document.exitFullscreen(); } catch (e) {}
   try { await screen.orientation.lock('landscape'); } catch (e) {}
 };
-function setMode(m) { mode = m; cacheVer++; $('m-pol').classList.toggle('on', m==='pol'); $('m-ter').classList.toggle('on', m==='ter'); request(); }
-$('m-pol').onclick = () => setMode('pol'); $('m-ter').onclick = () => setMode('ter');
+const MAP_VIEWS={pol:'Politik',ter:'Medan',religion:'Agama',resources:'Sumber daya',trade:'Perdagangan'};
+function closeMapViews(){$('mapViewMenu').hidden=true;$('mapViewToggle').setAttribute('aria-expanded','false');}
+function setMode(m){if(!MAP_VIEWS[m])return;mode=m;for(const p of provs)p._pf=null;cacheVer++;$('mapViewToggle').textContent='Peta: '+MAP_VIEWS[m]+' ▾';for(const b of $('mapViewMenu').querySelectorAll('[data-mapmode]')){b.classList.toggle('on',b.dataset.mapmode===m);b.setAttribute('aria-pressed',String(b.dataset.mapmode===m));}updateMapLegend();closeMapViews();request();}
+$('mapViewToggle').onclick=()=>{const open=$('mapViewMenu').hidden;$('mapViewMenu').hidden=!open;$('mapViewToggle').setAttribute('aria-expanded',String(open));updateMapLegend();SFX.play(open?'open':'close');};
+$('mapViewMenu').onclick=e=>{const b=e.target.closest('[data-mapmode]');if(b){setMode(b.dataset.mapmode);SFX.play('tap');}};
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('#mapviews'))closeMapViews();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMapViews();});
 setTimeout(() => $('hint').classList.add('gone'), 5000);
 
 function onResize() {
@@ -1172,14 +1151,7 @@ function onResize() {
   request();
 }
 window.addEventListener('resize', onResize);
-makePatterns(); sizeMini(); onResize();
-(function () {
-  let pref = null; try { pref = localStorage.getItem('mm_compact'); } catch (e) {}
-  const compact = pref === null ? window.innerHeight < 480 || window.innerWidth < 480 : pref === '1';
-  const set = c => { $('mini').classList.toggle('compact', c); $('mmToggle').textContent = c ? '▴' : '▾'; try { localStorage.setItem('mm_compact', c ? '1' : '0'); } catch (e) {} drawMini.base = null; request(); };
-  $('mini').classList.toggle('compact', compact); $('mmToggle').textContent = compact ? '▴' : '▾';
-  $('mmToggle').onclick = () => set(!$('mini').classList.contains('compact'));
-})();
+makePatterns(); onResize();
 /* ================= GAME: data, state, systems, UI ================= */
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 const MDAYS = [31,28,31,30,31,30,31,31,30,31,30,31];
@@ -1270,7 +1242,7 @@ const slotsOf = (q) => Math.max(1, Math.min(4, 1 + Math.floor((q.t+q.p+q.m)/10))
 /* ---------- time ---------- */
 let paused = true, speed = 3, acc = 0, lastT = 0;
 function dayTick() {
-  G.d++; armiesDay(); syncRegs();
+  G.d++; armiesDay(); navyDay(); syncRegs();
   if (G.d > MDAYS[G.mo]) { G.d = 1; G.mo++; if (G.mo > 11) { G.mo = 0; G.y++; } monthTick(); }
   topDirty = true;
 }
@@ -1294,7 +1266,7 @@ function monthTick() {
   }
   if (G.mo === 0) { G.prestige = Math.round(G.prestige * .95); G.legit = Math.min(100, G.legit + 1); }
   diplomacyMonth(); aiMonth(); syncRegs();
-  modMonth(); relMonth(); instMonth(); evMonth(); subjectsMonth(); aiContentMonth(); resourcesMonth(); militaryMonth();
+  modMonth(); relMonth(); instMonth(); evMonth(); subjectsMonth(); aiContentMonth(); resourcesMonth(); militaryMonth(); navyMonth();
   saveGame(true); renderWin();
 }
 function saveGame(silent) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); if (!silent) toast('Permainan disimpan.'); } catch (e) { if (!silent) toast('Penyimpanan tidak tersedia di sini.'); } }
@@ -1356,6 +1328,8 @@ function renderWin() {
   else if (winMode === 'trade') h = tradeHTML();
   else if (winMode === 'resources') h = resourcePanel();
   else if (winMode === 'expansion') h = expansionHTML();
+  else if (winMode === 'navy') h=navyHTML();
+  else if (winMode === 'fleet') h=fleetHTML(G.fleets.find(f=>f.id===G.selFleet));
   else if (winMode === 'worldcontent') h = worldContentHTML();
   else if (winMode === 'nation') {
     const n = NATS[G.nat], tot = Object.values(G.pv).reduce((a, q) => a + q.t + q.p + q.m, 0);
@@ -1394,7 +1368,7 @@ function renderWin() {
 function provHTML(p, e) {
   const q = G.pv[p.id], mine = !!q;
   let h = hd(p.n, p.k === 'S' ? 'Perairan' : 'Bangsa: ' + OWNR[p.id]);
-  if (p.k === 'S') return h + row('Medan', 'Perairan');
+  if (p.k === 'S') return h + row('Medan', 'Perairan')+seaFleetHTML(p.id);
   if (p.k === 'L' && !mine) return foreignProvHTML(p);
   const d = mine ? [q.t, q.p, q.m] : baseDev(p);
   h += `<div class="dev">${d.map((v, i) => `<div><i style="background:${DEV_COL[i]}">${'PMT'[i]}</i>${v}<small>${DEV_NAME[i]}</small></div>`).join('')}</div>`;
@@ -1417,7 +1391,7 @@ function provHTML(p, e) {
 /* ---------- actions ---------- */
 const act = {
   win: b => { if (winMode === b.dataset.w) { winMode = null; } else winMode = b.dataset.w; selId = null; renderWin(); request(); },
-  back: () => { const parent = { rel:'nation', ide:'tech', missions:'nation', subjects:'nation', trade:'econ', worldcontent:'nation', resources:'econ', expansion:'nation', declare:'dipn', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
+  back: () => { const parent = { rel:'nation', ide:'tech', missions:'nation', subjects:'nation', trade:'econ', worldcontent:'nation', resources:'econ', expansion:'nation', navy:'mil', fleet:'navy', declare:'dipn', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
   close: () => { winMode = null; selId = null; renderWin(); request(); },
   dev: b => { const q = G.pv[b.dataset.id], i = +b.dataset.i, k = ['t','p','m'][i], c = devCost(q[k]); if (G.mana[i] < c) return; G.mana[i] -= c; q[k]++; toast(`${DEV_NAME[i]} ${PROV[b.dataset.id].n} naik ke ${q[k]}.`); },
   build: b => { const q = G.pv[b.dataset.id], B = BUILD[b.dataset.k]; if (!q || !B || q.bld.includes(b.dataset.k) || q.cons.some(c=>c.type===b.dataset.k) || G.treasury < bCost(B) || q.bld.length + q.cons.length >= slotsOf(q)) return; G.treasury -= bCost(B); q.cons.push({ type:b.dataset.k, left:B.months }); toast(`Membangun ${B.n} di ${PROV[b.dataset.id].n} (${B.months} bln).`); },
@@ -1466,7 +1440,7 @@ EDGES.forEach(e => { PROV[e.a].edges.push(e); PROV[e.b].edges.push(e); });
 
 let OWNED = {};
 function rebuildOwned() { OWNED = {}; for (const id in OWNR) (OWNED[OWNR[id]] ||= []).push(+id); }
-function refreshWorld() { provs.forEach(p => { p._pf = null; }); COUNTRY_LABELS = null; drawMini.base = null; cacheVer++; request(); }
+function refreshWorld() { provs.forEach(p => { p._pf = null; }); COUNTRY_LABELS = null; cacheVer++; request(); }
 function setBaseWorld() { OWNR = { ...BASE_OWN }; CTRL = {}; rebuildOwned(); refreshWorld(); }
 function setWorld() { OWNR = G.own; CTRL = G.ctrl; rebuildOwned(); refreshWorld(); }
 
@@ -1782,6 +1756,7 @@ function transferProv(id, to, peaceful=false) {
 function finishNationCheck(nat) {
   if (alive(nat)) return;
   G.armies = G.armies.filter(a => a.nat !== nat);
+  G.fleets=(G.fleets||[]).filter(f=>f.nat!==nat);G.shipQueue=(G.shipQueue||[]).filter(q=>q.nat!==nat);
   G.wars.forEach(w => { w.att = w.att.filter(n => n !== nat); w.def = w.def.filter(n => n !== nat); });
   G.wars = G.wars.filter(w => w.att.length && w.def.length);
   G.al = G.al.filter(k => !k.split('|').includes(nat)); delete G.subj[nat];
@@ -1804,6 +1779,7 @@ function applyPeace(w, winner, opts) {
   if (opts.vassal && alive(ll)) setSubject(ll,wl,'vassal');
   if(w.independence && winner==='def' && alive(w.independence.n) && alive(w.independence.o))setSubject(w.independence.n,w.independence.o,'vassal');
   G.wars = G.wars.filter(x => x !== w);
+  for(const f of G.fleets||[])if(!warsOf(f.nat).length){f.battleDays=0;f.engagedSize=0;}
   for (const a of w.att) for (const b of w.def) G.truce[pairKey(a, b)] = monthIdx() + 60;
   // hapus pendudukan yang terkait perang ini bila tak ada perang lain yang menahannya
   for (const id in CTRL) {
@@ -2021,6 +1997,7 @@ function armyHTML(a) {
 }
 function milHTML(e) {
   let h = hd('Militer', `Resimen ${G.regs} / force limit ${e.fl}`) + row('Tenaga', `${G.mp.toFixed(1)}K / ${e.mpMax.toFixed(1)}K (+${e.mpRec.toFixed(2)}K/bln)`) + row('Pemeliharaan', e.armyCost.toFixed(2) + ' dukat/bln');
+  h+='<div class="r">'+btn('Armada kapal ›','win',{w:'navy'})+'</div>';
   h+=row('Profesionalisme',(G.professionalism[G.nat]||0).toFixed(1)+'%')+row('Lebar tempur',armyCombatWidth(G.nat)+' resimen')+'<div class="r">'+[0,.5,1].map(v=>btn((G.maintenance===v?'✓ ':'')+Math.round(v*100)+'%','maintenance',{v})).join('')+'</div><p class="note">Pemeliharaan rendah menghemat biaya, tetapi membatasi pemulihan moral. Latihan: biaya +25%, moral maksimal 50%, kualitas tempur dan profesionalisme bertambah.</p>';
   h += `<div class="r"><span>Rekrut (ibu kota)</span>${btn('Rekrut · ' + recCost(), 'rec', { v:1 }, G.mp >= 1 && G.treasury >= recCost() && !!capOf(G.nat))}</div>`;
   h += `<div class="sec">Pasukan Anda</div>`;
@@ -2131,7 +2108,7 @@ function foreignProvHTML(p) {
 function deselectArmy() { G.sel = null; if (winMode === 'army') winMode = null; selId = null; renderWin(); request(); updDesel(); }
 function updDesel() { const e = $('desel'); if (e) e.style.display = (phase === 'game' && G && G.sel) ? '' : 'none'; }
 function selectArmy(id, center) {
-  G.sel = id; winMode = 'army'; selId = null; renderWin(); request(); updDesel();
+  G.selFleet=null;G.sel = id; winMode = 'army'; selId = null; renderWin(); request(); updDesel();
   if (center) { const a = G.armies.find(x => x.id === id); if (a) flyTo(PROV[a.loc].lab[0], PROV[a.loc].lab[1], Math.max(view.s, 1.8), vw/2, vh/2); }
 }
 Object.assign(act, {
@@ -2189,6 +2166,7 @@ Object.assign(act, {
 /* ---------- map interaction ---------- */
 function onMapTap(p, x, y) {
   if (phase === 'start') { if (p && p.k === 'L') selectNation(OWNR[p.id]); return; }
+  if(handleFleetTap(p,x,y))return;
   const bh = BT_HIT.slice().reverse().find(h => x >= h.x0 && x <= h.x1 && y >= h.y0 && y <= h.y1);
   if (bh) { bpOpen(bh.bt.id, true); return; }
   const hit = ARM_HIT.slice().reverse().find(h => x >= h.x0 && x <= h.x1 && y >= h.y0 && y <= h.y1);
@@ -2968,7 +2946,7 @@ function syncLoans() { G.loans = G.ln.reduce((a, l) => a + l.a, 0); }
 function fixSave() {
   G.claims=[...new Set((G.claims || []).map(Number).filter(id=>PROV[id] && PROV[id].k==='L'))];
   G.missions ||= []; G.flags ||= {}; G.mod ||= []; G.fired ||= []; G.evq ||= []; G.infl ||= 0; G.bank ||= 0;
-  G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel(); fixSubjects(); fixTrade(); fixKingdomContent(); fixResources(); fixMilitary(); fixExpansion();
+  G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel(); fixSubjects(); fixTrade(); fixKingdomContent(); fixResources(); fixMilitary(); fixExpansion(); fixNavy();
 }
 function takeLoan(auto) {
   if (G.ln.length >= MAXLN) return false;
@@ -3000,7 +2978,7 @@ function econHTML(e) {
   const mm = v => v.toFixed(2), LB = { tax:'pajak', prod:'produksi', army:'biaya pasukan', trade:'efisiensi dagang', mp:'pemulihan tenaga', tech:'biaya teknologi', int:'bunga', adm:'ADM', dip:'DIP', mil:'MIL' };
   const fxText = fx => Object.entries(fx).map(([k, v]) => ['adm', 'dip', 'mil'].includes(k) ? `${v > 0 ? '+' : ''}${v} ${LB[k]}/bln` : k === 'int' ? `${v > 0 ? '+' : ''}${v}% ${LB[k]}` : `${v > 0 ? '+' : ''}${Math.round(v*100)}% ${LB[k]}`).join(' · ');
   let h = hd('Ekonomi', 'Anggaran bulanan') + `<div class="sec">Pemasukan</div>` + row('Pajak', mm(e.tax)) + row('Produksi', mm(e.prod)) + row('Dagang',mm(e.trade || 0)) + '<div class="r">'+btn('Jaringan perdagangan ›','win',{w:'trade'})+'</div>' + row('Pajak vasal',mm(e.vassalIncome || 0)) + row('Pajak kepada penguasa','−'+mm(e.subjectTax || 0))
-    + `<div class="sec">Pengeluaran</div>` + row('Pemeliharaan pasukan', '−' + mm(e.armyCost)) + row('Kekurangan pangan','−'+mm(e.supplyCost||0)) + row('Misionaris', '−' + mm(e.misCost)) + row(`Bunga pinjaman (${e.rate}%)`, '−' + mm(e.interest))
+    + `<div class="sec">Pengeluaran</div>` + row('Pemeliharaan pasukan', '−' + mm(e.armyCost))+row('Pemeliharaan armada','−'+mm(e.navalCost||0)) + row('Kekurangan pangan','−'+mm(e.supplyCost||0)) + row('Misionaris', '−' + mm(e.misCost)) + row(`Bunga pinjaman (${e.rate}%)`, '−' + mm(e.interest))
     + `<div class="r" style="background:rgba(0,0,0,.2)"><span>Saldo bulanan</span><b class="${e.net >= 0 ? 'pos' : 'neg'}">${sg(e.net)}</b></div>`
     + `<div class="sec">Kas & Inflasi</div>` + row('Kas', Math.floor(G.treasury) + ' dukat') + row('Inflasi', G.infl.toFixed(1) + '% (biaya naik)')
     + `<div class="r"><span>Kurangi inflasi 1%</span>${btn('50 ADM', 'infl', {}, G.infl > 0 && G.mana[0] >= 50)}</div>`
@@ -3409,9 +3387,10 @@ function subjectBudget(e) {
   e.subjectTax=G.subj[G.nat] && libertyDesire(G.nat)<50 ? e.tax*.1*(G.subjectData[G.nat]?.scutage?1.5:1):0;
   const drilling=myArmies().filter(a=>a.drilling).reduce((s,a)=>s+a.regs,0)/Math.max(1,G.regs);
   e.armyCost*=.5+.5*G.maintenance+.25*drilling;
+  e.navalCost=(G.fleets||[]).filter(f=>f.nat===G.nat).reduce((sum,f)=>sum+f.ships.reduce((s,x)=>s+SHIP_TYPES[x.type].upkeep,0),0);
   e.trade=tradeSnapshot().income;
   e.supplyCost=G.resourceStocks?.[G.nat]?.food<=0?e.armyCost*.2:0;
-  e.net=e.tax+e.prod+e.trade+e.vassalIncome-e.subjectTax-e.armyCost-e.misCost-e.interest-e.supplyCost;
+  e.net=e.tax+e.prod+e.trade+e.vassalIncome-e.subjectTax-e.armyCost-e.misCost-e.interest-e.supplyCost-e.navalCost;
   return e;
 }
 const tributeName = k => ({cash:'dukat',adm:'ADM',dip:'DIP',mil:'MIL',manpower:'ribu tenaga'}[k] || k);
@@ -3591,6 +3570,7 @@ function tradeSnapshot() {
  }
  const merchants=Object.fromEntries((G.trade.merchants||[]).filter(m=>!m.left).map(m=>[m.node,m]));
  let playerIncome=0;
+ for(const f of G.fleets||[])if(f.mission==='trade'&&!f.port&&!f.path.length&&!f.retreat){const node=nodes[seaTradeNode(f.sea)];if(node)node.raw[f.nat]=(node.raw[f.nat]||0)+f.ships.reduce((s,x)=>s+(x.type==='patrol'?2:0)*x.hp/100,0);}
  for(const def of TRADE_NODES) {
    const node=nodes[def.id],m=merchants[def.id];node.powers={...node.raw};
    if(m)node.powers[G.nat]=(node.powers[G.nat]||0)+2;
@@ -3860,6 +3840,105 @@ EVA.releaseConquest=a=>{
   const declaration=declarationHTML;declarationHTML=()=>declaration()+(WAR_DRAFT?'<p class="note">Rencanakan pascaperang: inti 24 bulan, overextension, otonomi dan separatisme. Tuntutan tanpa klaim memakai DIP; klaim sendiri tidak menghapus AE.</p>':'');
 })();
 
+/* ---------- Armada awal: pelabuhan, navigasi laut dan tugas dagang ---------- */
+const SHIP_TYPES={jung:{name:'Jung tempur',cost:30,wood:8,iron:2,months:6,power:5,upkeep:.25},patrol:{name:'Kapal patroli',cost:18,wood:4,iron:0,months:4,power:2,upkeep:.12},dayung:{name:'Perahu dayung',cost:12,wood:3,iron:0,months:3,power:2.5,upkeep:.08}};
+const SEA_PROVS=provs.filter(p=>p.k==='S');let NAV_GRID=null,FLEET_HIT=[];
+const portsOf=n=>Object.keys(G.own||OWNR).map(Number).filter(id=>(G.own||OWNR)[id]===n&&PROV[id].k==='L'&&PROV[id].cd).sort((a,b)=>(PROV[b].t==='coast')-(PROV[a].t==='coast')||PROV[a].r-PROV[b].r||a-b);
+function navalGrid(){
+ if(NAV_GRID)return NAV_GRID;
+ const cell=8,w=Math.ceil(WW/cell),h=Math.ceil(WH/cell),canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const c=canvas.getContext('2d',{willReadFrequently:true});c.scale(1/cell,1/cell);c.fillStyle='#fff';for(const p of provs)if(p.k==='L')c.fill(p.path);
+ const pixels=c.getImageData(0,0,w,h).data,wet=new Uint8Array(w*h),queue=[];
+ for(let i=0;i<w*h;i++)if(pixels[i*4+3]<10&&(i<w||i>=w*(h-1)||i%w===0||i%w===w-1)){wet[i]=1;queue.push(i);}
+ for(let q=0;q<queue.length;q++){const i=queue[q],x=i%w,y=Math.floor(i/w);for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,j=ny*w+nx;if(nx>=0&&ny>=0&&nx<w&&ny<h&&!wet[j]&&pixels[j*4+3]<10){wet[j]=1;queue.push(j);}}}
+ return NAV_GRID={w,h,cell,wet,points:{},xy:i=>[(i%w+.5)*cell,(Math.floor(i/w)+.5)*cell]};
+}
+function waterPoint(x,y){const g=navalGrid();let best=0,bd=Infinity;for(let i=0;i<g.wet.length;i++)if(g.wet[i]){const p=g.xy(i),d=(p[0]-x)**2+(p[1]-y)**2;if(d<bd){best=i;bd=d;}}return best;}
+function navalPoint(id){const g=navalGrid();return g.points[id]??(g.points[id]=waterPoint(...PROV[id].lab));}
+function navalPath(x,y,to){
+ const g=navalGrid(),start=waterPoint(x,y),end=navalPoint(to);if(start===end)return [];
+ const prev=new Int32Array(g.wet.length);prev.fill(-1);prev[start]=start;const queue=[start];
+ for(let q=0;q<queue.length&&prev[end]===-1;q++){const i=queue[q],ix=i%g.w,iy=Math.floor(i/g.w);for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){const nx=ix+dx,ny=iy+dy,j=ny*g.w+nx;if(nx<0||ny<0||nx>=g.w||ny>=g.h||!g.wet[j]||prev[j]!==-1)continue;if(dx&&dy&&(!g.wet[i+dx]||!g.wet[i+dy*g.w]))continue;prev[j]=i;queue.push(j);}}
+ if(prev[end]===-1)return null;const path=[];for(let i=end;i!==start;i=prev[i])path.unshift(g.xy(i));return path;
+}
+const nearestSea=(x,y)=>SEA_PROVS.reduce((a,b)=>Math.hypot(a.lab[0]-x,a.lab[1]-y)<Math.hypot(b.lab[0]-x,b.lab[1]-y)?a:b).id;
+const seaTradeNode=id=>({103:'sumatra',104:'malaka',105:'siam',106:'borneo',107:'jawa',108:'sumatra',109:'jawa',110:'jawa',111:'jawa',112:'jawa',113:'borneo',114:'sulawesi',115:'sulawesi',116:'sulawesi',117:'sulawesi',118:'jawa',119:'maluku',120:'maluku',121:'maluku',122:'maluku',123:'maluku',124:'jawa',125:'maluku',126:'maluku',127:'sumatra',128:'siam',129:'siam',130:'maluku'})[id]||'jawa';
+function makeFleet(n,port,types){const [x,y]=navalGrid().xy(navalPoint(port));const f={id:G.nid++,nat:n,name:'Armada '+PROV[port].n,port,sea:nearestSea(x,y),x,y,path:[],ships:types.map(type=>({type,hp:100})),mission:'harbor',retreat:0,battleDays:0};G.fleets.push(f);return f;}
+function fixNavy(){
+ G.shipQueue ||= [];if(!Array.isArray(G.fleets)){G.fleets=[];for(const n of Object.keys(NATS)){const ports=portsOf(n);if(!ports.length)continue;makeFleet(n,ports[0],ports.length>=5?['jung','jung','patrol','patrol','patrol','dayung']:ports.length>=2?['jung','patrol','dayung']:['patrol','dayung']);}}
+ for(const f of G.fleets){f.path ||= [];f.retreat ||= 0;f.battleDays ||= 0;}
+}
+function orderFleet(f,to,port=null,quiet=false){
+ if(!f||!PROV[to]||port&&((OWNR[port]!==f.nat)||CTRL[port]))return false;
+ const path=navalPath(f.x,f.y,to);if(!path){if(!quiet&&f.nat===G.nat)toast('Tidak ada jalur laut ke tujuan itu.');return false;}
+ f.path=path;f.port=null;f.targetPort=port;f.targetSea=port?nearestSea(...navalGrid().xy(navalPoint(port))):to;f.mission='sail';
+ if(!path.length){f.port=port;f.sea=f.targetSea;f.mission=port?'harbor':'hold';}return true;
+}
+const fleetHealth=f=>f.ships.length?f.ships.reduce((s,x)=>s+x.hp,0)/f.ships.length:0;
+function fleetHome(f){const ports=portsOf(f.nat).filter(id=>!CTRL[id]).sort((a,b)=>Math.hypot(PROV[a].lab[0]-f.x,PROV[a].lab[1]-f.y)-Math.hypot(PROV[b].lab[0]-f.x,PROV[b].lab[1]-f.y));for(const id of ports)if(orderFleet(f,id,id,true))return true;return false;}
+function navyDay(){
+ for(const f of G.fleets||[]){f.battleDays=Math.max(0,f.battleDays-1);f.retreat=Math.max(0,f.retreat-1);if(f.port&&(OWNR[f.port]!==f.nat||CTRL[f.port])){f.port=null;f.mission='hold';}
+  let budget=12;while(f.path.length&&budget>0){const p=f.path[0],d=Math.hypot(p[0]-f.x,p[1]-f.y);if(d<=budget){f.x=p[0];f.y=p[1];f.path.shift();budget-=d;}else{f.x+=(p[0]-f.x)*budget/d;f.y+=(p[1]-f.y)*budget/d;budget=0;}if(!f.path.length){f.sea=f.targetSea;f.port=f.targetPort&&OWNR[f.targetPort]===f.nat&&!CTRL[f.targetPort]?f.targetPort:null;if(f.mission!=='trade')f.mission=f.port?'harbor':'hold';}}
+  if(f.path.length)f.sea=nearestSea(f.x,f.y);
+ }
+ const fleets=(G.fleets||[]).filter(f=>f.ships.length&&!f.port&&!f.retreat),paired=new Set();
+ for(let i=0;i<fleets.length;i++)for(let j=i+1;j<fleets.length;j++){
+  const a=fleets[i],b=fleets[j];if(paired.has(a.id)||paired.has(b.id)||!atWar(a.nat,b.nat)||Math.hypot(a.x-b.x,a.y-b.y)>22)continue;paired.add(a.id);paired.add(b.id);
+  const power=f=>f.ships.reduce((s,x)=>s+SHIP_TYPES[x.type].power*x.hp/100,0),pa=power(a),pb=power(b);
+  for(const [f,damage] of [[a,pb*1.5],[b,pa*1.5]]){f.engagedSize ||= f.ships.length;f.battleDays=2;f.mission='hold';f.path=[];let left=damage;while(left>0&&f.ships.length){const ship=f.ships[0],hit=Math.min(left,ship.hp);ship.hp-=hit;left-=hit;if(ship.hp<=0)f.ships.shift();}
+   if(f.ships.length&&(fleetHealth(f)<35||f.ships.length<=f.engagedSize/2)){f.retreat=20;fleetHome(f);if(f.nat===G.nat)toast(f.name+' mundur ke pelabuhan.');}}
+  if(a.nat===G.nat||b.nat===G.nat)SFX.play('clash',900);
+ }
+ for(const f of G.fleets||[])if(!paired.has(f.id))f.engagedSize=0;
+ const sunk=(G.fleets||[]).filter(f=>!f.ships.length);for(const f of sunk)if(f.nat===G.nat){toast(f.name+' tenggelam dalam pertempuran laut.');addLog(f.name+' tenggelam.');}
+ G.fleets=(G.fleets||[]).filter(f=>f.ships.length);if(G.selFleet&&!G.fleets.some(f=>f.id===G.selFleet))G.selFleet=null;
+ if(G.d%5===0)for(const f of G.fleets){if(f.nat===G.nat||f.path.length||f.retreat)continue;if(fleetHealth(f)<80){fleetHome(f);continue;}
+  if(warsOf(f.nat).length){const enemy=G.fleets.filter(e=>atWar(f.nat,e.nat)&&!e.port&&!e.retreat).sort((a,b)=>Math.hypot(a.x-f.x,a.y-f.y)-Math.hypot(b.x-f.x,b.y-f.y))[0];if(enemy&&powerFleet(f)>=powerFleet(enemy)*.9){orderFleet(f,enemy.sea,null,true);continue;}}
+  if(!warsOf(f.nat).length&&f.ships.some(s=>s.type==='patrol')&&f.mission!=='trade'){if(orderFleet(f,f.sea,null,true))f.mission='trade';}
+ }
+}
+const powerFleet=f=>f.ships.reduce((s,x)=>s+SHIP_TYPES[x.type].power*x.hp/100,0);
+function navyMonth(){
+ for(const f of G.fleets||[])if(f.port&&OWNR[f.port]===f.nat&&!CTRL[f.port])for(const s of f.ships)s.hp=Math.min(100,s.hp+15);
+ G.shipQueue=G.shipQueue.filter(q=>{if(OWNR[q.port]!==q.nat){if(q.nat===G.nat)toast('Pembangunan kapal batal: pelabuhan hilang.');return false;}if(CTRL[q.port])return true;if(--q.left>0)return true;
+  const f=G.fleets.find(f=>f.nat===q.nat&&f.port===q.port);if(f)f.ships.push({type:q.type,hp:100});else makeFleet(q.nat,q.port,[q.type]);if(q.nat===G.nat)toast(SHIP_TYPES[q.type].name+' selesai dibangun di '+PROV[q.port].n+'.');return false;});
+}
+function navyHTML(){let h=hd('Armada Laut','Kapal awal, pelayaran, patroli dan pertempuran')+row('Biaya bulanan',econ().navalCost.toFixed(2)+' dukat')+'<p class="note">Pilih armada, lalu ketuk laut untuk berlayar atau pelabuhan sendiri untuk sandar. Kapal musuh yang berdekatan saat perang bertempur otomatis. Kapal di pelabuhan pulih 15% lambung/bulan. Angkutan tentara dan blokade belum tersedia.</p>';
+ for(const f of G.fleets.filter(f=>f.nat===G.nat))h+='<button class="btn rowb" data-act="selfleet" data-id="'+f.id+'"><span>'+f.name+' · '+f.ships.length+' kapal</span><em>'+Math.round(fleetHealth(f))+'% · '+(f.port?PROV[f.port].n:PROV[f.sea].n)+'</em></button>';
+ const ports=portsOf(G.nat);if(!ports.length)h+='<p class="note">Kerajaan ini belum memiliki wilayah pesisir untuk pelabuhan.</p>';
+ for(const id of ports){h+='<div class="sec">Galangan '+PROV[id].n+'</div>';const q=G.shipQueue.find(q=>q.port===id);if(q){h+=row(SHIP_TYPES[q.type].name,q.left+' bulan'+(CTRL[id]?' · tertunda':''));continue;}for(const [type,s] of Object.entries(SHIP_TYPES))h+='<div class="r">'+btn(s.name+' · '+s.cost+' dukat','buildship',{port:id,type},canBuildShip(id,type))+'</div><p class="note">'+s.wood+' kayu'+(s.iron?', '+s.iron+' besi':'')+' · '+s.months+' bulan · '+s.upkeep.toFixed(2)+' dukat/bln</p>';}
+ return h;}
+function fleetHTML(f){if(!f||f.nat!==G.nat)return hd('Armada')+'<p class="note">Armada tidak tersedia.</p>';let h=hd(f.name,f.ships.length+' kapal')+row('Lokasi',f.port?'Bersandar di '+PROV[f.port].n:PROV[f.sea].n)+row('Lambung',Math.round(fleetHealth(f))+'%')+row('Tugas',f.retreat?'Mundur':f.path.length?'Berlayar':f.mission==='trade'?'Menjaga perdagangan':f.port?'Di pelabuhan':'Siaga di laut');for(const [type,s] of Object.entries(SHIP_TYPES)){const ships=f.ships.filter(x=>x.type===type);if(ships.length)h+=row(s.name,ships.length);}
+ h+='<div class="r">'+btn('Kembali ke pelabuhan','fleethome',{id:f.id})+'</div><div class="r">'+btn('Jaga perdagangan','fleettrade',{id:f.id},!f.retreat&&f.ships.some(s=>s.type==='patrol'))+btn('Siaga','fleetstop',{id:f.id},!f.retreat)+'</div><p class="note">Patroli memberi +2 kekuatan dagang per kapal × kondisi lambung di node laut tujuan setelah tiba. Ketuk laut untuk mengubah tujuan; ketuk provinsi pesisir sendiri untuk sandar.</p><div class="sec">Tujuan laut</div>';
+ for(const p of SEA_PROVS)h+='<div class="r">'+btn(p.n,'fleetsail',{id:f.id,sea:p.id},!f.retreat)+'</div>';return h;}
+function canBuildShip(port,type){const s=SHIP_TYPES[type],stock=G.resourceStocks[G.nat];return !!s&&portsOf(G.nat).includes(+port)&&!CTRL[port]&&!G.shipQueue.some(q=>q.port===+port)&&G.treasury>=s.cost&&stock.wood>=s.wood&&stock.iron>=s.iron;}
+act.buildship=b=>{const port=+b.dataset.port,type=b.dataset.type;if(!canBuildShip(port,type))return;const s=SHIP_TYPES[type];G.treasury-=s.cost;G.resourceStocks[G.nat].wood-=s.wood;G.resourceStocks[G.nat].iron-=s.iron;G.shipQueue.push({nat:G.nat,port,type,left:s.months});saveGame(true);};
+act.selfleet=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat);if(!f)return;G.sel=null;G.selFleet=f.id;winMode='fleet';centerOn(f.x,f.y,Math.max(view.s,fitS*2));};
+act.fleetsail=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat);if(f&&!f.retreat&&PROV[+b.dataset.sea]?.k==='S')orderFleet(f,+b.dataset.sea);};
+act.fleethome=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat);if(f)fleetHome(f);};
+act.fleettrade=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat);if(f&&!f.retreat&&f.ships.some(s=>s.type==='patrol')&&orderFleet(f,f.targetSea||f.sea))f.mission='trade';};
+act.fleetstop=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat);if(f&&!f.retreat){f.path=[];f.mission=f.port?'harbor':'hold';}};
+function seaFleetHTML(id){return '<div class="sec">Armada di perairan ini</div>'+G.fleets.filter(f=>f.sea===+id).map(f=>f.nat===G.nat?'<div class="r">'+btn(f.name+' · '+f.ships.length+' kapal','selfleet',{id:f.id})+'</div>':row(f.nat,f.ships.length+' kapal')).join('');}
+function handleFleetTap(p,x,y){const h=FLEET_HIT.slice().reverse().find(h=>Math.hypot(x-h.x,y-h.y)<h.r);if(h){act.selfleet({dataset:{id:String(h.id)}});renderWin();request();return true;}
+ const f=winMode==='fleet'&&G.fleets.find(f=>f.id===G.selFleet&&f.nat===G.nat);if(!f||!p||f.retreat)return false;
+ if(p.k==='S'){orderFleet(f,p.id);renderWin();request();return true;}if(portsOf(G.nat).includes(p.id)){orderFleet(f,p.id,p.id);renderWin();request();return true;}return false;}
+function drawFleets(){FLEET_HIT=[];if(phase!=='game'||!G?.fleets)return;const groups={};
+ for(const f of G.fleets){if(f.nat!==G.nat&&view.s<fitS*1.4&&!atWar(f.nat,G.nat))continue;const key=Math.round(f.x/12)+','+Math.round(f.y/12),i=groups[key]||0;groups[key]=i+1;const x=sxw(f.x)+i*17,y=syw(f.y),k=Math.min(1.25,.6*Math.pow(Math.max(1,view.s/fitS),.25));if(x<-40||x>vw+40||y<-40||y>vh+40)continue;
+  ctx.save();if(f.id===G.selFleet&&f.path.length){ctx.strokeStyle='#f4dc90';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,y);for(const p of f.path)ctx.lineTo(sxw(p[0]),syw(p[1]));ctx.stroke();ctx.setLineDash([]);}
+  ctx.translate(x,y);ctx.scale(k,k);ctx.lineJoin='round';ctx.strokeStyle='#211b17';ctx.lineWidth=3;
+  ctx.fillStyle='#6c3e23';ctx.beginPath();ctx.moveTo(-15,6);ctx.lineTo(16,6);ctx.lineTo(10,14);ctx.lineTo(-9,14);ctx.closePath();ctx.stroke();ctx.fill();
+  ctx.strokeStyle='#ffe7af';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,7);ctx.lineTo(0,-20);ctx.stroke();ctx.fillStyle=natColor[f.nat]||'#eee';ctx.beginPath();ctx.moveTo(2,-18);ctx.lineTo(13,2);ctx.lineTo(2,2);ctx.closePath();ctx.stroke();ctx.fill();ctx.fillStyle='#f7dfa2';ctx.beginPath();ctx.moveTo(-2,-15);ctx.lineTo(-12,2);ctx.lineTo(-2,2);ctx.closePath();ctx.stroke();ctx.fill();
+  if(f.nat===G.nat){ctx.font='bold 12px Georgia';ctx.textAlign='center';ctx.fillStyle='#20170e';ctx.fillRect(-9,16,18,15);ctx.fillStyle='#ffe3a0';ctx.fillText(f.ships.length,0,28);if(f.id===G.selFleet){ctx.strokeStyle='#ffe481';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-2,23,0,Math.PI*2);ctx.stroke();}FLEET_HIT.push({id:f.id,x,y,r:Math.max(16,23*k)});}ctx.restore();
+ }
+}
+function mapFilterColor(p){
+ if(!G)return natColor[OWNR[p.id]]||'#888';
+ if(mode==='religion')return ({siwa:'#c79d45',hindu:'#d77845',mahayana:'#bca557',thera:'#d4bd70',islam:'#548d65',animis:'#886ca2'})[relOf(p.id)]||'#888';
+ if(mode==='resources')return ({food:'#a7ae5b',wood:'#42876b',iron:'#8094a5',spice:'#b377a8'})[provinceResource(p)]||'#a49778';
+ if(mode==='trade')return ({maluku:'#b476b5',sulawesi:'#dfad62',borneo:'#77a770',siam:'#8ebcb6',sumatra:'#cc956b',jawa:'#c86a55',malaka:'#6ba6c6'})[tradeNode(p)]||'#888';
+ return natColor[OWNR[p.id]]||'#888';
+}
+function updateMapLegend(){const labels=mode==='resources'?'Pangan: hijau muda · Kayu: hijau tua · Besi: biru abu · Rempah: ungu · Lainnya: krem':mode==='religion'?'Siwa/Hindu/Buddha: emas–jingga · Islam: hijau · Animisme: ungu':mode==='trade'?'Warna menunjukkan tujuh node perdagangan. Pilih provinsi untuk melihat nama node.':mode==='ter'?'Hijau: dataran/hutan · Abu: pegunungan · Krem: pesisir':'Warna menunjukkan pemilik wilayah; arsiran menunjukkan pendudukan.';$('mapLegend').textContent=labels;}
+
 /* ---------- start screen ---------- */
 let anim = 0;
 function flyTo(wx, wy, s, sx, sy) {
@@ -3931,7 +4010,7 @@ const SFX = (() => {
   // Pentatonik yang terinspirasi slendro, bukan rekonstruksi laras gamelan tertentu.
   const scale=[0,240,480,720,960],hz=(base,i)=>base*Math.pow(2,(scale[((i%5)+5)%5]+1200*Math.floor(i/5))/1200);
   function ramp(param,value,time=.15){if(!ctx)return;param.setTargetAtTime(value,T(),time);}
-  function currentScene(){if(phase!=='game'||!G)return 'peace';if((G.battles||[]).some(b=>!b.done&&btMine(b)))return 'battle';return warsOf(G.nat).length?'war':'peace';}
+  function currentScene(){if(phase!=='game'||!G)return 'peace';if((G.battles||[]).some(b=>!b.done&&btMine(b))||(G.fleets||[]).some(f=>f.nat===G.nat&&f.battleDays>0))return 'battle';return warsOf(G.nat).length?'war':'peace';}
   function mix(){
     if(!ctx)return;scene=currentScene();
     ramp(fx.gain,sfxOn?levels.effects/100:0,.03);ramp(ui.gain,sfxOn?levels.interface/100:0,.03);

@@ -10,7 +10,9 @@
 
 Penelusuran sumber tersebut mendukung keragaman tradisi kapal, bukan satu spesifikasi kapal Majapahit tahun 1350. Jangan memproyeksikan armada meriam abad XVI ke semua kerajaan pada awal permainan. Nama peran berikut adalah label desain, bukan klasifikasi sejarah yang pasti.
 
-## Rancangan angkatan laut — belum diimplementasikan
+## Rancangan angkatan laut dan status implementasi
+
+**Pembaruan:** armada awal, pelabuhan, pembangunan, navigasi laut, reparasi, perlindungan dagang dan pertempuran dasar kini tersedia. Kontrak implementasi tahap awal ada di `docs/ARMADA.md`. Tabel berikut menyimpan rancangan peran; jung angkut/transportasi dan blokade masih belum tersedia.
 
 | Peran EU4 | Label usulan Nusantara | Fungsi permainan |
 |---|---|---|
@@ -29,7 +31,7 @@ Urutan pembangunan yang dapat diuji per tahap:
 
 Kapal tempur, kapal dagang dan angkutan harus bersaing untuk anggaran yang sama. Blokade sebaiknya mengurangi produksi/pajak pesisir dan membantu pengepungan secara terbatas, dengan kekuatan relatif serta opsi mematahkan blokade. Semua efek wajib masuk perhitungan ekonomi/perang, bukan sekadar ikon. Save lama harus mendapat armada kosong tanpa kehilangan tentara atau rute yang sedang berjalan.
 
-Belum ada kapal, pelaut, blokade, laksamana atau angkutan laut di versi ini. Tentara masih melewati hubungan selat peta yang lama.
+Kapal sudah tersedia dalam tiga kelas sederhana. Pelaut, blokade, laksamana dan angkutan tentara belum tersedia. Tentara masih melewati hubungan selat peta yang lama.
 
 ## Kesiapan pasukan — sudah diterapkan
 
