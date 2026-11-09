@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node tools/make.mjs",
     "build:map": "node tools/build-map.mjs",
-    "test": "for t in tests/t17.py tests/t18.py tests/t19.py tests/t20.py tests/t21.py tests/t22.py; do python3 $t || exit 1; done"
+    "test": "python3 tests/run_all.py"
   },
   "keywords": [],
   "author": "",

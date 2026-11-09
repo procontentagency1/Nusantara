@@ -235,3 +235,6 @@ Keputusan desain yang diasumsikan (belum dikonfirmasi pemilik): event sejarah bo
 
 ## Skala pasukan dan bangunan regional
 Gunakan armyVisualScale untuk pasukan peta dan pertempuran; ARM_HIT/BT_HIT harus mengikuti transformasi yang sama. outlinedUnit memakai WeakMap dari sprite asli ke sprite ber-outline. CITY_STYLE_GROUPS/cityStyle hanya untuk arsitektur; jangan mengganti REGIONAL_STYLE karena dipakai busana dan klasifikasi perdagangan. tests/t29_visual_scale.py mengukur lebar gambar aktual dan hitbox pada enam zoom serta memastikan seluruh negara mendapat gaya eksplisit.
+
+## Audit, teknologi, dan sumber daya
+`npm test` menjalankan tests/run_all.py: HTTP lokal, browser tersedia, legacy smoke dan assertion t23+. Rincian audit dan batas ada di docs/AUDIT.md. Event button memiliki token uid; jangan konsumsi event dari tombol lama. Perdamaian menuntut pendudukan, bukan klaim saja. G.resourceStocks/G.improvements menyimpan stok negara/pengolahan provinsi; fixResources migrasi, resourcesMonth sekali per bulan. e.supplyCost masuk anggaran. Rekrut mulai MIL 4 membutuhkan besi pemain. Pengolahan tidak boleh dihapus ketika transferProv. worldLog memisahkan keputusan AI dari catatan pemain. Ahead-of-time memakai tahun target tingkat teknologi.
