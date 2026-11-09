@@ -1294,7 +1294,7 @@ function monthTick() {
   }
   if (G.mo === 0) { G.prestige = Math.round(G.prestige * .95); G.legit = Math.min(100, G.legit + 1); }
   diplomacyMonth(); aiMonth(); syncRegs();
-  modMonth(); relMonth(); instMonth(); evMonth(); subjectsMonth(); aiContentMonth(); resourcesMonth();
+  modMonth(); relMonth(); instMonth(); evMonth(); subjectsMonth(); aiContentMonth(); resourcesMonth(); militaryMonth();
   saveGame(true); renderWin();
 }
 function saveGame(silent) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); if (!silent) toast('Permainan disimpan.'); } catch (e) { if (!silent) toast('Penyimpanan tidak tersedia di sini.'); } }
@@ -1543,7 +1543,7 @@ const EVA = {
 };
 
 /* ---------- pasukan ---------- */
-function mkArmy(nat, regs, loc) { const a = { id:G.nid++, nat, regs, loc, path:[], prog:0 }; G.armies.push(a); return a; }
+function mkArmy(nat, regs, loc) { const a = { id:G.nid++, nat, regs, loc, path:[], prog:0, morale:1, drill:0, drilling:false }; G.armies.push(a); return a; }
 const armiesOf = nat => G.armies.filter(a => a.nat === nat);
 const regsOf = nat => armiesOf(nat).reduce((s, a) => s + a.regs, 0);
 const myArmies = () => armiesOf(G.nat);
@@ -1588,7 +1588,7 @@ function orderMove(a, to, quiet) {
   else p = pathTo(a.nat, a.loc, to);
   if (!p || !p.length) { if (!quiet && isMe(a.nat)) toast('Tidak ada rute ke sana (butuh akses militer atau perang).'); return false; }
   if (!(a.path.length && a.prog > 0)) a.prog = 0;
-  a.path = p; return true;
+  a.path = p; a.drilling=false; return true;
 }
 const hostile = (a, b) => !a.exiled && !b.exiled && a.nat !== b.nat && atWar(a.nat, b.nat);
 
@@ -1625,7 +1625,7 @@ function armiesDay() {
   if (G.sel && !G.armies.find(a => a.id === G.sel)) G.sel = null;
 }
 function powerOf(list, loc, defending) {
-  let p = 0; for (const a of list) p += a.regs*(1 + .06*(techOf(a.nat) - 3))*(G.aiContent?.[a.nat]?.prepared?1.05:1);
+  let p = 0; for (const a of list) p += a.regs*(1 + .06*(techOf(a.nat) - 3))*(G.aiContent?.[a.nat]?.prepared?1.05:1)*armyQuality(a);
   const t = PROV[loc].t; if (defending) p *= ({ mountain:1.25, jungle:1.1 })[t] || 1;
   return p;
 }
@@ -1760,6 +1760,7 @@ function declareWar(att, def, cb) {
     if(isMe(protector)) pushEvent({war:w.id,t:'Lindungi Negara Upeti',x:`${attacked} diserang ${att}. Berikan perlindungan? Menolak mengurangi kepercayaan 15 dan hubungan 30.`,o:[['Lindungi','tribdef',{w:w.id,n:attacked,yes:true}],['Tolak','tribdef',{w:w.id,n:attacked,yes:false}]]});
     else {w.def.push(protector);for(const v of subjectsOf(protector))if(!G.subjectData[v]?.scutage&&!sideOf(w,v))w.def.push(v);}
   }
+  for(const a of G.armies)if(a.nat!==G.nat&&sideOf(w,a.nat))a.drilling=false;
   addLog(`${att} menyatakan perang kepada ${def}.`);
   if (isMe(def) || (!isMe(att) && w.def.includes(G.nat))) pushEvent({ t:'Perang!', x:`${att} menyatakan perang kepada ${def}.`, o:[['Baik', 'ok', {}]] });
   else if (isMe(att)) toast(`Anda menyatakan perang kepada ${def}.`);
@@ -1864,12 +1865,12 @@ function aiMonth() {
     if (have < fl && Math.random() < (atw ? .8 : .35)) {
       const h = capOf(n); if ((CTRL[h.id] && CTRL[h.id] !== n) || G.armies.some(x => x.loc === h.id && atWar(n, x.nat))) continue;
       const idle = G.armies.find(a => a.nat === n && a.loc === h.id && !a.path.length && !a.bt && !a.exiled);
-      if (idle) idle.regs++; else mkArmy(n, 1, h.id);
+      if (idle) recruitReady(idle); else {const a=mkArmy(n,1,h.id);a.morale=.5;}
     }
   }
   // gabung pasukan menganggur di provinsi sama
   const seen = {};
-  for (const a of G.armies) { if (isMe(a.nat) || a.path.length || a.bt || a.exiled) continue; const k = a.nat + '@' + a.loc; if (seen[k]) { seen[k].regs += a.regs; a.regs = 0; } else seen[k] = a; }
+  for (const a of G.armies) { if (isMe(a.nat) || a.path.length || a.bt || a.exiled) continue; const k = a.nat + '@' + a.loc; if (seen[k]) { blendReadiness(seen[k],a);seen[k].regs += a.regs; a.regs = 0; } else seen[k] = a; }
   G.armies = G.armies.filter(a => a.regs > 0);
   if (monthIdx() < 6) return;
   const activeAIWars = G.wars.filter(w => !involvesMe(w)).length;
@@ -1998,7 +1999,7 @@ const bar = (v) => `<div class="sb"><i style="width:${Math.max(2, Math.min(98, 5
 function etaOf(a) { if (!a.path.length) return 0; let d = stepDays(a.loc, a.path[0]) - a.prog; for (let i = 0; i < a.path.length - 1; i++) d += stepDays(a.path[i], a.path[i + 1]); return d; }
 function relTxt(v) { return `<b class="${v >= 0 ? 'pos' : 'neg'}">${v > 0 ? '+' : ''}${Math.round(v)}</b>`; }
 function armyHTML(a) {
-  let h = hd(armyName(a), `${a.regs} resimen · ${G.nat}`);
+  let h = hd(armyName(a), `${a.regs} resimen · ${G.nat}`)+row('Moral',Math.round((a.morale??1)*100)+'%')+row('Latihan',Math.round(a.drill||0)+'/100')+btn(a.drilling?'Hentikan latihan':'Latih pasukan','drill',{id:a.id},!a.bt&&!a.path.length&&!a.exiled&&OWNR[a.loc]===G.nat&&!CTRL[a.loc]&&G.maintenance===1);
   { const c = cmdOf(a); h += row('Panglima', `${c.n} <small style="opacity:.7">T${c.f} S${c.s} M${c.m}</small>`); }
   h += row('Lokasi', `${PROV[a.loc].n} (${OWNR[a.loc]})`);
   if (a.path.length) h += row('Tujuan', `${PROV[a.path[a.path.length - 1]].n} · ${etaOf(a)} hari`);
@@ -2013,11 +2014,12 @@ function armyHTML(a) {
 }
 function milHTML(e) {
   let h = hd('Militer', `Resimen ${G.regs} / force limit ${e.fl}`) + row('Tenaga', `${G.mp.toFixed(1)}K / ${e.mpMax.toFixed(1)}K (+${e.mpRec.toFixed(2)}K/bln)`) + row('Pemeliharaan', e.armyCost.toFixed(2) + ' dukat/bln');
+  h+=row('Profesionalisme',(G.professionalism[G.nat]||0).toFixed(1)+'%')+row('Lebar tempur',armyCombatWidth(G.nat)+' resimen')+'<div class="r">'+[0,.5,1].map(v=>btn((G.maintenance===v?'✓ ':'')+Math.round(v*100)+'%','maintenance',{v})).join('')+'</div><p class="note">Pemeliharaan rendah menghemat biaya, tetapi membatasi pemulihan moral. Latihan: biaya +25%, moral maksimal 50%, kualitas tempur dan profesionalisme bertambah.</p>';
   h += `<div class="r"><span>Rekrut (ibu kota)</span>${btn('Rekrut · ' + recCost(), 'rec', { v:1 }, G.mp >= 1 && G.treasury >= recCost() && !!capOf(G.nat))}</div>`;
   h += `<div class="sec">Pasukan Anda</div>`;
   const L = myArmies();
   if (!L.length) h += `<p class="note">Belum punya pasukan.</p>`;
-  for (const a of L) h += `<button class="btn rowb" data-act="selarmy" data-id="${a.id}"><span>${armyName(a)} · ${a.regs} res.</span><em>${PROV[a.loc].n}${a.path.length ? ' → ' + PROV[a.path[a.path.length - 1]].n : ''}</em></button>`;
+  for (const a of L) h += `<button class="btn rowb" data-act="selarmy" data-id="${a.id}"><span>${armyName(a)} · ${a.regs} res.</span><em>Moral ${Math.round((a.morale??1)*100)}% · Latihan ${Math.round(a.drill||0)} · ${PROV[a.loc].n}${a.path.length ? ' → ' + PROV[a.path[a.path.length - 1]].n : ''}</em></button>`;
   h += `<div class="sec">Perang</div>`;
   const W = warsOf(G.nat);
   if (!W.length) h += `<p class="note">Tidak sedang berperang. Nyatakan perang lewat jendela Diplomasi (⚖).</p>`;
@@ -2128,13 +2130,13 @@ function selectArmy(id, center) {
 Object.assign(act, {
   selarmy: b => selectArmy(+b.dataset.id, true),
   astop: b => { const a = G.armies.find(x => x.id === +b.dataset.id); if (a) { a.path = []; a.prog = 0; } },
-  asplit: b => { const a = G.armies.find(x => x.id === +b.dataset.id); if (a && a.regs >= 2) { const n = Math.floor(a.regs/2); a.regs -= n; const m = mkArmy(a.nat, n, a.loc); m.path = [...a.path]; m.prog = a.prog; } },
-  amerge: b => { const a = G.armies.find(x => x.id === +b.dataset.id); if (!a) return; for (const x of G.armies) if (x !== a && x.nat === a.nat && x.loc === a.loc && !x.path.length && !x.bt) { a.regs += x.regs; x.regs = 0; } G.armies = G.armies.filter(x => x.regs > 0); },
+  asplit: b => { const a = G.armies.find(x => x.id === +b.dataset.id); if (a && a.nat===G.nat && !a.bt && a.regs >= 2) { const n = Math.floor(a.regs/2); a.regs -= n; const m = mkArmy(a.nat, n, a.loc); m.path = [...a.path]; m.prog = a.prog;m.morale=a.morale??1;m.drill=a.drill||0;m.drilling=false; } },
+  amerge: b => { const a = G.armies.find(x => x.id === +b.dataset.id); if (!a || a.nat!==G.nat || a.bt) return; for (const x of G.armies) if (x !== a && x.nat === a.nat && x.loc === a.loc && !x.path.length && !x.bt) { blendReadiness(a,x);a.regs += x.regs; x.regs = 0; } G.armies = G.armies.filter(x => x.regs > 0); },
   adisb: b => { const a = G.armies.find(x => x.id === +b.dataset.id); if (!a) return; a.regs--; G.mp = Math.min(econ().mpMax, G.mp + 1); if (a.regs <= 0) { G.armies = G.armies.filter(x => x !== a); G.sel = null; winMode = null; } syncRegs(); },
   rec: b => {
     if (!(G.mp >= 1 && G.treasury >= recCost())) return; const cap = capOf(G.nat); if (!cap) return;
-    G.mp -= 1; G.treasury -= recCost(); const idle = G.armies.find(a => a.nat === G.nat && a.loc === cap.id && !a.path.length);
-    if (idle) idle.regs++; else mkArmy(G.nat, 1, cap.id); syncRegs();
+    G.mp -= 1; G.treasury -= recCost(); const idle = G.armies.find(a => a.nat === G.nat && a.loc === cap.id && !a.path.length && !a.bt && !a.exiled);
+    if (idle) recruitReady(idle); else {const a=mkArmy(G.nat,1,cap.id);a.morale=.5;} syncRegs();
   },
   dipn: b => { winMode = 'dipn'; winProv = b.dataset.n; selId = null; },
   ev: b => { const e=G.ev[0],i=+b.dataset.i;if(!e || String(e.uid)!==b.dataset.event || !Number.isInteger(i) || !e.o[i])return;const o=e.o[i];G.ev.shift();if(EVA[o[1]])EVA[o[1]](o[2]);showEvent();saveGame(true); },
@@ -2454,15 +2456,15 @@ const sideArmies = (bt, k) => bt[k].ids.map(i => G.armies.find(a => a.id === i))
 const btMine = bt => bt.A.nats.includes(G.nat) || bt.B.nats.includes(G.nat);
 function sideStats(list, loc, isDef) {
   const men0 = list.reduce((n, a) => n + a.regs*1000, 0), regs = list.reduce((n, a) => n + a.regs, 0) || 1;
-  let pw = 0; for (const a of list) pw += a.regs*(1 + .06*(techOf(a.nat) - 3))*(G.aiContent?.[a.nat]?.prepared?1.05:1); pw /= regs;
+  let pw = 0; for (const a of list) pw += a.regs*(1 + .06*(techOf(a.nat) - 3))*(G.aiContent?.[a.nat]?.prepared?1.05:1)*armyQuality(a); pw /= regs;
   if (isDef) pw *= DEFPOW[PROV[loc].t] || 1;
   const lead = list.slice().sort((x, y) => y.regs - x.regs)[0];
-  return { ids:list.map(a => a.id), m0:Object.fromEntries(list.map(a => [a.id, a.regs*1000])), nat:lead.nat, nats:[...new Set(list.map(a => a.nat))], men0, men:men0, mor:1, roll:0, mod:0, dice:0, pow:pw, cm:{ ...cmdOf(lead) }, att:!isDef, last:0 };
+  return { ids:list.map(a => a.id), m0:Object.fromEntries(list.map(a => [a.id, a.regs*1000])), nat:lead.nat, nats:[...new Set(list.map(a => a.nat))], men0, men:men0, mor:list.reduce((s,a)=>s+a.regs*(a.morale??1),0)/regs, roll:0, mod:0, dice:0, pow:pw, cm:{ ...cmdOf(lead) }, att:!isDef, last:0 };
 }
 function newBattle(loc, la, lb, def) {
   const bt = { id:G.nid++, loc, day:0, pd:1, phase:'fire', fresh:true, h:[], rt:0, A:sideStats(la, loc, def === 'A'), B:sideStats(lb, loc, def === 'B') };
   G.battles.push(bt);
-  for (const a of la.concat(lb)) { a.bt = bt.id; a.path = []; a.prog = 0; }
+  for (const a of la.concat(lb)) { a.bt = bt.id; a.drilling=false; a.path = []; a.prog = 0; }
   if (btMine(bt)) { toast(`Pertempuran di ${PROV[loc].n} dimulai!`); SFX.play('horn'); if (!bpCur()) bpOpen(bt.id); }
   fxAdd({ k:'ring', wx:PROV[loc].lab[0], wy:PROV[loc].lab[1], oy:24, s:34, max:.8, col:'#ffb24a' });
   return bt;
@@ -2477,8 +2479,8 @@ function resolveBattles(arrived) {
       if (a.bt || a.loc !== bt.loc || a.prog !== 0 || a.regs <= 0) continue;
       const hA = lb.some(x => hostile(a, x)) && !la.some(x => hostile(a, x)), hB = la.some(x => hostile(a, x)) && !lb.some(x => hostile(a, x));
       const k = hA ? 'A' : hB ? 'B' : null; if (!k) continue;
-      const S = bt[k]; S.ids.push(a.id); S.m0[a.id] = a.regs*1000; S.men0 += a.regs*1000; S.men += a.regs*1000; if (!S.nats.includes(a.nat)) S.nats.push(a.nat);
-      a.bt = bt.id; a.path = []; a.prog = 0; (k === 'A' ? la : lb).push(a);
+      const S = bt[k];S.mor=(S.mor*S.men+(a.morale??1)*a.regs*1000)/(S.men+a.regs*1000); S.ids.push(a.id); S.m0[a.id] = a.regs*1000; S.men0 += a.regs*1000; S.men += a.regs*1000; if (!S.nats.includes(a.nat)) S.nats.push(a.nat);
+      a.bt = bt.id; a.drilling=false; a.path = []; a.prog = 0; (k === 'A' ? la : lb).push(a);
       if (isMe(a.nat)) toast('Pasukan Anda bergabung ke pertempuran.');
     }
   }
@@ -2519,8 +2521,9 @@ function stepBattle(bt) {
   }
   const pm = ph === 'fire' ? [.75, 1] : [1.3, 1.1], dm = {};
   for (const [S, O, o] of [[A, B, 'B'], [B, A, 'A']]) {
-    const f = S.dice + 3, rr = lim(S.men/Math.max(1, O.men), .35, 2.6);
-    dm[o] = { men:S.men*.0016*f*pm[0]*S.pow, mor:.0058*f*pm[1]*Math.sqrt(rr)*Math.sqrt(S.pow/O.pow) };
+    const engaged=Math.min(S.men,armyCombatWidth(S.nat)*1000),opposing=Math.min(O.men,armyCombatWidth(O.nat)*1000);
+    const f = S.dice + 3, rr = lim(engaged/Math.max(1, opposing), .35, 2.6);
+    dm[o] = { men:engaged*.0016*f*pm[0]*S.pow, mor:.0058*f*pm[1]*Math.sqrt(rr)*Math.sqrt(S.pow/O.pow) };
   }
   for (const [S, k] of [[A, 'A'], [B, 'B']]) {
     const d = dm[k], loss = Math.min(S.men, d.men); S.men -= loss; S.mor = Math.max(0, S.mor - d.mor - .8*loss/Math.max(1, S.men0)); S.last = Math.round(loss);
@@ -2540,7 +2543,7 @@ function endBattle(bt, forced) {
   if (win && !forced) { const L = bt[lk], W = bt[win]; L.men = Math.max(0, L.men - L.men*(.06 + .2*Math.random()*Math.min(1, W.men/Math.max(1, L.men)*.7))); }
   for (const k of ['A', 'B']) {
     const S = bt[k];
-    for (const a of sideArmies(bt, k)) { const sh = (S.m0[a.id] || 0)/Math.max(1, S.men0); a.regs = Math.max(S.men*sh >= 300 ? 1 : 0, Math.round(S.men*sh/1000)); delete a.bt; }
+    for (const a of sideArmies(bt, k)) { const sh = (S.m0[a.id] || 0)/Math.max(1, S.men0); a.regs = Math.max(S.men*sh >= 300 ? 1 : 0, Math.round(S.men*sh/1000)); a.morale=lim(S.mor,0,1);a.drill=Math.max(0,(a.drill||0)-Math.min(10,bt.day*.5));delete a.bt; }
   }
   let pts = 0;
   if (win) {
@@ -2959,7 +2962,7 @@ function syncLoans() { G.loans = G.ln.reduce((a, l) => a + l.a, 0); }
 function fixSave() {
   G.claims=[...new Set((G.claims || []).map(Number).filter(id=>PROV[id] && PROV[id].k==='L'))];
   G.missions ||= []; G.flags ||= {}; G.mod ||= []; G.fired ||= []; G.evq ||= []; G.infl ||= 0; G.bank ||= 0;
-  G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel(); fixSubjects(); fixTrade(); fixKingdomContent(); fixResources();
+  G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel(); fixSubjects(); fixTrade(); fixKingdomContent(); fixResources(); fixMilitary();
 }
 function takeLoan(auto) {
   if (G.ln.length >= MAXLN) return false;
@@ -3397,6 +3400,8 @@ const vassalTaxBase = n => (OWNED[n]||[]).reduce((s,id)=>s+((CTRL[id] && CTRL[id
 function subjectBudget(e) {
   e.vassalIncome=subjectsOf(G.nat).filter(n=>libertyDesire(n)<50).reduce((sum,n)=>sum+vassalTaxBase(n)*.1*(G.subjectData[n]?.scutage?1.5:1),0);
   e.subjectTax=G.subj[G.nat] && libertyDesire(G.nat)<50 ? e.tax*.1*(G.subjectData[G.nat]?.scutage?1.5:1):0;
+  const drilling=myArmies().filter(a=>a.drilling).reduce((s,a)=>s+a.regs,0)/Math.max(1,G.regs);
+  e.armyCost*=.5+.5*G.maintenance+.25*drilling;
   e.trade=tradeSnapshot().income;
   e.supplyCost=G.resourceStocks?.[G.nat]?.food<=0?e.armyCost*.2:0;
   e.net=e.tax+e.prod+e.trade+e.vassalIncome-e.subjectTax-e.armyCost-e.misCost-e.interest-e.supplyCost;
@@ -3685,6 +3690,17 @@ act.resourcesell=b=>{const k=b.dataset.k,s=G.resourceStocks[G.nat];if(!(k in RES
 act.improveResource=b=>{const id=+b.dataset.id,p=PROV[id],s=G.resourceStocks[G.nat];if(!G.pv[id]||!p||!provinceResource(p)||G.improvements[id]||CTRL[id]||G.treasury<50||s.wood<5)return;const tech=provinceResource(p)==='iron'?G.tech[2]:G.tech[0];if(tech<4)return;G.treasury-=50;s.wood-=5;G.improvements[id]={left:6,built:false};};
 (()=>{const recruit=act.rec;act.rec=b=>{const s=G.resourceStocks[G.nat],needs=G.tech[2]>=4;if(needs&&s.iron<1){toast('Rekrut membutuhkan 1 besi.');return;}const mp=G.mp;recruit(b);if(needs&&G.mp<mp)s.iron-=1;};})();
 
+/* Kesiapan pasukan: moral, latihan, profesionalisme dan pemeliharaan. */
+function blendReadiness(a,b){const total=a.regs+b.regs;a.morale=((a.morale??1)*a.regs+(b.morale??1)*b.regs)/total;a.drill=((a.drill||0)*a.regs+(b.drill||0)*b.regs)/total;a.drilling=false;}
+function recruitReady(a){blendReadiness(a,{regs:1,morale:.5,drill:0});a.regs++;}
+function fixMilitary(){G.maintenance=Number.isFinite(G.maintenance)?lim(G.maintenance,0,1):1;G.professionalism ||= {};for(const n of Object.keys(NATS))G.professionalism[n] ||= 0;for(const a of G.armies){a.morale=Number.isFinite(a.morale)?lim(a.morale,0,1):1;a.drill=Number.isFinite(a.drill)?lim(a.drill,0,100):0;}}
+const armyMaintenance=n=>n===G.nat?G.maintenance:1;
+const armyCombatWidth=n=>Math.min(30,8+Math.floor(techOf(n)/2));
+const armyQuality=a=>1+(a.drill||0)/100*.1+(G.professionalism?.[a.nat]||0)/100*.05+modSum(a.nat===G.nat?'discipline':'__none');
+function militaryMonth(){fixMilitary();for(const a of G.armies){if(a.bt)continue;const maintenance=armyMaintenance(a.nat),cap=.5+.5*maintenance;a.morale=Math.min(cap,a.morale+.12*maintenance);if(a.nat!==G.nat)a.drilling=!warsOf(a.nat).length&&!a.path.length&&OWNR[a.loc]===a.nat&&!CTRL[a.loc];if(a.drilling&&maintenance===1&&!a.path.length&&OWNR[a.loc]===a.nat&&!CTRL[a.loc]&&!a.exiled){a.drill=Math.min(100,a.drill+2);a.morale=Math.min(.5,a.morale);G.professionalism[a.nat]=Math.min(100,G.professionalism[a.nat]+.1*a.regs/Math.max(1,regsOf(a.nat)));}else a.drill=Math.max(0,a.drill-.5);}}
+act.maintenance=b=>{const v=+b.dataset.v;if(![0,.5,1].includes(v))return;G.maintenance=v;if(v<1)for(const a of myArmies()){a.drilling=false;a.morale=Math.min(a.morale??1,.5+.5*v);}saveGame(true);};
+act.drill=b=>{const a=G.armies.find(a=>a.id===+b.dataset.id);if(!a||a.nat!==G.nat||a.bt||a.path.length||a.exiled||OWNR[a.loc]!==G.nat||CTRL[a.loc]||G.maintenance<1)return;a.drilling=!a.drilling;if(a.drilling)a.morale=Math.min(a.morale,.5);saveGame(true);};
+
 /* ---------- start screen ---------- */
 let anim = 0;
 function flyTo(wx, wy, s, sx, sy) {
@@ -3777,7 +3793,7 @@ const SFX = (() => {
   const bell = (f, t, v = .18, dest) => { osc('sine', f, t, .004, 1.4, v, dest); osc('sine', f * 2.01, t, .004, .7, v * .45, dest); osc('sine', f * 2.76, t, .004, .35, v * .25, dest); };
   const gong = (f, t, v = .3) => { osc('sine', f, t, .01, 3, v, null, f * .985); osc('sine', f * 1.5, t, .01, 2.2, v * .5); osc('sine', f * 2.4, t, .01, 1.4, v * .3); noise(t, .25, v * .25, 'lowpass', 700); };
   const drum = (t, v = .45, f = 150) => { osc('sine', f, t, .002, .22, v, null, f * .38); noise(t, .06, v * .5, 'bandpass', 1400); };
-  const click = (t, f = 1500, v = .1) => osc('triangle', f, t, .002, .05, v);
+  const click = (t, f = 520, v = .025) => osc('sine', f, t, .008, .035, v);
   function horn(t, f, dur = .5, v = .16) {
     const o = ctx.createOscillator(), g = ctx.createGain(), fl = ctx.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f, t); o.frequency.linearRampToValueAtTime(f * 1.06, t + dur);
     fl.type = 'lowpass'; fl.frequency.setValueAtTime(500, t); fl.frequency.linearRampToValueAtTime(1800, t + dur * .6);
@@ -3785,33 +3801,33 @@ const SFX = (() => {
     o.connect(fl); fl.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .05);
   }
   const S = {
-    tap:   t => click(t, 1300, .08),
-    open:  t => { bell(hz(523, 2), t, .12); bell(hz(523, 4), t + .06, .1); },
-    close: t => { bell(hz(523, 3), t, .1); },
-    sel:   t => { drum(t, .22, 220); click(t + .02, 1900, .06); },
-    march: t => { drum(t, .35, 130); drum(t + .13, .28, 110); },
+    tap:   t => click(t, 480, .022),
+    open:  t => click(t,560,.025),
+    close: t => click(t,420,.018),
+    sel:   t => click(t,500,.022),
+    march: t => {click(t,240,.025);click(t+.06,200,.018);},
     clash: t => { noise(t, .18, .3, 'highpass', 2500); osc('square', 420, t, .002, .08, .08, null, 180); noise(t + .09, .14, .2, 'highpass', 3200); drum(t, .35, 90); },
     war:   t => { drum(t, .6, 110); drum(t + .28, .5, 100); drum(t + .56, .6, 90); horn(t + .1, 146, .9, .2); horn(t + .1, 220, .9, .1); },
     win:   t => { [0, 2, 4, 7].forEach((n, i) => bell(hz(392, n), t + i * .13, .2)); gong(hz(130, 0), t, .25); },
     lose:  t => { [4, 3, 1, 0].forEach((n, i) => bell(hz(330, n), t + i * .2, .16)); gong(hz(98, 0), t + .5, .35); },
     peace: t => { gong(hz(110, 0), t, .3); bell(hz(440, 2), t + .35, .16); bell(hz(440, 4), t + .6, .14); },
     build: t => { noise(t, .05, .3, 'bandpass', 1800); osc('sine', 90, t, .002, .12, .35); noise(t + .16, .05, .25, 'bandpass', 2200); osc('sine', 110, t + .16, .002, .12, .3); bell(hz(659, 4), t + .38, .12); },
-    up:    t => { [0, 1, 2, 4].forEach((n, i) => bell(hz(440, n), t + i * .07, .13)); },
-    coin:  t => { bell(1760, t, .1); bell(2349, t + .07, .09); },
-    ok:    t => { bell(hz(523, 1), t, .14); bell(hz(523, 3), t + .09, .14); },
-    no:    t => { osc('square', 190, t, .003, .13, .08, null, 120); osc('square', 150, t + .12, .003, .15, .08, null, 90); },
+    up:    t => {click(t,520,.022);click(t+.045,650,.014);},
+    coin:  t => { click(t,640,.02);click(t+.035,760,.012); },
+    ok:    t => click(t,620,.025),
+    no:    t => osc('sine',220,t,.008,.08,.025,null,180),
     alert: t => { gong(hz(98, 0), t, .3); drum(t + .02, .35, 100); },
     event: t => { gong(hz(130, 0), t, .22); [0, 2, 1, 3].forEach((n, i) => bell(hz(494, n), t + .2 + i * .15, .15)); },
     gone:  t => { gong(hz(82, 0), t, .4); gong(hz(61, 0), t + .4, .35); },
     start: t => { gong(hz(98, 0), t, .35); drum(t + .5, .5, 120); drum(t + .75, .5, 120); [0, 2, 4, 7, 9].forEach((n, i) => bell(hz(330, n), t + 1 + i * .12, .17)); },
-    month: t => { bell(hz(262, 4), t, .05); },
+    month: t => click(t,380,.012),
     horn:  t => { horn(t, 130, .7, .2); horn(t + .05, 195, .7, .1); drum(t, .5, 100); },
     bday:  t => { noise(t, .09, .13, 'highpass', 2200); drum(t, .16, 95); },
     whoosh:t => { noise(t, .22, .06, 'bandpass', 900); },
   };
   function play(name, minGap = 40) {
     if (!sfxOn || !S[name]) return; init(); if (!ctx || ctx.state !== 'running') return;
-    const n = performance.now(); if (last[name] && n - last[name] < minGap) return; last[name] = n;
+    const n = performance.now(); const ui=['tap','open','close','sel','coin','ok','month','up','no','march'].includes(name);if(ui&&last.ui&&n-last.ui<100)return;if(ui)last.ui=n; if (last[name] && n - last[name] < minGap) return; last[name] = n;
     try { S[name](T() + .01); } catch (e) {}
   }
   /* musik latar: gamelan ambient generatif (slendro), pelan */
