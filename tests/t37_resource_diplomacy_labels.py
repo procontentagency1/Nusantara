@@ -33,6 +33,9 @@ with sync_playwright() as p:
  page.screenshot(path='/tmp/nusantara-resource-quote.png')
  page.locator('#win button[data-act=resourceorder][data-k=wood][data-kind=buy]').click()
  assert page.evaluate('G.resourceOrders.length')==1
+ assert page.locator('#win button[data-act=resourcecancel]').count()==1
+ page.evaluate('for(let i=0;i<60&&G.resourceOrders.length;i++)resourceTradeDay()')
+ assert page.locator('#win button[data-act=resourcecancel]').count()==0
  page.evaluate("winMode=null;renderWin();setMode('religion');const p=capOf(G.nat);centerOn(p.lab[0],p.lab[1],fitS*2.8);renderDetail()")
  page.wait_for_timeout(600);page.screenshot(path='/tmp/nusantara-faith-labels.png')
  assert not errors,errors

@@ -4005,7 +4005,7 @@ function settleResourceTrade(id,cancel=false){
  }
  saveGame(true);return true;
 }
-function resourceTradeDay(){for(const o of [...(G.resourceOrders||[])]){if(!alive(o.n)||!alive(G.nat)||atWar(G.nat,o.n)){settleResourceTrade(o.id,true);continue;}if(--o.left<=0)settleResourceTrade(o.id);}}
+function resourceTradeDay(){const active=!!G.resourceOrders?.length;for(const o of [...(G.resourceOrders||[])]){if(!alive(o.n)||!alive(G.nat)||atWar(G.nat,o.n)){settleResourceTrade(o.id,true);continue;}if(--o.left<=0)settleResourceTrade(o.id);}if(active&&winMode==='resourceTrade')renderWin();}
 function resourceTradeMonth(){
  for(const n of Object.keys(NATS))if(n!==G.nat&&alive(n)&&G.resourceTradeGold[n]<2000)G.resourceTradeGold[n]=Math.min(2000,G.resourceTradeGold[n]+Math.max(2,natDev(n)*.12));
  if(monthIdx()===0||monthIdx()%6||G.resourceOrders.length>=3)return;
