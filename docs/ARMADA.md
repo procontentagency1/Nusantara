@@ -36,7 +36,7 @@ Armada musuh yang sama-sama di laut, tidak sedang mundur dan berjarak maksimal 2
 
 Armada mencoba mundur ketika kehilangan separuh jumlah kapal saat mulai pertempuran atau rata-rata lambung di bawah 35%. Masa mundur 20 hari mencegah serangan dan intersepsi ulang. Armada bersandar tidak bertempur. Kapal yang kehilangan pelabuhan keluar dari status sandar. Aneksasi penuh membersihkan armada negara yang lenyap.
 
-AI berangkat menjaga perdagangan saat damai, kembali memperbaiki kapal yang rusak, serta mengejar armada musuh di laut ketika perkiraan kekuatannya memadai. Ekonomi pembangunan kapal AI belum setara pemain dan kapal tenggelam belum otomatis diganti. Angkutan resimen, blokade, pelaut, laksamana, penangkapan kapal, naval force limit dan bonus perahu dayung menurut jenis laut belum tersedia. Hubungan selat untuk tentara tetap berfungsi sampai transportasi laut lengkap.
+AI berangkat menjaga perdagangan saat damai, kembali memperbaiki kapal yang rusak, serta mengejar armada musuh di laut ketika perkiraan kekuatannya memadai. Ekonomi pembangunan kapal AI belum setara pemain dan kapal tenggelam belum otomatis diganti. Blokade, pelaut, laksamana, penangkapan kapal, naval force limit dan bonus perahu dayung menurut jenis laut belum tersedia. Hubungan selat untuk tentara tetap berfungsi.
 
 ## Save
 
@@ -51,3 +51,9 @@ Mode agama mewarnai agama provinsi; sumber daya mewarnai pangan/kayu/besi/rempah
 ## Verifikasi dan batas
 
 `tests/t36_navy_mapviews.py` memeriksa armada awal kerajaan pesisir, biaya, rute air, kedatangan, sandar, perbaikan, antrean/biaya sekali, pembangunan selesai, bonus dagang, pertempuran/mundur, save/migrasi tanpa duplikat, warna filter, penghapusan minimap serta interaksi dropdown/Escape. Screenshot viewport HP 780×360 mencakup panel armada, kapal di peta dan dropdown. `t27_trade` diperbarui untuk komponen biaya laut yang disengaja; seluruh regresi melalui `npm test`. Belum dites pada HP fisik atau penyeimbangan kampanye panjang pemain.
+
+## Angkutan pasukan
+
+Di Militer → Armada, pilih armada yang bersandar di pelabuhan sendiri dan pasukan diam di provinsi yang sama, lalu pilih Muat. Setiap kapal mengangkut dua resimen; pisahkan pasukan terlebih dulu bila terlalu besar. Satu armada membawa satu kelompok. Pilih provinsi pesisir dari daftar atau ketuk pesisir di peta untuk mendarat; akses militer atau perang diperlukan. Pasukan di atas kapal tidak ikut pertempuran dan kepungan darat, tetapi tetap dihitung dalam biaya dan kekuatan kerajaan. Saat mendarat di provinsi yang ditempati musuh, pertempuran langsung terjadi. Kehilangan kapal mengurangi kapasitas dan kelebihan resimen hilang; bila armada tenggelam seluruh muatan hilang.
+
+Muatan dan rute tersimpan bersama armada; save lama tanpa muatan tetap berlaku. AI memakai angkutan sederhana saat armada dan pasukan tersedia di pelabuhan serta ada sasaran perang yang tidak dapat dijangkau lewat darat. AI belum merencanakan operasi gabungan yang kompleks. tests/t40_transport.py mencakup muat, kapasitas, save, perjalanan, pendaratan, pertempuran, tenggelam, AI, dan tombol panel.
