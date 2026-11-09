@@ -2257,7 +2257,7 @@ function outlinedUnit(c) {
  }
  g.drawImage(c,0,0);UNIT_OUTLINES.set(c,result);return result;
 }
-function armyVisualScale(s=view.s){return .6*Math.pow(Math.max(.01,s/fitS),.6);}
+function armyVisualScale(s=view.s){return .6*Math.pow(Math.max(.01,s/fitS),.38);}
 /* ---------- sprite & figur ---------- */
 function figureOn(g, x, y, u, col, o) {
   o = o || {}; const c = o.plain?soldierSprite(col,regionalStyle(o.nat)):outlinedUnit(soldierSprite(col, regionalStyle(o.nat)));
@@ -2334,7 +2334,7 @@ function drawBattles() {
   const u = .42, k = zf(), battleScale=armyVisualScale();
   for (const bt of G.battles) {
     if (bt.done) continue;
-    const P = PROV[bt.loc], cx = sxw(P.lab[0]) + 6, by = syw(P.lab[1]) + 25;
+    const P = PROV[bt.loc], cx = sxw(P.lab[0]), by = syw(P.lab[1]) + 3;
     if (cx < -50 || by < -60 || cx > vw + 50 || by > vh + 50) continue;
     ctx.save();ctx.translate(cx,by);ctx.scale(battleScale,battleScale);ctx.translate(-cx,-by);
     const fire = bt.phase === 'fire', A = bt.A, B = bt.B, mine = A.nats.includes(G.nat) || B.nats.includes(G.nat);
@@ -2389,11 +2389,12 @@ function drawArmies() {
   drawRoutes(); drawSieges();
   const stack = {}, list = [];
   for (const a of G.armies) { if (a.bt) continue; const q = armyPos(a); if (q[0] < -80*armyScale || q[1] < -80*armyScale || q[0] > vw + 80*armyScale || q[1] > vh + 80*armyScale) continue; list.push({ a, q }); }
+  const stackCount={};for(const {a} of list){const key=a.loc+(a.path.length?'m':'s');stackCount[key]=(stackCount[key]||0)+1;}
   list.sort((m, n) => m.q[1] - n.q[1]);
   for (const { a, q } of list) {
     const [x, y] = q, moving = a.path.length > 0, key = a.loc + (moving ? 'm' : 's'), idx = stack[key] = (stack[key] ?? -1) + 1;
     ctx.save(); ctx.translate(x, y); ctx.scale(armyScale, armyScale); ctx.translate(-x, -y);
-    const bx = x + 12 + idx*17, by = y + 22, col = natColor[a.nat] || '#aaa', [dx] = armyDir(a), sg = moving && dx < 0 ? -1 : 1, ph = fxT*5 + a.id*1.7;
+    const bx = x + (idx-(stackCount[key]-1)/2)*15, by = y + 2, col = natColor[a.nat] || '#aaa', [dx] = armyDir(a), sg = moving && dx < 0 ? -1 : 1, ph = fxT*5 + a.id*1.7;
     if (G.sel === a.id) { ctx.fillStyle = `rgba(255,230,140,${.35 + .15*Math.sin(fxT*5)})`; ctx.strokeStyle = '#ffe08a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(bx + 3, by + 1, 15, 5, 0, 0, 7); ctx.fill(); ctx.stroke(); }
     if (moving) {
       const nf = a.regs >= 11 ? 3 : a.regs >= 5 ? 2 : 1;
