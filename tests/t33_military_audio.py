@@ -22,7 +22,7 @@ with sync_playwright() as p:
  page.locator('#rail button[data-w=menu]').click()
  page.evaluate("SFX.setMus(false)")
  page.wait_for_timeout(150)
- audio=page.evaluate("""()=>{const peaks=[];const proto=AudioParam.prototype,old=proto.exponentialRampToValueAtTime;proto.exponentialRampToValueAtTime=function(v,t){peaks.push(v);return old.call(this,v,t);};SFX.play('tap');proto.exponentialRampToValueAtTime=old;return peaks;}""")
+ audio=page.evaluate("""()=>{const peaks=[],gains=new WeakSet(),cp=AudioContext.prototype,cg=cp.createGain;cp.createGain=function(){const g=cg.call(this);gains.add(g.gain);return g;};const proto=AudioParam.prototype,old=proto.exponentialRampToValueAtTime;proto.exponentialRampToValueAtTime=function(v,t){if(gains.has(this))peaks.push(v);return old.call(this,v,t);};try{SFX.play('tap');}finally{proto.exponentialRampToValueAtTime=old;cp.createGain=cg;}return peaks;}""")
  print('tap gain envelope',audio);assert audio and max(audio)<=.03
  assert not errors,errors
  b.close()
