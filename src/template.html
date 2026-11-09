@@ -348,7 +348,7 @@ button,.btn{touch-action:manipulation}
  <div id="mapViewMenu" class="wood" hidden>
   <button class="btn" data-mapmode="pol">Politik</button><button class="btn" data-mapmode="ter">Medan</button>
   <button class="btn" data-mapmode="religion">Agama</button><button class="btn" data-mapmode="resources">Sumber daya</button><button class="btn" data-mapmode="trade">Perdagangan</button>
-  <div id="mapLegend"></div><div class="sec">Lihat kawasan</div><button class="btn" data-mapregion="nusantara">Nusantara</button><button class="btn" data-mapregion="china">Tiongkok</button><button class="btn" data-mapregion="japan">Jepang & Korea</button>
+  <div id="mapLegend"></div><p class="note">Kabut menutupi wilayah asing. Gerakkan armada atau pasukan untuk menemukannya; penemuan tersimpan.</p><div class="sec">Lihat kawasan</div><button class="btn" data-mapregion="india">Asia Selatan</button><button class="btn" data-mapregion="nusantara">Nusantara</button><button class="btn" data-mapregion="china">Tiongkok</button><button class="btn" data-mapregion="japan">Jepang & Korea</button>
  </div>
 </div>
 <div id="hint" class="abs">Geser · cubit zoom · ketuk provinsi</div>
@@ -698,6 +698,9 @@ const CITY_STYLE_GROUPS={
 function cityStyle(nat){if(EAST_PROFILE[nat])return EAST_PROFILE[nat].region;return nat==='Majapahit'?'majapahit':Object.keys(CITY_STYLE_GROUPS).find(k=>CITY_STYLE_GROUPS[k].includes(nat))||'melayu';}
 function regionalHall(g,x,y,k,style,v) {
  if(['china','korea','japan','ryukyu','ainu','taiwan','vietnam','champa'].includes(style))return eastHall(g,x,y,k,style,v);
+ if(style==='india_south'){g.save();g.translate(x,y);g.scale(k,k);g.fillStyle='#a58c69';g.fillRect(-8,-2,16,2);for(let i=0;i<4;i++){const w=7-i*1.25,y0=-2-i*3;g.fillStyle=i%2?'#c3ab87':'#d6c09b';g.fillRect(-w,y0-3,w*2,3);g.fillStyle='#806b50';g.fillRect(-w-.4,y0-3,w*2+.8,.5);}g.fillStyle='#5c4a36';g.fillRect(-1.5,-5,3,5);g.fillStyle='#e0ca99';g.fillRect(-1,-16,2,2);g.restore();return;}
+ if(style==='sri_lanka'){g.save();g.translate(x,y);g.scale(k,k);g.fillStyle='#e6d8b7';g.fillRect(-8,-2,16,2);g.beginPath();g.ellipse(0,-2,6,6,0,Math.PI,0);g.fill();g.fillRect(-1,-11,2,4);g.fillStyle='#bd9a55';g.fillRect(-.5,-13,1,2);g.restore();return;}
+ if(style==='india_sultan'){g.save();g.translate(x,y);g.scale(k,k);g.fillStyle='#bc9b6e';g.fillRect(-7,-9,14,9);g.fillStyle='#e0c49b';g.beginPath();g.ellipse(0,-9,6,5,0,Math.PI,0);g.fill();g.fillStyle='#493729';g.fillRect(-1.5,-6,3,6);g.restore();return;}
  g.save();g.translate(x,y);g.scale(k,k);
  const roof=['#946746','#ad7c4c','#806447'][v%3],edge='#3f2d23';
  const raised=['melayu','minang','batak','borneo','sulawesi','islands'].includes(style);
@@ -883,6 +886,8 @@ function soldierSprite(col, style = 'jawa') {
     if (style === 'sumatra') { poly(g, [[15,10],[18,3],[23,6],[28,3],[31,10]], col, ol); g.fillStyle='#e8c25a'; g.fillRect(16,10,14,1.5); }
     if (style === 'borneo') { g.fillStyle='#f0d39a'; for (let y=25; y<39; y+=4) g.fillRect(15,y,16,1); g.fillStyle='#d7bf87'; poly(g, [[17,8],[22,0],[24,8]], '#e9d9aa', ol); }
     if (style === 'timur') { g.strokeStyle='#efd18a'; g.lineWidth=1.2; for (let y=48; y<60; y+=4) { g.beginPath(); g.moveTo(12,y); g.lineTo(34,y); g.stroke(); } g.fillStyle='#e5d5ac'; g.fillRect(16,8,14,2); }
+    if (style==='india_sultan') { g.fillStyle='#e2d2ad';g.beginPath();g.ellipse(23,8,8,4,0,0,7);g.fill();g.strokeStyle='#8d7355';g.lineWidth=.7;g.stroke();g.beginPath();g.moveTo(17,8);g.lineTo(28,6);g.moveTo(17,10);g.lineTo(29,8);g.stroke(); }
+    if (style==='india_south'||style==='sri_lanka') { g.fillStyle='#e4d5ae';poly(g,[[14,44],[32,44],[35,62],[11,62]],'#d6c59a',ol);g.strokeStyle=col;g.lineWidth=2;g.beginPath();g.moveTo(12,57);g.lineTo(34,57);g.stroke();if(style==='sri_lanka'){g.fillStyle='#f0dfb7';g.fillRect(16,8,14,3);} }
     // perisai
     g.fillStyle = lg(4, 0, 14, 0, '#8b5a2e', '#5b381a'); g.strokeStyle = ol; g.lineWidth = .9;
     g.beginPath(); g.ellipse(9, 38, 6.4, 13, 0, 0, 7); g.fill(); g.stroke();
@@ -1134,7 +1139,7 @@ function frame() {
     const n = nats.find(n => n.nat === selNat); if (n) { ctx.strokeStyle = '#ffe08a'; ctx.lineWidth = 3/s; ctx.stroke(n.path); }
   }
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  drawArmies(); drawFleets(); if (phase === 'game' && G) fxDraw();
+  drawArmies(); drawFleets(); if (phase === 'game' && G) { fxDraw(); drawExplorationFog(); }
   ctx.setTransform(1,0,0,1,0,0); vignette();
 }
 function draw() { frame(); }
@@ -1193,7 +1198,7 @@ const MAP_VIEWS={pol:'Politik',ter:'Medan',religion:'Agama',resources:'Sumber da
 function closeMapViews(){$('mapViewMenu').hidden=true;$('mapViewToggle').setAttribute('aria-expanded','false');}
 function setMode(m){if(!MAP_VIEWS[m])return;mode=m;COUNTRY_LABELS=null;for(const p of provs)p._pf=null;cacheVer++;$('mapViewToggle').textContent='Peta: '+MAP_VIEWS[m]+' ▾';for(const b of $('mapViewMenu').querySelectorAll('[data-mapmode]')){b.classList.toggle('on',b.dataset.mapmode===m);b.setAttribute('aria-pressed',String(b.dataset.mapmode===m));}updateMapLegend();closeMapViews();request();}
 $('mapViewToggle').onclick=()=>{const open=$('mapViewMenu').hidden;$('mapViewMenu').hidden=!open;$('mapViewToggle').setAttribute('aria-expanded',String(open));updateMapLegend();SFX.play(open?'open':'close');};
-$('mapViewMenu').onclick=e=>{const region=e.target.closest('[data-mapregion]');if(region){const p=byName(({nusantara:'Makassar',china:'Kaifeng',japan:'Laut Jepang'})[region.dataset.mapregion]);if(p)centerOn(p.lab[0],p.lab[1],region.dataset.mapregion==='japan'?.65:.55);closeMapViews();return;}const b=e.target.closest('[data-mapmode]');if(b){setMode(b.dataset.mapmode);SFX.play('tap');}};
+$('mapViewMenu').onclick=e=>{const region=e.target.closest('[data-mapregion]');if(region){const p=byName(({india:'Vijayanagara',nusantara:'Makassar',china:'Kaifeng',japan:'Laut Jepang'})[region.dataset.mapregion]);if(p)centerOn(p.lab[0],p.lab[1],region.dataset.mapregion==='japan'?.65:.55);closeMapViews();return;}const b=e.target.closest('[data-mapmode]');if(b){setMode(b.dataset.mapmode);SFX.play('tap');}};
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('#mapviews'))closeMapViews();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMapViews();});
 setTimeout(() => $('hint').classList.add('gone'), 5000);
@@ -1305,7 +1310,7 @@ const slotsOf = (q) => Math.max(1, Math.min(4, 1 + Math.floor((q.t+q.p+q.m)/10))
 /* ---------- time ---------- */
 let paused = true, speed = 3, acc = 0, lastT = 0;
 function dayTick() {
-  G.d++; armiesDay(); navyDay(); resourceTradeDay(); syncRegs();
+  G.d++; armiesDay(); navyDay(); revealExploration(); resourceTradeDay(); syncRegs();
   if (G.d > MDAYS[G.mo]) { G.d = 1; G.mo++; if (G.mo > 11) { G.mo = 0; G.y++; } monthTick(); }
   topDirty = true;
 }
@@ -2116,7 +2121,7 @@ function peaceHTML() {
   return h + `<div class="r"><span></span>${btn('Kembali', 'win', { w:'war' })}</div>`;
 }
 function dipListHTML() {
-  const my = capOf(G.nat), list = Object.keys(NATS).filter(n => n !== G.nat && alive(n)).map(n => {
+  const my = capOf(G.nat), list = Object.keys(NATS).filter(n => n !== G.nat && alive(n) && knownNation(n)).map(n => {
     const c = capOf(n); return { n, d:Math.hypot(c.lab[0] - my.lab[0], c.lab[1] - my.lab[1]), neigh:(OWNED[n] || []).some(id => LINK[id].some(l => OWNR[l.to] === G.nat)) };
   }).sort((a, b) => (b.neigh - a.neigh) || a.d - b.d).slice(0, 36);
   let h = hd('Diplomasi', `Diplomat bebas: ${dipFree()} · ${G.mana[1] | 0} DIP`);
@@ -2235,6 +2240,7 @@ Object.assign(act, {
 /* ---------- map interaction ---------- */
 function onMapTap(p, x, y) {
   if (phase === 'start') { if (p && p.k === 'L') selectNation(OWNR[p.id]); return; }
+  if(p&&!explored(p.id)&&!(winMode==='fleet'&&p.k==='S')&&!G.sel){toast('Wilayah belum dikenal. Jelajahi dengan armada atau pasukan.');return;}
   const bh = BT_HIT.slice().reverse().find(h => x >= h.x0 && x <= h.x1 && y >= h.y0 && y <= h.y1);
   if (bh) { bpOpen(bh.bt.id, true); return; }
   const hit = ARM_HIT.slice().reverse().find(h => x >= h.x0 && x <= h.x1 && y >= h.y0 && y <= h.y1);
@@ -3014,7 +3020,7 @@ const loanSize = dev => Math.max(20, Math.floor(dev*.5));
 const loanRate = () => Math.max(1, 4 + Math.max(0, -G.stab) + (G.bank > 0 ? 5 : 0) + modSum('int'));
 function syncLoans() { G.loans = G.ln.reduce((a, l) => a + l.a, 0); }
 function fixSave() {
-  fixEastWorld(); fixEqualAreaWorld();
+  fixEastWorld(); fixEqualAreaWorld(); fixSouthWorld(); fixExploration();
   G.claims=[...new Set((G.claims || []).map(Number).filter(id=>PROV[id] && PROV[id].k==='L'))];
   G.missions ||= []; G.flags ||= {}; G.mod ||= []; G.fired ||= []; G.evq ||= []; G.infl ||= 0; G.bank ||= 0;
   G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel(); fixSubjects(); fixTrade(); fixKingdomContent(); fixResources(); fixMilitary(); fixExpansion(); fixNavy(); fixResourceTrade(); fixWorld();
@@ -3574,6 +3580,7 @@ EVA.tribdef=a=>{const w=G.wars.find(w=>w.id===a.w);if(!w)return;if(a.yes){if(!si
 
 /* ---------- Tahap G: jaringan dagang terarah ---------- */
 const TRADE_NODES = [
+ {id:'bengal',n:'Teluk Benggala',out:['malaka']},
  {id:'nippon',n:'Kepulauan Jepang',out:['hangzhou']},{id:'korea',n:'Semenanjung Korea',out:['hangzhou']},{id:'hangzhou',n:'Pesisir Tiongkok',out:['siam','malaka']},
  {id:'maluku',n:'Maluku',out:['sulawesi','jawa']},
  {id:'sulawesi',n:'Sulawesi',out:['jawa']},
@@ -3585,7 +3592,7 @@ const TRADE_NODES = [
 ];
 const TRADE_BY_ID=Object.fromEntries(TRADE_NODES.map(n=>[n.id,n]));
 function tradeNode(p) {
- const n=p.nat;if(EAST_PROFILE[n])return ['japan','ainu'].includes(EAST_PROFILE[n].region)?'nippon':EAST_PROFILE[n].region==='korea'?'korea':['china','taiwan','ryukyu'].includes(EAST_PROFILE[n].region)?'hangzhou':'siam';
+ const n=p.nat;if(EAST_PROFILE[n])return ['india_south','india_sultan','sri_lanka'].includes(EAST_PROFILE[n].region)?'bengal': ['japan','ainu'].includes(EAST_PROFILE[n].region)?'nippon':EAST_PROFILE[n].region==='korea'?'korea':['china','taiwan','ryukyu'].includes(EAST_PROFILE[n].region)?'hangzhou':'siam';
  if(['Bintan','Tumasik','Pahang','Kelantan','Kadaram','Langkasuka'].includes(n))return 'malaka';
  if(['Siam','Khmer','Champa','Tenasserim'].includes(n))return 'siam';
  if(['Minahasa','Gorontalo','Luwu','Makassar','Konawe','Banggai','Buton','Visayas','Mindanao','Sulu'].includes(n))return 'sulawesi';
@@ -3919,7 +3926,7 @@ function navalPath(x,y,to){
  if(prev[end]===-1)return null;const path=[];for(let i=end;i!==start;i=prev[i])path.unshift(g.xy(i));return path;
 }
 const nearestSea=(x,y)=>SEA_PROVS.reduce((a,b)=>Math.hypot(a.lab[0]-x,a.lab[1]-y)<Math.hypot(b.lab[0]-x,b.lab[1]-y)?a:b).id;
-const seaTradeNode=id=>/Laut Jepang|Korea|Seto|Hokkaido|Pasifik Utara|Pasifik Honshu/.test(PROV[id]?.n||'')?'nippon':/Kuning|Bohai/.test(PROV[id]?.n||'')?'korea':/Guangdong|Taiwan|Cina Timur|Ryukyu/.test(PROV[id]?.n||'')?'hangzhou':PROV[id]?.n==='Teluk Tonkin'?'siam':({103:'sumatra',104:'malaka',105:'siam',106:'borneo',107:'jawa',108:'sumatra',109:'jawa',110:'jawa',111:'jawa',112:'jawa',113:'borneo',114:'sulawesi',115:'sulawesi',116:'sulawesi',117:'sulawesi',118:'jawa',119:'maluku',120:'maluku',121:'maluku',122:'maluku',123:'maluku',124:'jawa',125:'maluku',126:'maluku',127:'sumatra',128:'siam',129:'siam',130:'maluku'})[id]||'jawa';
+const seaTradeNode=id=>/Laut Arab|Gujarat|Malabar|Lakadewa|Mannar|Coromandel|Benggala|Hindia Barat Daya|Hindia Tengah Barat/.test(PROV[id]?.n||'')?'bengal':/Laut Jepang|Korea|Seto|Hokkaido|Pasifik Utara|Pasifik Honshu/.test(PROV[id]?.n||'')?'nippon':/Kuning|Bohai/.test(PROV[id]?.n||'')?'korea':/Guangdong|Taiwan|Cina Timur|Ryukyu/.test(PROV[id]?.n||'')?'hangzhou':PROV[id]?.n==='Teluk Tonkin'?'siam':({103:'sumatra',104:'malaka',105:'siam',106:'borneo',107:'jawa',108:'sumatra',109:'jawa',110:'jawa',111:'jawa',112:'jawa',113:'borneo',114:'sulawesi',115:'sulawesi',116:'sulawesi',117:'sulawesi',118:'jawa',119:'maluku',120:'maluku',121:'maluku',122:'maluku',123:'maluku',124:'jawa',125:'maluku',126:'maluku',127:'sumatra',128:'siam',129:'siam',130:'maluku'})[id]||'jawa';
 function makeFleet(n,port,types){const [x,y]=navalGrid().xy(navalPoint(port));const f={id:G.nid++,nat:n,name:'Armada '+PROV[port].n,port,sea:nearestSea(x,y),x,y,path:[],ships:types.map(type=>({type,hp:100})),mission:'harbor',retreat:0,battleDays:0};G.fleets.push(f);return f;}
 function fixNavy(){
  G.shipQueue ||= [];if(!Array.isArray(G.fleets)){G.fleets=[];for(const n of Object.keys(NATS)){const ports=portsOf(n);if(!ports.length)continue;makeFleet(n,ports[0],ports.length>=5?['jung','jung','patrol','patrol','patrol','dayung']:ports.length>=2?['jung','patrol','dayung']:['patrol','dayung']);}}
@@ -4024,6 +4031,7 @@ function fixResourceTrade(){G.resourceOrders ||= [];G.resourceTradeGold ||= {};G
 function resourceCapacity(n,k){return 500-(G.resourceOrders||[]).filter(o=>o.k===k&&(o.from===n||o.to===n)).reduce((s,o)=>s+o.qty,0);}
 function resourceRoute(n){
  if(!Object.hasOwn(NATS,n)||n===G.nat||!alive(n)||!alive(G.nat))return {reason:'Kerajaan tidak tersedia.'};
+ if(!knownNation(n))return {reason:'Kerajaan belum ditemukan.'};
  if(atWar(G.nat,n))return {reason:'Perdagangan ditutup saat perang.'};
  if(relGet(G.nat,n)<=-75)return {reason:'Hubungan terlalu buruk (butuh lebih dari −75).'};
  const a=capOf(G.nat),b=capOf(n),distance=Math.hypot(a.lab[0]-b.lab[0],a.lab[1]-b.lab[1]);
@@ -4089,23 +4097,56 @@ function resourceTradeHTML(){
   if(route.reason)h+='<p class="note neg">'+route.reason+'</p>';else h+=row(route.type,route.days+' hari · ongkos '+route.fee+' dukat');
   for(const k of Object.keys(RESOURCE_NAMES)){h+='<div class="sec">'+RESOURCE_NAMES[k]+'</div>'+row('Stok Anda / '+n,G.resourceStocks[G.nat][k].toFixed(1)+' / '+G.resourceStocks[n][k].toFixed(1));for(const kind of ['buy','sell']){const q=resourceQuote(n,k,kind),label=kind==='buy'?'Beli':'Jual';h+='<div class="r">'+btn(label+' '+RESOURCE_QUANTITY+(q.total!==undefined?' · '+q.total+' dukat':''),'resourceorder',{n,k,kind,qty:RESOURCE_QUANTITY,total:q.total},!q.reason)+'</div>'+(q.reason?'<p class="note">'+q.reason+'</p>':'');}}
  }
- if(!n||!alive(n)||n===G.nat){h+='<div class="sec">Pilih mitra</div>';const partners=Object.keys(NATS).filter(n=>n!==G.nat&&alive(n)).map(n=>({n,r:resourceRoute(n)})).sort((a,b)=>(!!a.r.reason)-(!!b.r.reason)||(a.r.distance||1e9)-(b.r.distance||1e9));
+ if(!n||!alive(n)||n===G.nat){h+='<div class="sec">Pilih mitra</div>';const partners=Object.keys(NATS).filter(n=>n!==G.nat&&alive(n)&&knownNation(n)).map(n=>({n,r:resourceRoute(n)})).sort((a,b)=>(!!a.r.reason)-(!!b.r.reason)||(a.r.distance||1e9)-(b.r.distance||1e9));
  for(const p of partners)h+='<button class="btn rowb" data-act="resourcepartner" data-n="'+p.n+'"><span>'+p.n+'</span><em>'+(p.r.reason?'Belum tersedia':p.r.days+' hari · hubungan '+Math.round(relGet(G.nat,p.n)))+'</em></button>';}
  h+='<p class="note">Surplus membuat harga lebih murah; kelangkaan menaikkan harga. Hubungan baik dan aliansi memperkecil selisih harga. Setiap pengiriman sukses memperbaiki hubungan +2, maksimal +6 per mitra/tahun. Dana dagang AI adalah anggaran khusus, bukan seluruh kas negaranya. Kapasitas gudang dicadangkan selama pengiriman.</p><div class="sec">Riwayat dagang</div>';
  return h+G.resourceTradeLog.map(t=>'<p class="note">'+t+'</p>').join('');
 }
 
 /* ---------- Asia Timur 1350: profil, migrasi, misi dan peristiwa ---------- */
+// Ekspansi Asia Selatan: koordinat v3 bergeser ke kanan; skala geografis tetap.
+const SOUTH_NATIONS=['Delhi','Bahmani','Vijayanagara','Madurai','Calicut','Warangal','Bengal','Odisha','Gampola','Jaffna','Nepal','Sindh'];
+function fixSouthWorld(){
+ if(!G||(G.mapVersion||1)>=4)return;
+ const old=G.mapVersion||1, shift=25*1600/54;
+ for(const p of provs)if(p.k==='L'&&SOUTH_NATIONS.includes(p.nat)&&G.own[p.id]===undefined){G.own[p.id]=BASE_OWN[p.id];if(G.pr)G.pr[p.id]=initialEastReligion(p);}
+ // Bangsa baru mendapat satu pasukan dan armada sesuai pelabuhan, hanya sekali.
+ setWorld();for(const n of SOUTH_NATIONS){if(!NATS[n]||!alive(n))continue;if(!G.armies.some(a=>a.nat===n)){const cap=capOf(n);if(cap)mkArmy(n,Math.max(2,Math.round(NATS[n].dev/18)),cap.id);}if(G.fleets&&!G.fleets.some(f=>f.nat===n)){const ports=portsOf(n);if(ports.length){const f=makeFleet(n,ports[0],['jung','patrol','dayung']);f._southPosition=true;}}}
+ for(const f of G.fleets||[]){
+  if(f._southPosition){delete f._southPosition;continue;}
+  const moving=!!f.path?.length,target=f.landing||f.targetPort||f.targetSea;f.x+=shift;
+  const point=navalGrid().xy(f.port?navalPoint(f.port):waterPoint(f.x,f.y));f.x=point[0];f.y=point[1];f.sea=nearestSea(f.x,f.y);
+  if(moving&&target){const path=navalPath(f.x,f.y,target);if(path){f.path=path;if(!path.length&&f.targetPort&&!f.landing){f.port=f.targetPort;f.mission='harbor';}}else{f.path=[];f.landing=null;f.targetPort=null;f.mission=f.port?'harbor':'hold';addLog('Rute '+f.name+' perlu diperintahkan ulang setelah perluasan peta.');}}else f.path=[];
+ }
+ // Save lama mempertahankan pengetahuan atas seluruh wilayah peta sebelumnya.
+ if(!G.explored){G.explored={};for(const p of provs)if(p.id<=228)G.explored[p.id]=true;}
+ G.mapVersion=4;addLog('Asia Selatan tersedia; posisi armada dan save dipertahankan.');
+}
+function explored(id){return phase!=='game'||!G||!!G.explored?.[id];}
+function knownNation(n){return !G?.explored||n===G.nat||(OWNED[n]||[]).some(id=>!!G.explored[id])||atWar(G.nat,n)||allied(G.nat,n)||subjectMaster(n)===G.nat||subjectMaster(G.nat)===n;}
+function fixExploration(){
+ if(!G)return;if(!G.explored){G.explored={};const owned=provs.filter(p=>p.k==='L'&&G.own[p.id]===G.nat);for(const p of provs)if(owned.some(a=>Math.hypot(p.lab[0]-a.lab[0],p.lab[1]-a.lab[1])<190))G.explored[p.id]=true;}
+ revealExploration();
+}
+function revealExploration(){
+ if(!G?.explored)return;const spots=[];for(const a of G.armies||[])if(a.nat===G.nat&&PROV[a.loc])spots.push(PROV[a.loc].lab);for(const f of G.fleets||[])if(f.nat===G.nat){spots.push([f.x,f.y]);if(f.sea)G.explored[f.sea]=true;}
+ let changed=false;for(const p of provs)if(!G.explored[p.id]&&(G.own[p.id]===G.nat||spots.some(q=>Math.hypot(q[0]-p.lab[0],q[1]-p.lab[1])<130))){G.explored[p.id]=true;changed=true;}
+ if(changed)request();
+}
+function drawExplorationFog(){
+ if(!G?.explored)return;ctx.save();ctx.setTransform(dpr*view.s,0,0,dpr*view.s,dpr*view.tx,dpr*view.ty);ctx.fillStyle='#b5a682';ctx.strokeStyle='#b5a682';ctx.lineWidth=1/view.s;
+ const x0=-view.tx/view.s,y0=-view.ty/view.s,x1=(vw-view.tx)/view.s,y1=(vh-view.ty)/view.s;for(const p of provs)if(!G.explored[p.id]&&p.bb[2]>=x0&&p.bb[0]<=x1&&p.bb[3]>=y0&&p.bb[1]<=y1){ctx.fill(p.path);ctx.stroke(p.path);}ctx.restore();
+}
 function eastIdeaNames(n){const p=EAST_PROFILE[n];return ['Penjaga '+p.capital,'Jaringan Bandar '+n,'Tata Dewan dan Arsip','Tradisi Pengetahuan','Utusan '+p.capital,'Perlengkapan Prajurit','Pelindung Seni dan Naskah'];}
 function fixEastWorld(){
  if(!G)return;G.rulerChanges ||= {};for(const n of Object.keys(NATS))if(G.rulerChanges[n])NATS[n].ruler={...G.rulerChanges[n]};
  if((G.mapVersion||1)>=2)return;
- const added=[];for(const p of provs)if(p.k==='L'&&G.own[p.id]===undefined){G.own[p.id]=BASE_OWN[p.id];added.push(p);if(G.pr)G.pr[p.id]=initialEastReligion(p);}
+ const added=[];for(const p of provs)if(p.k==='L'&&!SOUTH_NATIONS.includes(p.nat)&&G.own[p.id]===undefined){G.own[p.id]=BASE_OWN[p.id];added.push(p);if(G.pr)G.pr[p.id]=initialEastReligion(p);}
  const tr=DATA.legacyTransform;
  if(tr&&G.fleets)for(const f of G.fleets){f.x*=tr.scale;f.y=f.y*tr.scale+tr.offsetY;}
  for(const n of EAST_ASIA.newNations){if(!added.some(p=>p.nat===n)||!NATS[n])continue;
   mkArmy(n,Math.max(2,Math.round(NATS[n].dev/18)),NATS[n].capital.id);
-  if(G.fleets){const ports=portsOf(n);if(ports.length){const f=makeFleet(n,ports[0],ports.length>=5?['jung','patrol','patrol']:['patrol','dayung']);f._equalAreaPosition=true;}}
+  if(G.fleets){const ports=portsOf(n);if(ports.length){const f=makeFleet(n,ports[0],ports.length>=5?['jung','patrol','patrol']:['patrol','dayung']);f._equalAreaPosition=true;f._southPosition=true;}}
  }
  if(added.some(p=>p.nat==='Goryeo')&&added.some(p=>p.nat==='Yuan')){setSubject('Goryeo','Yuan','tributary',120);G.rel[pairKey('Goryeo','Yuan')]=60;}
  G.mapVersion=2;addLog('Peta Asia Timur tersedia. Kepemilikan dan progres wilayah lama dipertahankan.');
@@ -4116,10 +4157,7 @@ function fixEqualAreaWorld(){
  if(!G||(G.mapVersion||1)>=3)return;
  for(const f of G.fleets||[]){
   if(f._equalAreaPosition){delete f._equalAreaPosition;continue;}
-  const moving=!!f.path?.length,target=f.landing||f.targetPort||f.targetSea,xy=mercatorV2ToEqualArea(f.x,f.y);
-  const point=navalGrid().xy(f.port?navalPoint(f.port):waterPoint(xy[0],xy[1]));f.x=point[0];f.y=point[1];f.sea=nearestSea(f.x,f.y);
-  if(moving&&target){const path=navalPath(f.x,f.y,target);if(path){f.path=path;if(!path.length&&f.targetPort&&!f.landing){f.port=f.targetPort;f.mission='harbor';}}else{f.path=[];f.landing=null;f.targetPort=null;f.mission=f.port?'harbor':'hold';addLog('Rute '+f.name+' perlu diperintahkan ulang setelah pembaruan peta.');}}
-  else f.path=[];
+  const xy=mercatorV2ToEqualArea(f.x,f.y);f.x=xy[0];f.y=xy[1];
  }
  G.mapVersion=3;addLog('Proyeksi peta diperbarui; posisi armada disesuaikan.');
 }
@@ -4137,7 +4175,7 @@ function eastMissions(n){const p=EAST_PROFILE[n];if(!p)return [];return p.missio
  }));}
 function regionalCenterMissions(n){const p=EAST_PROFILE[n];if(!p)return [];const bonus={china:{tax:.05},korea:{tech:-.04},japan:{army:-.05},ryukyu:{trade:.08},ainu:{mp:.05},taiwan:{prod:.05},vietnam:{mpmax:.05},mainland:{tax:.05},champa:{trade:.08}}[p.region]||{prod:.05};const key=Object.keys(bonus)[0],label={tax:'pajak +5%',tech:'biaya teknologi −4%',army:'pemeliharaan tentara −5%',trade:'efisiensi dagang +8%',mp:'pemulihan tenaga +5%',prod:'produksi +5%',mpmax:'batas tenaga +5%'}[key];return [{id:'east_'+n+'_center',branch:'Istana',name:'Kembangkan '+p.capital,condition:'Kuasai '+p.capital+' tanpa pendudukan musuh dan tingkatkan perkembangan menjadi 15',reward:label+' selama 10 tahun',ready:()=>{const c=byName(p.capital);return !!c&&missionHeld(c)&&provDev(c.id)>=15;},grant:()=>addMod('east_center_'+n,p.tech[0],120,bonus)}];}
 function eastCultureHTML(n){const p=EAST_PROFILE[n];if(!p)return hd('Budaya')+'<p class="note">Profil regional belum tersedia.</p>';
- const dress={china:'Jubah, sabuk dan lamelar terinspirasi tradisi Yuan; tekstil emas terbatas sebagai aksen komando.',korea:'Jubah dan lamelar berhelm, dengan perlengkapan besi; bukan seragam istana Joseon.',japan:'Siluet yoroi/lamelar, bahu dan kabuto; bukan tosei-gusoku atau seragam Edo.',ryukyu:'Busana sederhana berikat dan perlengkapan aji; warna adalah kode permainan.',ainu:'Jubah dan tepi berpola terinspirasi koleksi Ainu; motif tidak diklaim persis dari 1350.',taiwan:'Tunik serat, penutup kepala dan perlengkapan setempat sebagai pendekatan majemuk.',vietnam:'Jubah, ikat pinggang dan perlengkapan penjaga masa Tran secara sederhana.',mainland:'Kain berikat, tunik dan perlengkapan kota daratan; bukan pakaian tunggal seluruh masyarakat.',champa:'Kain berikat dan perlengkapan penjaga bandar sebagai pendekatan Champa.'};
+ const dress={india_sultan:'Kain katun dan penutup kepala, dengan perlengkapan istana dan prajurit sebagai interpretasi regional.',india_south:'Kain berikat dan perlengkapan setempat; siluet mewakili ragam tradisi India Selatan.',sri_lanka:'Kain berikat dan perlengkapan pengawal pesisir sebagai interpretasi regional.',china:'Jubah, sabuk dan lamelar terinspirasi tradisi Yuan; tekstil emas terbatas sebagai aksen komando.',korea:'Jubah dan lamelar berhelm, dengan perlengkapan besi; bukan seragam istana Joseon.',japan:'Siluet yoroi/lamelar, bahu dan kabuto; bukan tosei-gusoku atau seragam Edo.',ryukyu:'Busana sederhana berikat dan perlengkapan aji; warna adalah kode permainan.',ainu:'Jubah dan tepi berpola terinspirasi koleksi Ainu; motif tidak diklaim persis dari 1350.',taiwan:'Tunik serat, penutup kepala dan perlengkapan setempat sebagai pendekatan majemuk.',vietnam:'Jubah, ikat pinggang dan perlengkapan penjaga masa Tran secara sederhana.',mainland:'Kain berikat, tunik dan perlengkapan kota daratan; bukan pakaian tunggal seluruh masyarakat.',champa:'Kain berikat dan perlengkapan penjaga bandar sebagai pendekatan Champa.'};
  return hd(n,'Budaya & sejarah 1350')+row('Pusat',p.capital)+row('Pemerintahan',p.gov)+row('Tradisi agama',p.relig)+'<div class="sec">Latar sejarah</div><p class="note">'+p.bio+'</p><div class="sec">Budaya</div><p class="note">'+p.culture+'</p><div class="sec">Pakaian & perlengkapan</div><p class="note">'+dress[p.region]+'</p><div class="sec">Pengetahuan & teknologi</div>'+p.tech.map((t,i)=>row(TECH_NAME[i],t)).join('')+'<p class="note">Semua memulai pada tingkat teknologi 3 untuk keseimbangan. Tradisi dan hadiah misi memberi perbedaan mekanis; angka bukan ukuran keunggulan sebuah budaya. Batas wilayah dan gambar adalah pendekatan. Profil penguasa dewan yang belum terverifikasi ditandai sebagai contoh.</p>';
 }
 for(const [n,p] of Object.entries(EAST_PROFILE)){

@@ -22,8 +22,8 @@ with sync_playwright() as p:
   const oldRatio=area(oldY,40)/area(oldY,0),newRatio=area(equalY,40)/area(equalY,0);
   G=fixture.save;fixSave();setWorld();const e=fixture.expected,f=G.fleets.find(x=>x.id===e.fleet);
   const xy=mercatorV2ToEqualArea(e.x,e.y);
-  const checks={projection:DATA.mapVersion===3&&DATA.projection==='cylindrical-equal-area',oldDistorted:oldRatio>1.65,equalArea:Math.abs(newRatio-1)<1e-10,
-   ids:JSON.stringify(DATA.provinces.map(p=>[p.id,p.n??null,p.k??null]))===JSON.stringify(fixture.provinceIds),version:G.mapVersion===3,position:Math.hypot(f.x-xy[0],f.y-xy[1])<20,cargo:f.cargo?.id===e.army,route:f.landing===e.target&&f.path.length>0,
+  const checks={projection:DATA.mapVersion===4&&DATA.projection==='cylindrical-equal-area',oldDistorted:oldRatio>1.65,equalArea:Math.abs(newRatio-1)<1e-10,
+   ids:fixture.provinceIds.every(p=>PROV[p[0]]?.n===p[1]&&PROV[p[0]]?.k===p[2]),version:G.mapVersion===4,position:Math.hypot(f.x-xy[0]-25*1600/54,f.y-xy[1])<20,cargo:f.cargo?.id===e.army,route:f.landing===e.target&&f.path.length>0,
    economy:G.treasury===e.treasury&&G.mana[1]===e.mana&&G.pv[1].p===e.production&&G.resourceOrders.length===e.orders,faith:G.pr[1]===e.rels,era:G.world.era===e.era};
   const n=G.fleets.length,x=f.x,y=f.y;fixSave();checks.idempotent=G.fleets.length===n&&f.x===x&&f.y===y;
   for(let i=0;i<2000&&f.cargo;i++){G.d=1;navyDay();}

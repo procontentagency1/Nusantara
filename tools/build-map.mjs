@@ -5,13 +5,13 @@ import { Delaunay } from 'd3-delaunay';
 import polygonClipping from 'polygon-clipping';
 import { LAND, SEA } from './seeds.mjs';
 
-const B = { x0: 92, x1: 146, y0: -11.5, y1: 46 };
+const B = { x0: 67, x1: 146, y0: -11.5, y1: 46 };
 // Lambert cylindrical equal-area: ukuran luas lintang utara dan tropis sebanding.
 // Bentuk dan jarak tetap terdistorsi; garis bujur/lintang tetap lurus.
-const RAD=Math.PI/180, scale=1600/((B.x1-B.x0)*RAD);
+const RAD=Math.PI/180, scale=1600/(54*RAD);
 const proj=geoProjection((lambda,phi)=>[lambda,Math.sin(phi)])
  .scale(scale).translate([-scale*B.x0*RAD,scale*Math.sin(B.y1*RAD)]);
-const W=1600, H=scale*(Math.sin(B.y1*RAD)-Math.sin(B.y0*RAD));
+const W=scale*(B.x1-B.x0)*RAD, H=scale*(Math.sin(B.y1*RAD)-Math.sin(B.y0*RAD));
 const P=(lo,la)=>proj([lo,la]);
 
 // Daratan: potong dulu di koordinat geografis, lalu proyeksikan
@@ -186,6 +186,6 @@ const RIVERS = [
 const rivers = RIVERS.map(r => { let d=''; r.forEach(([lo,la],i)=>{ const [x,y]=P(lo,la); d += (i?'L':'M')+round(x)+' '+round(y)+' '; }); return d.trim(); });
 const lakes = [[98.85,2.65,.28,.14]].map(([lo,la,rx,ry]) => { let d=''; for (let i=0;i<24;i++){ const a=i/24*Math.PI*2; const [x,y]=P(lo+Math.cos(a)*rx, la+Math.sin(a)*ry); d += (i?'L':'M')+round(x)+' '+round(y)+' '; } return d+'Z'; });
 provinces.sort((a,b)=>a.id-b.id);
-const out = {mapVersion:3,projection:'cylindrical-equal-area',geo:B,legacyTransform:previous.legacyTransform, W: round(W), H: round(H), coast, provinces, nations, rivers, lakes, adj, edges, straits };
+const out = {mapVersion:4,projection:'cylindrical-equal-area',geo:B,legacyTransform:previous.legacyTransform, W: round(W), H: round(H), coast, provinces, nations, rivers, lakes, adj, edges, straits };
 fs.writeFileSync('data/map-data.json', JSON.stringify(out));
 console.log('provinsi:', provinces.length, 'W', W.toFixed(1), 'H', H.toFixed(1), 'bytes', JSON.stringify(out).length);
