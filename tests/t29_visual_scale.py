@@ -22,7 +22,7 @@ with sync_playwright() as p:
  for ratio in [1,4,12]:
   page.evaluate("""ratio=>{view.s=fitS*ratio;const p=NATS.Majapahit.capital;view.tx=vw*.5-p.lab[0]*view.s;view.ty=vh*.6-p.lab[1]*view.s;winMode=null;renderWin();invalidate(true);}""",ratio)
   page.screenshot(path='/tmp/nusantara-units-zoom-'+str(ratio)+'.png')
- page.evaluate("""()=>{const styles=['majapahit',...Object.keys(CITY_STYLE_GROUPS)];const c=document.createElement('canvas');c.width=1000;c.height=500;c.style='position:fixed;inset:0;z-index:1000;width:1000px;height:500px';document.body.append(c);const g=c.getContext('2d');g.fillStyle='#143344';g.fillRect(0,0,1000,500);g.font='16px Georgia';g.fillStyle='#f1d38a';styles.forEach((s,i)=>{const x=i%5*200,y=Math.floor(i/5)*160;g.fillText(s,x+8,y+22);const img=citySprite(1,0,s);g.drawImage(img,x+15,y+35,img.width*1.7,img.height*1.7);});}""")
+ page.evaluate("""()=>{const styles=['majapahit',...Object.keys(CITY_STYLE_GROUPS)];const c=document.createElement('canvas');c.width=1000;c.height=Math.ceil(styles.length/5)*160;c.style='position:fixed;inset:0;z-index:1000;width:1000px;height:auto';document.body.append(c);const g=c.getContext('2d');g.fillStyle='#143344';g.fillRect(0,0,c.width,c.height);g.font='16px Georgia';g.fillStyle='#f1d38a';styles.forEach((s,i)=>{const x=i%5*200,y=Math.floor(i/5)*160;g.fillText(s,x+8,y+22);const img=citySprite(1,0,s);g.drawImage(img,x+15,y+35,img.width*1.7,img.height*1.7);});}""")
  page.locator('body > canvas').screenshot(path='/tmp/nusantara-regional-buildings.png')
  assert not errors,errors
  b.close()

@@ -1,0 +1,1345 @@
+{
+  "version": 1,
+  "profiles": {
+    "Yuan": {
+      "region": "china",
+      "capital": "Dadu",
+      "culture": "Pemerintahan Mongol, masyarakat Han dan jaringan lintas Asia",
+      "relig": "Buddha Vajrayana",
+      "gov": "Kekaisaran Yuan",
+      "title": "Kaisar",
+      "ruler": "Toghon Temur",
+      "real": true,
+      "bio": "Yuan memerintah pada 1350; wilayah yang ditampilkan hanya bagian timur kekaisarannya. Agama, bahasa dan tradisi masyarakatnya beragam. Ming belum berdiri.",
+      "tech": [
+        "Arsip dan kantor Yuan",
+        "Bandar jung dan jaringan saudagar",
+        "Pasukan lamelar dan pertahanan perbatasan"
+      ],
+      "tradition": {
+        "prod": 0.05,
+        "tolN": 1
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung untuk Dadu",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Kantor dan Penyalin",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Pelabuhan Quanzhou",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Pulihkan Kepercayaan Istana",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Krisis Serban Merah",
+          "text": "Skenario sejarah 1351+: pemberontakan Serban Merah dan masalah pemerintahan menekan Yuan. Pilihan reformasi atau penindakan tidak memaksakan keruntuhan dinasti pada tahun tertentu.",
+          "year": 1351,
+          "historical": true
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Dadu",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ],
+      "provinceRel": "Tradisi Tionghoa"
+    },
+    "Goryeo": {
+      "region": "korea",
+      "capital": "Kaesong",
+      "culture": "Goryeo: Buddhisme, pendidikan Konfusian dan tradisi setempat",
+      "relig": "Buddha Mahayana",
+      "gov": "Kerajaan Goryeo",
+      "title": "Wang",
+      "ruler": "Chungjeong",
+      "real": true,
+      "bio": "Goryeo berpusat di Kaesong. Chungjeong masih berkuasa pada awal 1350; masa reformasi Gongmin dimulai pada 1351. Joseon belum berdiri.",
+      "tech": [
+        "Penyalinan dan cetak logam",
+        "Bandar semenanjung Korea",
+        "Benteng dan pandai besi Goryeo"
+      ],
+      "tradition": {
+        "tech": -0.03
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Kaesong",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Tradisi Cetak Logam",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Bandar Semenanjung",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Dewan Kerajaan",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Pergantian Istana 1351",
+          "text": "Skenario sejarah: naiknya Gongmin pada 1351 membuka pilihan reformasi jabatan dan hubungan dengan Yuan. Dalam kampanye ini keputusan serta hasilnya dapat berbeda.",
+          "year": 1351,
+          "historical": true
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Kaesong",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Ashikaga": {
+      "region": "japan",
+      "capital": "Kyoto",
+      "culture": "Lingkungan bushi, biara dan istana Kyoto",
+      "relig": "Shinto-Buddha",
+      "gov": "Keshogunan Ashikaga",
+      "title": "Shogun",
+      "ruler": "Ashikaga Takauji",
+      "real": true,
+      "bio": "Jepang berada dalam konflik istana utara dan selatan. Pembagian wilayah adalah pendekatan loyalitas, bukan batas klan Sengoku abad XVI.",
+      "tech": [
+        "Arsip kuil dan pemerintahan shogun",
+        "Bandar dan pelayaran pesisir",
+        "Yoroi, kabuto dan organisasi bushi"
+      ],
+      "tradition": {
+        "army": -0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Bekal untuk Para Bushi",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Arsip Kyoto",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Bandar Hakata",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Satukan Dua Istana",
+          "metric": "unify",
+          "branch": "Ekspansi",
+          "min": 2,
+          "targets": [
+            "Yoshino"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Bushi yang Terbelah",
+          "text": "Skenario kontekstual Nanbokucho: pemimpin militer dan lingkungan istana memperdebatkan pembagian kuasa. Reformasi atau dukungan kepada pengikut mengubah jalannya konflik.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Kyoto",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Yoshino": {
+      "region": "japan",
+      "capital": "Yoshino",
+      "culture": "Istana selatan dan pendukung regional yang beragam",
+      "relig": "Shinto-Buddha",
+      "gov": "Istana Selatan",
+      "title": "Tenno",
+      "ruler": "Go-Murakami",
+      "real": true,
+      "bio": "Istana Selatan mempertahankan tuntutan legitimasi dari Yoshino. Wilayah Kii, Ise, Tosa dan Higo adalah penyederhanaan basis pendukung yang berubah-ubah.",
+      "tech": [
+        "Catatan dan legitimasi istana",
+        "Utusan dan bandar pendukung",
+        "Prajurit istana dan perang pegunungan"
+      ],
+      "tradition": {
+        "tolT": 1
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Bekal Pengikut Istana",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Catatan Silsilah",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Utusan ke Bandar",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Pulihkan Kedudukan Istana",
+          "metric": "unify",
+          "branch": "Ekspansi",
+          "min": 2,
+          "targets": [
+            "Ashikaga"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Silsilah dan Kesetiaan",
+          "text": "Skenario kontekstual: pendukung meminta pengakuan tanah dan kedudukan sebagai imbalan mempertahankan istana. Konsesi dapat memperkuat dukungan tetapi mengurangi pemasukan pusat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Yoshino",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Hokuzan": {
+      "region": "ryukyu",
+      "capital": "Nakijin",
+      "culture": "Aji dan masyarakat Ryukyu masa gusuku",
+      "relig": "Tradisi Ryukyu",
+      "gov": "Kerajaan Aji",
+      "title": "Aji",
+      "ruler": "Dewan Nakijin",
+      "real": false,
+      "bio": "Salah satu tiga lingkup kekuasaan Okinawa abad XIV. Ibu kota dan kesatuan politik disederhanakan; kerajaan Ryukyu bersatu 1429 belum ada.",
+      "tech": [
+        "Dewan aji dan penyimpanan hasil",
+        "Pertukaran bandar Ryukyu",
+        "Gusuku dan penjaga pelabuhan"
+      ],
+      "tradition": {
+        "trade": 0.05
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Cadangan untuk Gusuku",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Dewan Para Aji",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jalur Pertukaran Kepulauan",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Satukan Tiga Lingkup",
+          "metric": "unify",
+          "branch": "Ekspansi",
+          "min": 2,
+          "targets": [
+            "Chuzan",
+            "Nanzan"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Para Aji di Nakijin",
+          "text": "Skenario kontekstual Sanzan: para aji memperdebatkan penguatan gusuku atau menjalin pertukaran dengan tetangga. Penyatuan bukan hasil otomatis pada tanggal sejarah.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Nakijin",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Chuzan": {
+      "region": "ryukyu",
+      "capital": "Urasoe",
+      "culture": "Aji dan masyarakat Ryukyu masa gusuku",
+      "relig": "Tradisi Ryukyu",
+      "gov": "Kerajaan Aji",
+      "title": "Aji",
+      "ruler": "Dewan Urasoe",
+      "real": false,
+      "bio": "Salah satu tiga lingkup kekuasaan Okinawa abad XIV. Ibu kota dan kesatuan politik disederhanakan; kerajaan Ryukyu bersatu 1429 belum ada.",
+      "tech": [
+        "Dewan aji dan penyimpanan hasil",
+        "Pertukaran bandar Ryukyu",
+        "Gusuku dan penjaga pelabuhan"
+      ],
+      "tradition": {
+        "trade": 0.05
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Cadangan untuk Gusuku",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Dewan Para Aji",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jalur Pertukaran Kepulauan",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Satukan Tiga Lingkup",
+          "metric": "unify",
+          "branch": "Ekspansi",
+          "min": 2,
+          "targets": [
+            "Hokuzan",
+            "Nanzan"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Para Aji di Urasoe",
+          "text": "Skenario kontekstual Sanzan: para aji memperdebatkan penguatan gusuku atau menjalin pertukaran dengan tetangga. Penyatuan bukan hasil otomatis pada tanggal sejarah.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Urasoe",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Nanzan": {
+      "region": "ryukyu",
+      "capital": "Ozato",
+      "culture": "Aji dan masyarakat Ryukyu masa gusuku",
+      "relig": "Tradisi Ryukyu",
+      "gov": "Kerajaan Aji",
+      "title": "Aji",
+      "ruler": "Dewan Ozato",
+      "real": false,
+      "bio": "Salah satu tiga lingkup kekuasaan Okinawa abad XIV. Ibu kota dan kesatuan politik disederhanakan; kerajaan Ryukyu bersatu 1429 belum ada.",
+      "tech": [
+        "Dewan aji dan penyimpanan hasil",
+        "Pertukaran bandar Ryukyu",
+        "Gusuku dan penjaga pelabuhan"
+      ],
+      "tradition": {
+        "trade": 0.05
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Cadangan untuk Gusuku",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Dewan Para Aji",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jalur Pertukaran Kepulauan",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Satukan Tiga Lingkup",
+          "metric": "unify",
+          "branch": "Ekspansi",
+          "min": 2,
+          "targets": [
+            "Hokuzan",
+            "Chuzan"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Para Aji di Ozato",
+          "text": "Skenario kontekstual Sanzan: para aji memperdebatkan penguatan gusuku atau menjalin pertukaran dengan tetangga. Penyatuan bukan hasil otomatis pada tanggal sejarah.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Ozato",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Komunitas Ainu": {
+      "region": "ainu",
+      "capital": "Shiraoi",
+      "culture": "Berbagai komunitas Ainu; bukan kerajaan tunggal",
+      "relig": "Tradisi Ainu",
+      "gov": "Persekutuan komunitas (abstraksi)",
+      "title": "Pemuka",
+      "ruler": "Dewan Kotan",
+      "real": false,
+      "bio": "Representasi permainan untuk sejumlah komunitas utara. Cise, bahan busana dan pertukaran utara menjadi inspirasi; tidak mengklaim satu raja atau budaya yang tidak berubah.",
+      "tech": [
+        "Pengetahuan dan persediaan kotan",
+        "Jaringan pertukaran utara",
+        "Perburuan, penjaga dan perlengkapan besi"
+      ],
+      "tradition": {
+        "mp": 0.05
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Cadangan Musim Dingin",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Rawat Pengetahuan Kotan",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Pertukaran dengan Selatan",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Musyawarah Kotan",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Hasil Hutan dan Pertukaran Utara",
+          "text": "Skenario what-if: komunitas menimbang hasil hutan dan hasil laut untuk pertukaran, sambil menjaga cadangan setempat. Nama pemimpin dan institusi adalah abstraksi permainan.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Shiraoi",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Komunitas Taiwan": {
+      "region": "taiwan",
+      "capital": "Taiwan Utara",
+      "culture": "Masyarakat Austronesia Taiwan yang majemuk",
+      "relig": "Animisme",
+      "gov": "Persekutuan komunitas (abstraksi)",
+      "title": "Pemuka",
+      "ruler": "Dewan Pesisir",
+      "real": false,
+      "bio": "Wilayah ini mewakili beragam komunitas; bukan klaim adanya kerajaan Taiwan bersatu pada 1350. Hubungan etnis modern dan kelompok arkeologi tidak disamakan begitu saja.",
+      "tech": [
+        "Pengetahuan dan tata simpan lokal",
+        "Pertukaran pesisir Taiwan",
+        "Penjaga desa dan perlengkapan setempat"
+      ],
+      "tradition": {
+        "prod": 0.05
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Cadangan Desa Pesisir",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Wariskan Pengetahuan",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jaringan Pertukaran Pesisir",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Kesepakatan Antardesa",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Saudagar di Pantai",
+          "text": "Skenario what-if berdasarkan jaringan pertukaran regional: perwakilan pesisir menimbang perdagangan baru dan keamanan persediaan. Perjanjian tidak berarti penyerahan kedaulatan.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Taiwan Utara",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Dai Viet": {
+      "region": "vietnam",
+      "capital": "Thang Long",
+      "culture": "Dai Viet masa Tran; tradisi Buddha, Konfusian dan Dao",
+      "relig": "Buddha Mahayana",
+      "gov": "Kerajaan Tran",
+      "title": "Hoang de",
+      "ruler": "Tran Du Tong",
+      "real": true,
+      "bio": "Dai Viet masa Tran berpusat di Thang Long. Tran Du Tong berkuasa 1341–1369; hubungan dengan Champa dan tata pemerintahan delta menjadi konteks konten.",
+      "tech": [
+        "Pendidikan dan kantor Thang Long",
+        "Bandar dan jalur delta",
+        "Pertahanan delta dan pandai besi"
+      ],
+      "tradition": {
+        "mpmax": 0.05
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Delta Merah",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Pendidikan Thang Long",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Saudagar Delta",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Pulihkan Wibawa Dewan",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Nasihat kepada Istana Tran",
+          "text": "Skenario kontekstual masa Tran Du Tong: pejabat meminta perhatian pada pengairan dan pemerintahan daerah. Pilihan disiplin atau kelonggaran membawa akibat ekonomi dan legitimasi.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Thang Long",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Sukhothai": {
+      "region": "mainland",
+      "capital": "Sukhothai",
+      "culture": "Tradisi kota Sukhothai dan Buddhisme Theravada",
+      "relig": "Buddha Theravada",
+      "gov": "Monarki regional",
+      "title": "Raja",
+      "ruler": "Dewan Sukhothai",
+      "real": false,
+      "bio": "Pusat politik daratan abad XIV. Batas provinsi dan dewan pemimpin merupakan penyederhanaan; penguasa yang belum diverifikasi tidak diberi nama sejarah rekaan.",
+      "tech": [
+        "Catatan biara dan tata daerah",
+        "Bandar sungai dan jaringan muang",
+        "Pertahanan kota dan perlengkapan besi"
+      ],
+      "tradition": {
+        "tax": 0.03
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Sukhothai",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Pengetahuan di Sukhothai",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jaringan Sungai dan Bandar",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Kesepakatan Dewan Sukhothai",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Daerah di Sukhothai",
+          "text": "Skenario kontekstual: pemuka daerah menimbang pengairan, sumbangan keagamaan dan pungutan pusat. Tidak merekonstruksi satu peristiwa tercatat atau batas tahun pemerintahan tertentu.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Sukhothai",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Lan Na": {
+      "region": "mainland",
+      "capital": "Chiang Mai",
+      "culture": "Masyarakat Tai utara dan kerajaan Lan Na",
+      "relig": "Buddha Theravada",
+      "gov": "Monarki regional",
+      "title": "Raja",
+      "ruler": "Dewan Chiang Mai",
+      "real": false,
+      "bio": "Pusat politik daratan abad XIV. Batas provinsi dan dewan pemimpin merupakan penyederhanaan; penguasa yang belum diverifikasi tidak diberi nama sejarah rekaan.",
+      "tech": [
+        "Catatan biara dan tata daerah",
+        "Bandar sungai dan jaringan muang",
+        "Pertahanan kota dan perlengkapan besi"
+      ],
+      "tradition": {
+        "tax": 0.03
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Chiang Mai",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Pengetahuan di Chiang Mai",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jaringan Sungai dan Bandar",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Kesepakatan Dewan Chiang Mai",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Daerah di Chiang Mai",
+          "text": "Skenario kontekstual: pemuka daerah menimbang pengairan, sumbangan keagamaan dan pungutan pusat. Tidak merekonstruksi satu peristiwa tercatat atau batas tahun pemerintahan tertentu.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Chiang Mai",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Muang Sua": {
+      "region": "mainland",
+      "capital": "Muang Sua",
+      "culture": "Muang dataran tinggi; representasi sebelum Lan Xang 1353",
+      "relig": "Buddha Theravada",
+      "gov": "Monarki regional",
+      "title": "Raja",
+      "ruler": "Dewan Muang Sua",
+      "real": false,
+      "bio": "Pusat politik daratan abad XIV. Batas provinsi dan dewan pemimpin merupakan penyederhanaan; penguasa yang belum diverifikasi tidak diberi nama sejarah rekaan.",
+      "tech": [
+        "Catatan biara dan tata daerah",
+        "Bandar sungai dan jaringan muang",
+        "Pertahanan kota dan perlengkapan besi"
+      ],
+      "tradition": {
+        "tax": 0.03
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Muang Sua",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Pengetahuan di Muang Sua",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jaringan Sungai dan Bandar",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Kesepakatan Dewan Muang Sua",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Daerah di Muang Sua",
+          "text": "Skenario kontekstual: pemuka daerah menimbang pengairan, sumbangan keagamaan dan pungutan pusat. Tidak merekonstruksi satu peristiwa tercatat atau batas tahun pemerintahan tertentu.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Muang Sua",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Pinya": {
+      "region": "mainland",
+      "capital": "Pinya",
+      "culture": "Pusat pemerintahan lembah Irrawaddy di Pinya",
+      "relig": "Buddha Theravada",
+      "gov": "Monarki regional",
+      "title": "Raja",
+      "ruler": "Dewan Pinya",
+      "real": false,
+      "bio": "Pusat politik daratan abad XIV. Batas provinsi dan dewan pemimpin merupakan penyederhanaan; penguasa yang belum diverifikasi tidak diberi nama sejarah rekaan.",
+      "tech": [
+        "Catatan biara dan tata daerah",
+        "Bandar sungai dan jaringan muang",
+        "Pertahanan kota dan perlengkapan besi"
+      ],
+      "tradition": {
+        "tax": 0.03
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Pinya",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Pengetahuan di Pinya",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jaringan Sungai dan Bandar",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Kesepakatan Dewan Pinya",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Daerah di Pinya",
+          "text": "Skenario kontekstual: pemuka daerah menimbang pengairan, sumbangan keagamaan dan pungutan pusat. Tidak merekonstruksi satu peristiwa tercatat atau batas tahun pemerintahan tertentu.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Pinya",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Sagaing": {
+      "region": "mainland",
+      "capital": "Sagaing",
+      "culture": "Pusat pemerintahan utara Irrawaddy di Sagaing",
+      "relig": "Buddha Theravada",
+      "gov": "Monarki regional",
+      "title": "Raja",
+      "ruler": "Dewan Sagaing",
+      "real": false,
+      "bio": "Pusat politik daratan abad XIV. Batas provinsi dan dewan pemimpin merupakan penyederhanaan; penguasa yang belum diverifikasi tidak diberi nama sejarah rekaan.",
+      "tech": [
+        "Catatan biara dan tata daerah",
+        "Bandar sungai dan jaringan muang",
+        "Pertahanan kota dan perlengkapan besi"
+      ],
+      "tradition": {
+        "tax": 0.03
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Sagaing",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Pengetahuan di Sagaing",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jaringan Sungai dan Bandar",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Kesepakatan Dewan Sagaing",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Daerah di Sagaing",
+          "text": "Skenario kontekstual: pemuka daerah menimbang pengairan, sumbangan keagamaan dan pungutan pusat. Tidak merekonstruksi satu peristiwa tercatat atau batas tahun pemerintahan tertentu.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Sagaing",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Hanthawaddy": {
+      "region": "mainland",
+      "capital": "Martaban",
+      "culture": "Masyarakat Mon dan pusat-pusat dagang selatan",
+      "relig": "Buddha Theravada",
+      "gov": "Monarki regional",
+      "title": "Raja",
+      "ruler": "Dewan Martaban",
+      "real": false,
+      "bio": "Pusat politik daratan abad XIV. Batas provinsi dan dewan pemimpin merupakan penyederhanaan; penguasa yang belum diverifikasi tidak diberi nama sejarah rekaan.",
+      "tech": [
+        "Catatan biara dan tata daerah",
+        "Bandar sungai dan jaringan muang",
+        "Pertahanan kota dan perlengkapan besi"
+      ],
+      "tradition": {
+        "tax": 0.03
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Martaban",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Pengetahuan di Martaban",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jaringan Sungai dan Bandar",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Kesepakatan Dewan Martaban",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Daerah di Martaban",
+          "text": "Skenario kontekstual: pemuka daerah menimbang pengairan, sumbangan keagamaan dan pungutan pusat. Tidak merekonstruksi satu peristiwa tercatat atau batas tahun pemerintahan tertentu.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Martaban",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Mong Mao": {
+      "region": "mainland",
+      "capital": "Ruili",
+      "culture": "Persekutuan dan pusat Tai di perbatasan Yunnan",
+      "relig": "Buddha Theravada",
+      "gov": "Monarki regional",
+      "title": "Raja",
+      "ruler": "Dewan Ruili",
+      "real": false,
+      "bio": "Pusat politik daratan abad XIV. Batas provinsi dan dewan pemimpin merupakan penyederhanaan; penguasa yang belum diverifikasi tidak diberi nama sejarah rekaan.",
+      "tech": [
+        "Catatan biara dan tata daerah",
+        "Bandar sungai dan jaringan muang",
+        "Pertahanan kota dan perlengkapan besi"
+      ],
+      "tradition": {
+        "tax": 0.03
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Ruili",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Pengetahuan di Ruili",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jaringan Sungai dan Bandar",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Kesepakatan Dewan Ruili",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Daerah di Ruili",
+          "text": "Skenario kontekstual: pemuka daerah menimbang pengairan, sumbangan keagamaan dan pungutan pusat. Tidak merekonstruksi satu peristiwa tercatat atau batas tahun pemerintahan tertentu.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Ruili",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Siam": {
+      "region": "mainland",
+      "capital": "Ayutthaya",
+      "culture": "Tradisi regional Siam",
+      "relig": "Buddha Theravada",
+      "gov": "Monarki regional",
+      "title": "Raja",
+      "ruler": "Dewan Ayutthaya",
+      "real": false,
+      "bio": "Pusat Chao Phraya sedang bertransformasi. Sumber berbeda memakai 1350/1351 untuk pendirian Ayutthaya; nama Siam mempertahankan identitas skenario lama.",
+      "tech": [
+        "Arsip dan tata daerah",
+        "Bandar dan jaringan saudagar",
+        "Pertahanan dan pandai besi"
+      ],
+      "tradition": {
+        "prod": 0.03
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Cadangan Ayutthaya",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Tata Pemerintahan Ayutthaya",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jaringan Bandar Siam",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Wibawa Dewan",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Pengelolaan Pusat Ayutthaya",
+          "text": "Skenario kontekstual: pembesar meminta pembiayaan tata air, pendidikan atau bandar. Keputusan mengikuti keadaan kampanye.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Ayutthaya",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Khmer": {
+      "region": "mainland",
+      "capital": "Angkor",
+      "culture": "Tradisi regional Khmer",
+      "relig": "Buddha Theravada",
+      "gov": "Monarki regional",
+      "title": "Raja",
+      "ruler": "Dewan Angkor",
+      "real": false,
+      "bio": "Angkor menjadi pusat profil kerajaan. Bangunan besar dan tata air diperlakukan sebagai warisan berlapis, bukan seluruhnya dibuat pada 1350.",
+      "tech": [
+        "Arsip dan tata daerah",
+        "Bandar dan jaringan saudagar",
+        "Pertahanan dan pandai besi"
+      ],
+      "tradition": {
+        "prod": 0.03
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Cadangan Angkor",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Tata Pemerintahan Angkor",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jaringan Bandar Khmer",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Wibawa Dewan",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Pengelolaan Pusat Angkor",
+          "text": "Skenario kontekstual: pembesar meminta pembiayaan tata air, pendidikan atau bandar. Keputusan mengikuti keadaan kampanye.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Angkor",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Champa": {
+      "region": "champa",
+      "capital": "Vijaya",
+      "culture": "Tradisi regional Champa",
+      "relig": "Hindu",
+      "gov": "Monarki regional",
+      "title": "Raja",
+      "ruler": "Dewan Vijaya",
+      "real": false,
+      "bio": "Vijaya dan Panduranga melengkapi wilayah Champa lama. Menara bata, bandar dan tradisi setempat menjadi inspirasi; batas Voronoi bukan batas kerajaan yang tepat.",
+      "tech": [
+        "Arsip dan tata daerah",
+        "Bandar dan jaringan saudagar",
+        "Pertahanan dan pandai besi"
+      ],
+      "tradition": {
+        "prod": 0.03
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Cadangan Vijaya",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Tata Pemerintahan Vijaya",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jaringan Bandar Champa",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Wibawa Dewan",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Pengelolaan Pusat Vijaya",
+          "text": "Skenario kontekstual: pembesar meminta pembiayaan tata air, pendidikan atau bandar. Keputusan mengikuti keadaan kampanye.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Pertukaran Pengetahuan di Vijaya",
+          "text": "Skenario kontekstual: juru tulis, saudagar dan pengrajin meminta perlindungan untuk bertukar pengetahuan. Pilihan ini menyimpang sesuai keadaan kampanye, bukan kejadian tunggal yang dipastikan tercatat.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    }
+  },
+  "newNations": [
+    "Yuan",
+    "Goryeo",
+    "Ashikaga",
+    "Yoshino",
+    "Hokuzan",
+    "Chuzan",
+    "Nanzan",
+    "Komunitas Ainu",
+    "Komunitas Taiwan",
+    "Dai Viet",
+    "Sukhothai",
+    "Lan Na",
+    "Muang Sua",
+    "Pinya",
+    "Sagaing",
+    "Hanthawaddy",
+    "Mong Mao"
+  ],
+  "sources": "docs/RISET_ASIA_TIMUR.md"
+}
