@@ -1319,7 +1319,7 @@ function monthTick() {
   }
   if (G.mo === 0) { G.prestige = Math.round(G.prestige * .95); G.legit = Math.min(100, G.legit + 1); }
   diplomacyMonth(); aiMonth(); syncRegs();
-  modMonth(); relMonth(); instMonth(); evMonth(); subjectsMonth(); aiContentMonth(); resourcesMonth(); militaryMonth(); navyMonth(); resourceTradeMonth();
+  modMonth(); relMonth(); instMonth(); evMonth(); subjectsMonth(); aiContentMonth(); resourcesMonth(); militaryMonth(); navyMonth(); resourceTradeMonth(); worldSystemsMonth();
   saveGame(true); renderWin();
 }
 function saveGame(silent) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); if (!silent) toast('Permainan disimpan.'); } catch (e) { if (!silent) toast('Penyimpanan tidak tersedia di sini.'); } }
@@ -1386,6 +1386,7 @@ function renderWin() {
   else if (winMode === 'navy') h=navyHTML();
   else if (winMode === 'fleet') h=fleetHTML(G.fleets.find(f=>f.id===G.selFleet));
   else if (winMode === 'worldcontent') h = worldContentHTML();
+  else if (winMode === 'eras') h = worldEraHTML();
   else if (winMode === 'nation') {
     const n = NATS[G.nat], tot = Object.values(G.pv).reduce((a, q) => a + q.t + q.p + q.m, 0);
     h = hd(G.nat, n.gov) + row('Penguasa', `${n.title} ${n.ruler.name}`) + row('Kemampuan', `ADM ${n.ruler.a} · DIP ${n.ruler.d} · MIL ${n.ruler.m}`)
@@ -1394,6 +1395,7 @@ function renderWin() {
       + `<div class="r"><span>Naikkan stabilitas</span>${btn('+1 · ' + stabCost() + ' ADM', 'stab', {}, G.stab < 3 && G.mana[0] >= stabCost())}</div>`
       + `<div class="r"><span>Agama ${RELS[G.rs].n} · kesatuan ${unity()}%</span>${btn('Agama ›', 'win', { w:'rel' })}</div>`
       + `<div class="r"><span>Vasal dan negara upeti</span>${btn('Bawahan ›', 'win', {w:'subjects'})}</div>`
+      + `<div class="r"><span>Era dan tujuan dunia</span>${btn('Era ›','win',{w:'eras'})}</div>`
       + `<div class="r"><span>Kabar kerajaan lain</span>${btn('Lihat ›','win',{w:'worldcontent'})}</div>`
       + (EAST_PROFILE[G.nat]?'<div class="r">'+btn('Budaya & sejarah ›','win',{w:'culture'})+'</div>':'')
       + `<div class="r"><span>Ekspansi & integrasi</span>${btn('Kelola ›','win',{w:'expansion'})}</div>`
@@ -1447,7 +1449,7 @@ function provHTML(p, e) {
 /* ---------- actions ---------- */
 const act = {
   win: b => { if (winMode === b.dataset.w) { winMode = null; } else winMode = b.dataset.w; selId = null; renderWin(); request(); },
-  back: () => { const parent = { rel:'nation', ide:'tech', missions:'nation', subjects:'nation', trade:'econ', worldcontent:'nation', culture:'nation',resources:'econ', resourceTrade:'resources', expansion:'nation', navy:'mil', fleet:'navy', declare:'dipn', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
+  back: () => { const parent = { rel:'nation', ide:'tech', missions:'nation', subjects:'nation', trade:'econ', worldcontent:'nation', eras:'nation', culture:'nation',resources:'econ', resourceTrade:'resources', expansion:'nation', navy:'mil', fleet:'navy', declare:'dipn', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
   close: () => { winMode = null; selId = null; renderWin(); request(); },
   dev: b => { const q = G.pv[b.dataset.id], i = +b.dataset.i, k = ['t','p','m'][i], c = devCost(q[k]); if (G.mana[i] < c) return; G.mana[i] -= c; q[k]++; toast(`${DEV_NAME[i]} ${PROV[b.dataset.id].n} naik ke ${q[k]}.`); },
   build: b => { const q = G.pv[b.dataset.id], B = BUILD[b.dataset.k]; if (!q || !B || q.bld.includes(b.dataset.k) || q.cons.some(c=>c.type===b.dataset.k) || G.treasury < bCost(B) || q.bld.length + q.cons.length >= slotsOf(q)) return; G.treasury -= bCost(B); q.cons.push({ type:b.dataset.k, left:B.months }); toast(`Membangun ${B.n} di ${PROV[b.dataset.id].n} (${B.months} bln).`); },
@@ -1515,7 +1517,7 @@ function capOf(nat) {
   return best;
 }
 const aiFl = nat => Math.max(2, Math.round(2 + natMan(nat)/4));
-const techOf = nat => isMe(nat) ? G.tech[2] : aiTech();
+const techOf = nat => worldAiLevel(nat,2);
 const fortOf = id => PROV[id] === capOf(OWNR[id]) ? 3 : PROV[id].r === 1 ? 2 : 1;
 
 /* ---------- hubungan ---------- */
@@ -2119,7 +2121,7 @@ function dipNatHTML(t) {
   const n = NATS[t]; if (!alive(t)) return hd(t) + '<p class="note">Negara ini sudah tidak ada.</p>';
   const rel = relGet(G.nat, t), war = atWar(G.nat, t), al = allied(G.nat, t), mar = married(G.nat, t), acc = G.acc.includes(t + '>' + G.nat), tr = truceLeft(G.nat, t);
   let h = hd(t, `${n.title} ${n.ruler.name}`);
-  h += row('Hubungan', relTxt(rel)) + row('Provinsi', (OWNED[t] || []).length) + row('Resimen', regsOf(t)) + row('Agama', n.relig);
+  h += row('Hubungan', relTxt(rel)) + row('Provinsi', (OWNED[t] || []).length) + row('Resimen', regsOf(t)) + row('Agama', n.relig) + (G.world?.ai?.[t]?.lastDecision?row('Keputusan dunia',G.world.ai[t].lastDecision):'');
   if(subjectMaster(t)) h+=subjectPanel(t);
   const fl = []; if (war) fl.push('Perang'); if (al) fl.push('Sekutu'); if (mar) fl.push('Pernikahan'); if (acc) fl.push('Akses militer'); if (tr) fl.push(`Gencatan ${(tr/12).toFixed(1)} th`);
   if (fl.length) h += row('Hubungan khusus', fl.join(' · '));
@@ -3005,7 +3007,7 @@ function fixSave() {
   fixEastWorld();
   G.claims=[...new Set((G.claims || []).map(Number).filter(id=>PROV[id] && PROV[id].k==='L'))];
   G.missions ||= []; G.flags ||= {}; G.mod ||= []; G.fired ||= []; G.evq ||= []; G.infl ||= 0; G.bank ||= 0;
-  G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel(); fixSubjects(); fixTrade(); fixKingdomContent(); fixResources(); fixMilitary(); fixExpansion(); fixNavy(); fixResourceTrade();
+  G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel(); fixSubjects(); fixTrade(); fixKingdomContent(); fixResources(); fixMilitary(); fixExpansion(); fixNavy(); fixResourceTrade(); fixWorld();
 }
 function takeLoan(auto) {
   if (G.ln.length >= MAXLN) return false;
@@ -3256,13 +3258,7 @@ function relMonth() {
     m.p += misStr() + (RELS[relOf(m.pid)].g === RELS[G.rs].g ? 1 : 0);
     if (m.p >= 100) { G.pr[m.pid] = G.rs; G.miss.splice(G.miss.indexOf(m), 1); toast(`${PROV[m.pid].n} kini memeluk ${RELS[G.rs].n}.`); addLog(`${PROV[m.pid].n} berpindah ke ${RELS[G.rs].n}.`); }
   }
-  if (G.y >= 1380) {
-    const ch = .004 * Math.min(3, 1 + (G.y - 1380)/60);
-    for (const p of provs) {
-      if (p.k !== 'L' || p.t !== 'coast' || G.pr[p.id] === 'islam' || G.pv[p.id]) continue;
-      if ((LINK[p.id] || []).some(l => G.pr[l.to] === 'islam') && Math.random() < ch) G.pr[p.id] = 'islam';
-    }
-  }
+
 }
 function relHTML() {
   const un = unity(), tt = tolTrue(), th = tolHeretic(), tn = tolHeathen(), sg2 = v => (v >= 0 ? '+' : '') + v;
@@ -3278,7 +3274,7 @@ function relHTML() {
   return h + `<p class="note">Toleransi negatif memotong pajak & produksi provinsi 10% per poin. Keresahan (+6 saat ada misionaris) baru memicu pemberontak di tahap berikutnya.</p>`;
 }
 defEvent({ id:'islam_menyebar', t:'Pedagang Muslim', once:false, mtth:60,
-  cond: () => G.y >= 1380 && G.rs !== 'islam' && candIslam().length > 0,
+  cond: () => false, // Migrasi: event lama tetap dapat dibaca save lama; penyebaran baru memakai komunitas.
   x: () => { const id = candIslam()[Math.floor(Math.random()*candIslam().length)]; G.evx.islam = id; return `Pedagang dan ulama dari Samudra Pasai menetap di pelabuhan ${PROV[id].n}. Mereka berdagang jujur dan mulai mengajarkan agama mereka kepada penduduk.`; },
   o:[{ l:'Biarkan mereka berdakwah', tip:'Provinsi beralih ke Islam; produksi +5% selama 36 bulan', fx:() => { G.pr[G.evx.islam] = 'islam'; EF.mod('muslim', 'Saudagar Muslim', 36, { prod:.05 }); } },
      { l:'Usir para pendakwah', tip:'+3 prestise; pajak −3% selama 24 bulan', fx:() => { EF.prestige(3); EF.mod('usir', 'Pedagang tersinggung', 24, { tax:-.03 }); } },
@@ -3289,14 +3285,14 @@ function candIslam() { return Object.keys(G.pv).map(Number).filter(id => PROV[id
 const TL_MAX = 32;
 const techYear = L => 1350 + 13*(L - 3);
 const aiTech = () => Math.min(TL_MAX,3 + Math.max(0, Math.floor((G.y - 1358)/14)));
-function neighborTech(i){const neighbors=new Set((OWNED[G.nat]||[]).flatMap(id=>(LINK[id]||[]).map(l=>OWNR[l.to])).filter(n=>n&&n!==G.nat));return neighbors.size?aiTech():G.tech[i];}
+function neighborTech(i){const neighbors=new Set((OWNED[G.nat]||[]).flatMap(id=>(LINK[id]||[]).map(l=>OWNR[l.to])).filter(n=>n&&n!==G.nat));return neighbors.size?Math.max(...[...neighbors].map(n=>worldAiLevel(n,i))):G.tech[i];}
 const INST = [
   { k:'pelayaran', n:'Pelayaran Jung', y:1400, org:'Majapahit', fx:{ prod:.10 }, d:'+10% produksi' },
   { k:'mesiu', n:'Meriam & Mesiu', y:1450, org:'Samudra', fx:{ mpmax:.10 }, d:'+10% tenaga & force limit' },
   { k:'pasar', n:'Pasar Samudra', y:1500, org:'Malayu', fx:{ tax:.10 }, d:'+10% pajak' },
 ];
 const orgProv = nat => (NATS[nat] ? NATS[nat].capital : NATS.Majapahit.capital).id;
-const instPen = () => .25 * INST.filter(I => G.inst[I.k] && G.inst[I.k].on && !G.inst[I.k].emb).length;
+const instPen = () => INST.reduce((sum,I)=>{const s=G.inst[I.k];return sum+(s?.on&&!s.emb?worldInstitutionPenalty(s,I):0);},0);
 function instShare(k) {
   const S = G.inst[k]; if (!S) return 0; let a = 0, b = 0;
   for (const id in G.pv) { const d = provDev(id); b += d; if (S.emb || S.pv[id]) a += d; }
@@ -3308,17 +3304,8 @@ function embrace(k) {
   if (!I || !S || !S.on || S.emb || instShare(k) < .1 || G.treasury < c) return;
   G.treasury -= c; S.emb = true; addMod('inst_' + k, 'Lembaga ' + I.n, -1, I.fx); toast(`Lembaga ${I.n} diadopsi.`); addLog(`Mengadopsi lembaga ${I.n}.`);
 }
-function instMonth() {
-  for (const I of INST) {
-    const S = G.inst[I.k] ||= { on:false, pv:{}, emb:false };
-    if (!S.on && G.y >= I.y) { S.on = true; const o = orgProv(I.org); S.pv[o] = 1; toast(`Lembaga ${I.n} muncul di ${PROV[o].n}.`); addLog(`Lembaga ${I.n} muncul di ${PROV[o].n}.`); }
-    if (!S.on) continue;
-    for (const id of Object.keys(S.pv)) for (const l of (LINK[id] || [])) {
-      if (PROV[l.to].k !== 'L' || S.pv[l.to]) continue;
-      if (Math.random() < .05*(1 + provDev(l.to)/25)) S.pv[l.to] = 1;
-    }
-  }
-}
+function instMonth() { worldInstitutionMonth(); }
+
 function techBreak(i) {
   const cur = G.tech[i], target=cur+1, pen = instPen(), tm = .3*Math.min(1, Math.max(0, (techYear(cur) - 1350)/377)), ahead = .1*Math.max(0, techYear(target) - G.y);
   const neigh = Math.min(.75, .05*Math.max(0, neighborTech(i) - cur)), idea = .02*G.ideas.length, other = modSum('tech') + (G.bank > 0 ? .5 : 0);
@@ -3328,7 +3315,7 @@ function techBreak(i) {
 }
 function techCost(i) { return techBreak(i || 0).tot; }
 function techHTML() {
-  let h = hd('Teknologi', `Rata-rata dunia: tingkat ${aiTech()}`)+(EAST_PROFILE[G.nat]?'<p class="note">'+EAST_PROFILE[G.nat].tech.join(' · ')+'</p>':'');
+  let h = hd('Teknologi', `Rata-rata dunia: tingkat ${worldAverageTech()}`)+(EAST_PROFILE[G.nat]?'<p class="note">'+EAST_PROFILE[G.nat].tech.join(' · ')+'</p>':'');
   for (let i = 0; i < 3; i++) {
     const B = techBreak(i), L = G.tech[i];
     h += `<div class="sec">${TECH_NAME[i]} · ${L}/${TL_MAX}</div>` + row('Efek', TECH_DESC[i]) + row('Tahun tingkat berikutnya',techYear(L+1)) + '<p class="note">'+(['ADM 4: pengolahan pangan/kayu/rempah.','DIP: menaikkan produksi dan efisiensi perdagangan.','MIL 4: tambang besi dan kebutuhan besi untuk rekrut.'][i])+'</p>'
@@ -3343,7 +3330,7 @@ function techHTML() {
     h += `<div class="r"><span>${I.n}<br><small style="opacity:.6">${I.d}${S.on && !S.emb ? ` · menyebar ${Math.round(100*instShare(I.k))}% (butuh 10%)` : ''}</small></span>${right}</div>`;
   }
   h += `<div class="r"><span>Ide nasional ${G.ideas.length}/7</span>${btn('Ide ›', 'win', { w:'ide' })}</div>`;
-  return h + `<p class="note">Lembaga yang sudah muncul tapi belum diadopsi menambah biaya teknologi +25%. Maju lebih cepat dari kurva sejarah = +10% per tahun; tertinggal dari dunia = −5% per tingkat.</p>`;
+  return h + `<p class="note">Lembaga yang belum diadopsi menaikkan biaya teknologi 1% per tahun setelah muncul, maksimal 50% per lembaga. Maju lebih cepat dari kurva sejarah = +10% per tahun; tertinggal dari dunia = −5% per tingkat.</p>`;
 }
 const IDEAS = [
   { d:'+10% tenaga & force limit', c:2, fx:{ mpmax:.10 } }, { d:'+10% produksi', c:1, fx:{ prod:.10 } }, { d:'+10% pajak', c:0, fx:{ tax:.10 } },
@@ -3725,7 +3712,7 @@ function aiContentMonth(){
   }
  }
 }
-function worldContentHTML(){let h=hd('Kabar Kerajaan','Misi dan keputusan AI');for(const n of Object.keys(NATS).filter(n=>n!==G.nat&&alive(n))){const s=G.aiContent[n];h+=row(n,(s?.missions.length||0)+' misi · '+(s?.events||0)+' keputusan');}return h+'<div class="sec">Catatan terbaru</div>'+[...(G.worldLog||[]),...G.log].slice(0,80).map(t=>'<p class="note">'+t+'</p>').join('');}
+function worldContentHTML(){let h=hd('Kabar Kerajaan','Misi dan keputusan AI');for(const n of Object.keys(NATS).filter(n=>n!==G.nat&&alive(n))){const s=G.aiContent[n];h+=row(n,(s?.missions.length||0)+' misi · '+(s?.events||0)+' keputusan · '+(G.world?.claims[n+'|'+G.world.era]?.length||0)+' tujuan era');}return h+'<div class="sec">Catatan terbaru</div>'+[...(G.worldLog||[]),...G.log].slice(0,80).map(t=>'<p class="note">'+t+'</p>').join('');}
 
 /* Sumber daya fisik dan pengolahan provinsi. */
 const RESOURCE_NAMES={food:'Pangan',wood:'Kayu',iron:'Besi',spice:'Rempah'};
@@ -4115,7 +4102,7 @@ function fixEastWorld(){
 }
 function eastMissionReady(m,n=G.nat){
  if(m.metric==='stock')return (G.resourceStocks[n]?.food||0)>=m.min;
- if(m.metric==='tech')return (n===G.nat?G.tech[0]:aiTech())>=m.min;
+ if(m.metric==='tech')return worldAiLevel(n,0)>=m.min;
  if(m.metric==='trade')return n===G.nat?G.resourceTradeLog.some(t=>t.includes(' tiba')):G.fleets.some(f=>f.nat===n&&f.mission==='trade'&&!f.path.length);
  if(m.metric==='unify')return m.targets.every(t=>NATS[t]&&NATS[t].ids.every(id=>OWNR[id]===n||G.subj[OWNR[id]]===n));
  return n===G.nat?G.stab>=2&&overextension()<100:!warsOf(n).length&&overextension(n)<80;
@@ -4141,6 +4128,8 @@ defEvent({id:'east_goryeo_jikji',t:'Cetak Logam di Heungdeoksa',once:true,mtth:6
 defEvent({id:'east_yuan_mandat',t:'Mandat Setelah Krisis',once:true,mtth:18,cond:()=>G.nat==='Yuan'&&G.y>=1368,x:'Pada sejarah nyata, Ming berdiri pada 1368. Kampanye ini membuka skenario alternatif: Yuan yang masih bertahan dapat merundingkan pemulihan pemerintahan atau menegaskan pusat. Tidak otomatis mengganti negara atau mencaplok wilayah.',o:[{l:'Rundingkan tata pemerintahan baru',tip:'−50 ADM; stabilitas +1; toleransi agama lain +1 selama 60 bulan',fx:()=>{EF.mana(0,-50);EF.stab(1);EF.mod('yuan_mandat','Kesepakatan pemerintahan',60,{tolN:1});}},{l:'Tegaskan pusat kekaisaran',tip:'+10 legitimasi; pajak +5% selama 36 bulan',fx:()=>{EF.legit(10);EF.mod('yuan_pusat','Pemulihan pusat',36,{tax:.05});}}]});
 const _eastAiContent=aiContentMonth;
 aiContentMonth=function(){_eastAiContent();for(const [n,p] of Object.entries(EAST_PROFILE)){if(n===G.nat||!alive(n))continue;const s=G.aiContent[n];for(const m of p.missions){const id='east_'+m.id;if(!s.missions.includes(id)&&eastMissionReady(m,n)){s.missions.push(id);addWorldLog(n+' menyelesaikan '+m.title+'.');}}if(s.months%36===0)addWorldLog(n+' membahas '+p.events[0].title+' dalam dewan regional.');}};
+
+__WORLD_SYSTEMS__
 
 /* ---------- start screen ---------- */
 let anim = 0;
