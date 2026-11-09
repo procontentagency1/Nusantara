@@ -150,3 +150,19 @@ LAND.push(
  ['Ruili',97.85,24.0,'Mong Mao','indep','mountain',1],['Mogaung',96.94,25.3,'Mong Mao','indep','mountain',2]
 );
 SEA.push(['Teluk Tonkin',108.0,19.4],['Laut Guangdong',115.0,21.5],['Selat Taiwan',119.3,23.3],['Laut Cina Timur',124.0,28.5],['Laut Kuning',123.0,35.0],['Laut Bohai',120.0,39.0],['Selat Korea',129.5,34.3],['Laut Jepang',135.0,39.0],['Laut Seto',133.5,34.1],['Laut Ryukyu',130.0,26.0],['Laut Hokkaido',143.0,44.8],['Pasifik Utara',145.0,36.0],['Pasifik Honshu',141.0,33.0]);
+// Asia Selatan 1350: batas politik dan provinsi adalah pendekatan permainan.
+LAND.push(
+ ['Delhi',77.21,28.61,'Delhi','indep','plains',1],['Lahore',74.35,31.55,'Delhi','indep','plains',2],['Multan',71.47,30.20,'Delhi','indep','plains',2],['Gujarat',72.58,23.03,'Delhi','indep','coast',2],['Ajmer',74.64,26.45,'Delhi','indep','mountain',2],['Kannauj',79.92,27.06,'Delhi','indep','plains',2],['Malwa',75.86,22.72,'Delhi','indep','plains',2],['Jaunpur',82.68,25.75,'Delhi','indep','plains',2],
+ ['Devagiri',75.25,19.95,'Bahmani','indep','mountain',2],['Gulbarga',76.83,17.33,'Bahmani','indep','plains',1],['Bidar',77.52,17.91,'Bahmani','indep','plains',2],['Dabhol',73.18,17.58,'Bahmani','indep','coast',2],
+ ['Vijayanagara',76.46,15.34,'Vijayanagara','indep','plains',1],['Bengaluru',77.59,12.97,'Vijayanagara','indep','plains',2],['Mangaluru',74.86,12.91,'Vijayanagara','indep','coast',2],['Penukonda',77.59,14.08,'Vijayanagara','indep','plains',2],
+ ['Madurai',78.12,9.92,'Madurai','indep','plains',1],['Tiruchirappalli',78.69,10.81,'Madurai','indep','plains',2],['Kayal',78.12,8.64,'Madurai','indep','coast',2],
+ ['Calicut',75.78,11.26,'Calicut','indep','coast',1],['Kochi',76.27,9.93,'Calicut','indep','coast',2],
+ ['Warangal',79.59,17.98,'Warangal','indep','plains',1],['Rajahmundry',81.78,17.0,'Warangal','indep','coast',2],
+ ['Lakhnauti',88.15,24.87,'Bengal','indep','plains',1],['Sonargaon',90.6,23.65,'Bengal','indep','plains',2],['Chittagong',91.83,22.36,'Bengal','indep','coast',2],['Satgaon',88.34,22.94,'Bengal','indep','coast',2],
+ ['Cuttack',85.88,20.46,'Odisha','indep','plains',1],['Puri',85.83,19.8,'Odisha','indep','coast',2],['Kalinga',84.0,18.6,'Odisha','indep','coast',2],
+ ['Gampola',80.57,7.16,'Gampola','indep','mountain',1],['Colombo',79.86,6.93,'Gampola','indep','coast',2],['Ruhuna',80.55,6.04,'Gampola','indep','coast',2],
+ ['Jaffna',80.02,9.66,'Jaffna','indep','coast',1],['Mannar',79.9,8.98,'Jaffna','indep','coast',2],
+ ['Kathmandu',85.32,27.72,'Nepal','indep','mountain',1],['Bhaktapur',85.43,27.67,'Nepal','indep','mountain',2],
+ ['Thatta',67.99,24.75,'Sindh','indep','coast',1],['Sehwan',67.86,26.43,'Sindh','indep','plains',2]
+);
+SEA.push(['Laut Arab',69.8,18.0],['Pesisir Gujarat',70.5,22.0],['Laut Malabar',72.2,12.0],['Laut Lakadewa',74.0,6.0],['Samudra Hindia Barat Daya',76.5,-3.0],['Teluk Mannar',79.1,8.7],['Pesisir Coromandel',81.0,13.0],['Teluk Benggala Barat',84.0,15.0],['Teluk Benggala Utara',88.0,20.0],['Teluk Benggala Selatan',86.0,5.0],['Samudra Hindia Tengah Barat',84.0,-5.0]);

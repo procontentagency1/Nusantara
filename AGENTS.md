@@ -276,3 +276,6 @@ Peta versi 3 memakai proyeksi silinder setara luas. `fixEqualAreaWorld` memigras
 
 ## Kejernihan saat geser peta
 Cache detail menyimpan area ekstra terbatas di sekitar viewport (`detailPadding`, maksimum sekitar 1,9 juta piksel). Pada geser kecil dengan zoom tetap, `frame` melakukan satu blit detail pada koordinat piksel bulat, tanpa cache dunia atau resampling; refresh diam tetap berlangsung. Geseran besar/pinch dapat sementara memakai cache dunia. `paintStatic` memakai padding untuk culling dan transform ikon/label; jangan menghilangkannya tanpa uji posisi. tests/t44_map_drag_cache.py dan t39 menguji cache, gesture, resize dan memori. Lihat docs/RENDER_MOBILE.md.
+
+## Asia Selatan dan penjelajahan
+Peta versi 4 menambahkan profil Asia Selatan dan `bengal` node. `fixSouthWorld` menjaga ID, menambah bangsa, menggeser koordinat armada versi 3 sebesar 25×1600/54 dan menghitung ulang rute; migrasi v1/v2 mesti dijalankan terlebih dahulu. `G.explored` adalah wilayah yang sudah diketahui pemain, bukan penglihatan unit taktis; `revealExploration` diperbarui tiap hari. Save lama memulai dengan 228 wilayah lama diketahui. Pertahankan kemampuan mengarahkan armada ke laut yang tertutup dan kompatibilitas angkutan. Riset dan batas ada di docs/ASIA_SELATAN_DAN_PENJELAJAHAN.md.

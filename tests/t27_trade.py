@@ -18,7 +18,7 @@ with sync_playwright() as p:
  const start=G.treasury,expected=econ().net,random=Math.random;Math.random=()=>1;monthTick();Math.random=random;const paid=Math.abs(G.treasury-start-expected)<1e-6;
  winMode='trade';renderWin();return {nodes:TRADE_NODES.length,conservation,automatic,pure,budget,travel,bonus,penalty,cap,steering,market,occupied,saved,migration,paid};
  }""")
- print(result);assert result['nodes']==10 and all(v for k,v in result.items() if k!='nodes')
+ print(result);assert result['nodes']==11 and all(v for k,v in result.items() if k!='nodes')
  page.screenshot(path='/tmp/nusantara-trade.png')
  assert not errors,errors
  b.close()

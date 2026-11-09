@@ -1320,6 +1320,798 @@
           "historical": false
         }
       ]
+    },
+    "Delhi": {
+      "region": "india_sultan",
+      "capital": "Delhi",
+      "culture": "Istana Tughluq, tradisi Persia dan masyarakat India Utara",
+      "relig": "Islam Sunni",
+      "provinceRel": "Hindu",
+      "gov": "Kesultanan Delhi",
+      "title": "Sultan",
+      "ruler": "Muhammad bin Tughluq",
+      "real": true,
+      "bio": "Muhammad bin Tughluq memerintah hingga 1351; Benggala dan wilayah Dekan telah terlepas menjelang 1350.",
+      "tech": [
+        "Arsip dan pajak Tughluq",
+        "Jalur Gujarat dan pedagang India",
+        "Benteng dan pasukan Delhi"
+      ],
+      "tradition": {
+        "prod": 0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Delhi",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Arsip dan pajak Tughluq",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jalur Gujarat dan pedagang India",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Delhi",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Warisan Tughluq",
+          "text": "Skenario alternatif: Muhammad bin Tughluq memerintah hingga 1351; Benggala dan wilayah Dekan telah terlepas menjelang 1350. Dewan mempertimbangkan penataan kerajaan dan dukungan terhadap masyarakat setempat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Jaringan Delhi",
+          "text": "Skenario alternatif: saudagar dan pengrajin mengusulkan perlindungan jalur pertukaran. Hasil bergantung pada pilihan kerajaan.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Bahmani": {
+      "region": "india_sultan",
+      "capital": "Gulbarga",
+      "culture": "Istana Dekan, bahasa dan tradisi India serta Persia",
+      "relig": "Islam Sunni",
+      "provinceRel": "Hindu",
+      "gov": "Kesultanan Bahmani",
+      "title": "Sultan",
+      "ruler": "Alauddin Hasan Bahman Shah",
+      "real": true,
+      "bio": "Bahmani berdiri pada 1347 setelah pemberontakan di Dekan; Gulbarga menjadi pusat awalnya.",
+      "tech": [
+        "Administrasi Dekan",
+        "Bandar pesisir barat",
+        "Benteng dan tentara Dekan"
+      ],
+      "tradition": {
+        "prod": 0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Gulbarga",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Administrasi Dekan",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Bandar pesisir barat",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Gulbarga",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Dekan",
+          "text": "Skenario alternatif: Bahmani berdiri pada 1347 setelah pemberontakan di Dekan; Gulbarga menjadi pusat awalnya. Dewan mempertimbangkan penataan kerajaan dan dukungan terhadap masyarakat setempat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Jaringan Gulbarga",
+          "text": "Skenario alternatif: saudagar dan pengrajin mengusulkan perlindungan jalur pertukaran. Hasil bergantung pada pilihan kerajaan.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Vijayanagara": {
+      "region": "india_south",
+      "capital": "Vijayanagara",
+      "culture": "Tradisi Kannada dan Telugu, pusat pemujaan dan jaringan dagang",
+      "relig": "Hindu",
+      "provinceRel": "Hindu",
+      "gov": "Kerajaan Vijayanagara",
+      "title": "Raya",
+      "ruler": "Harihara I",
+      "real": true,
+      "bio": "Vijayanagara berkembang sejak 1336 di kawasan Tungabhadra; kekuasaannya pada 1350 belum mencakup seluruh India Selatan.",
+      "tech": [
+        "Irigasi Tungabhadra",
+        "Pasar dan saudagar Kannada",
+        "Benteng batu dan pasukan raya"
+      ],
+      "tradition": {
+        "prod": 0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Vijayanagara",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Irigasi Tungabhadra",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Pasar dan saudagar Kannada",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Vijayanagara",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Pertahanan Tungabhadra",
+          "text": "Skenario alternatif: Vijayanagara berkembang sejak 1336 di kawasan Tungabhadra; kekuasaannya pada 1350 belum mencakup seluruh India Selatan. Dewan mempertimbangkan penataan kerajaan dan dukungan terhadap masyarakat setempat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Jaringan Vijayanagara",
+          "text": "Skenario alternatif: saudagar dan pengrajin mengusulkan perlindungan jalur pertukaran. Hasil bergantung pada pilihan kerajaan.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Madurai": {
+      "region": "india_sultan",
+      "capital": "Madurai",
+      "culture": "Istana Ma’bar dan masyarakat Tamil yang majemuk",
+      "relig": "Islam Sunni",
+      "provinceRel": "Hindu",
+      "gov": "Kesultanan Madurai",
+      "title": "Sultan",
+      "ruler": "Dewan Madurai",
+      "real": false,
+      "bio": "Kesultanan Madurai berkuasa di sebagian Tamil sebelum penaklukan Vijayanagara pada abad ke-14. Nama dewan adalah pengganti penguasa yang belum dipastikan.",
+      "tech": [
+        "Administrasi Ma’bar",
+        "Pelabuhan Tamil dan mutiara",
+        "Penjaga kota Madurai"
+      ],
+      "tradition": {
+        "prod": 0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Madurai",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Administrasi Ma’bar",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Pelabuhan Tamil dan mutiara",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Madurai",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Ma’bar",
+          "text": "Skenario alternatif: Kesultanan Madurai berkuasa di sebagian Tamil sebelum penaklukan Vijayanagara pada abad ke-14. Nama dewan adalah pengganti penguasa yang belum dipastikan. Dewan mempertimbangkan penataan kerajaan dan dukungan terhadap masyarakat setempat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Jaringan Madurai",
+          "text": "Skenario alternatif: saudagar dan pengrajin mengusulkan perlindungan jalur pertukaran. Hasil bergantung pada pilihan kerajaan.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Calicut": {
+      "region": "india_south",
+      "capital": "Calicut",
+      "culture": "Pesisir Malabar, masyarakat Malayalam dan saudagar lintas Samudra Hindia",
+      "relig": "Hindu",
+      "provinceRel": "Hindu",
+      "gov": "Kerajaan Calicut",
+      "title": "Samudiri",
+      "ruler": "Dewan Samudiri",
+      "real": false,
+      "bio": "Calicut merupakan pusat pesisir Malabar; dewan dalam permainan mewakili penguasa setempat tanpa menebak nama individu.",
+      "tech": [
+        "Catatan bandar Malabar",
+        "Lada dan jalur musim angin",
+        "Pengawal pelabuhan"
+      ],
+      "tradition": {
+        "trade": 0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Calicut",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Catatan bandar Malabar",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Lada dan jalur musim angin",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Calicut",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Musim angin Malabar",
+          "text": "Skenario alternatif: Calicut merupakan pusat pesisir Malabar; dewan dalam permainan mewakili penguasa setempat tanpa menebak nama individu. Dewan mempertimbangkan penataan kerajaan dan dukungan terhadap masyarakat setempat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Jaringan Calicut",
+          "text": "Skenario alternatif: saudagar dan pengrajin mengusulkan perlindungan jalur pertukaran. Hasil bergantung pada pilihan kerajaan.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Warangal": {
+      "region": "india_south",
+      "capital": "Warangal",
+      "culture": "Masyarakat Telugu dan tradisi penguasa Nayaka",
+      "relig": "Hindu",
+      "provinceRel": "Hindu",
+      "gov": "Kerajaan Warangal",
+      "title": "Nayaka",
+      "ruler": "Kapaya Nayaka",
+      "real": true,
+      "bio": "Sesudah runtuhnya Kakatiya, Kapaya Nayaka memimpin kekuasaan di Warangal pada pertengahan abad ke-14.",
+      "tech": [
+        "Pengelolaan tangki air",
+        "Jalur Andhra",
+        "Benteng Warangal"
+      ],
+      "tradition": {
+        "prod": 0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Warangal",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Pengelolaan tangki air",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jalur Andhra",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Warangal",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Nayaka",
+          "text": "Skenario alternatif: Sesudah runtuhnya Kakatiya, Kapaya Nayaka memimpin kekuasaan di Warangal pada pertengahan abad ke-14. Dewan mempertimbangkan penataan kerajaan dan dukungan terhadap masyarakat setempat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Jaringan Warangal",
+          "text": "Skenario alternatif: saudagar dan pengrajin mengusulkan perlindungan jalur pertukaran. Hasil bergantung pada pilihan kerajaan.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Bengal": {
+      "region": "india_sultan",
+      "capital": "Lakhnauti",
+      "culture": "Tradisi Bengali, Persia dan jaringan sungai delta",
+      "relig": "Islam Sunni",
+      "provinceRel": "Hindu",
+      "gov": "Kesultanan Bengal",
+      "title": "Sultan",
+      "ruler": "Shamsuddin Ilyas Shah",
+      "real": true,
+      "bio": "Ilyas Shah menyatukan kekuasaan Bengal pada pertengahan abad ke-14; penyatuan pada awal 1350 disederhanakan untuk permainan.",
+      "tech": [
+        "Administrasi sungai Bengal",
+        "Delta dan pelabuhan Bengal",
+        "Armada sungai dan benteng"
+      ],
+      "tradition": {
+        "trade": 0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Lakhnauti",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Administrasi sungai Bengal",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Delta dan pelabuhan Bengal",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Lakhnauti",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Penyatuan Bengal",
+          "text": "Skenario alternatif: Ilyas Shah menyatukan kekuasaan Bengal pada pertengahan abad ke-14; penyatuan pada awal 1350 disederhanakan untuk permainan. Dewan mempertimbangkan penataan kerajaan dan dukungan terhadap masyarakat setempat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Jaringan Lakhnauti",
+          "text": "Skenario alternatif: saudagar dan pengrajin mengusulkan perlindungan jalur pertukaran. Hasil bergantung pada pilihan kerajaan.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Odisha": {
+      "region": "india_south",
+      "capital": "Cuttack",
+      "culture": "Tradisi Odia dan patronase kuil Jagannath",
+      "relig": "Hindu",
+      "provinceRel": "Hindu",
+      "gov": "Kerajaan Odisha",
+      "title": "Raja",
+      "ruler": "Dewan Gangga Timur",
+      "real": false,
+      "bio": "Dinasti Gangga Timur berpusat di Odisha; nama dewan adalah pendekatan untuk menghindari penguasa yang belum dipastikan.",
+      "tech": [
+        "Pengairan delta Mahanadi",
+        "Bandar pesisir Kalinga",
+        "Benteng dan pengawal Odisha"
+      ],
+      "tradition": {
+        "prod": 0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Cuttack",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Pengairan delta Mahanadi",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Bandar pesisir Kalinga",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Cuttack",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Kalinga",
+          "text": "Skenario alternatif: Dinasti Gangga Timur berpusat di Odisha; nama dewan adalah pendekatan untuk menghindari penguasa yang belum dipastikan. Dewan mempertimbangkan penataan kerajaan dan dukungan terhadap masyarakat setempat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Jaringan Cuttack",
+          "text": "Skenario alternatif: saudagar dan pengrajin mengusulkan perlindungan jalur pertukaran. Hasil bergantung pada pilihan kerajaan.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Gampola": {
+      "region": "sri_lanka",
+      "capital": "Gampola",
+      "culture": "Tradisi Sinhala dan Buddhisme Theravada, dengan komunitas perdagangan beragam",
+      "relig": "Buddha Theravada",
+      "provinceRel": "Buddha Theravada",
+      "gov": "Kerajaan Gampola",
+      "title": "Raja",
+      "ruler": "Bhuvanaikabahu IV",
+      "real": true,
+      "bio": "Gampola menjadi pusat kerajaan Sinhala pada pertengahan abad ke-14. Batas pulau dalam permainan disederhanakan.",
+      "tech": [
+        "Wihara dan catatan Sinhala",
+        "Bandar dan jalur Sri Lanka",
+        "Pertahanan dataran tinggi"
+      ],
+      "tradition": {
+        "prod": 0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Gampola",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Wihara dan catatan Sinhala",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Bandar dan jalur Sri Lanka",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Gampola",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Gampola",
+          "text": "Skenario alternatif: Gampola menjadi pusat kerajaan Sinhala pada pertengahan abad ke-14. Batas pulau dalam permainan disederhanakan. Dewan mempertimbangkan penataan kerajaan dan dukungan terhadap masyarakat setempat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Jaringan Gampola",
+          "text": "Skenario alternatif: saudagar dan pengrajin mengusulkan perlindungan jalur pertukaran. Hasil bergantung pada pilihan kerajaan.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Jaffna": {
+      "region": "sri_lanka",
+      "capital": "Jaffna",
+      "culture": "Tradisi Tamil Sri Lanka dan perdagangan Selat Palk",
+      "relig": "Hindu",
+      "provinceRel": "Hindu",
+      "gov": "Kerajaan Jaffna",
+      "title": "Raja",
+      "ruler": "Dewan Aryacakravarti",
+      "real": false,
+      "bio": "Dinasti Aryacakravarti berkuasa di utara Sri Lanka; profil dewan menghindari nama raja yang belum dipastikan.",
+      "tech": [
+        "Arsip Aryacakravarti",
+        "Mutiara dan selat Palk",
+        "Penjaga pesisir Jaffna"
+      ],
+      "tradition": {
+        "trade": 0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Jaffna",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Arsip Aryacakravarti",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Mutiara dan selat Palk",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Jaffna",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Jaffna",
+          "text": "Skenario alternatif: Dinasti Aryacakravarti berkuasa di utara Sri Lanka; profil dewan menghindari nama raja yang belum dipastikan. Dewan mempertimbangkan penataan kerajaan dan dukungan terhadap masyarakat setempat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Jaringan Jaffna",
+          "text": "Skenario alternatif: saudagar dan pengrajin mengusulkan perlindungan jalur pertukaran. Hasil bergantung pada pilihan kerajaan.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Nepal": {
+      "region": "india_south",
+      "capital": "Kathmandu",
+      "culture": "Budaya Newar, tradisi Hindu-Buddha dan istana Malla",
+      "relig": "Hindu",
+      "provinceRel": "Hindu",
+      "gov": "Kerajaan Nepal",
+      "title": "Raja",
+      "ruler": "Dewan Malla",
+      "real": false,
+      "bio": "Lembah Kathmandu memiliki tradisi Malla; politik dan kepemilikannya disederhanakan pada peta.",
+      "tech": [
+        "Naskah dan kerajinan Newar",
+        "Jalur lembah Himalaya",
+        "Benteng lembah"
+      ],
+      "tradition": {
+        "prod": 0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Kathmandu",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Naskah dan kerajinan Newar",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Jalur lembah Himalaya",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Kathmandu",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Malla",
+          "text": "Skenario alternatif: Lembah Kathmandu memiliki tradisi Malla; politik dan kepemilikannya disederhanakan pada peta. Dewan mempertimbangkan penataan kerajaan dan dukungan terhadap masyarakat setempat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Jaringan Kathmandu",
+          "text": "Skenario alternatif: saudagar dan pengrajin mengusulkan perlindungan jalur pertukaran. Hasil bergantung pada pilihan kerajaan.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
+    },
+    "Sindh": {
+      "region": "india_sultan",
+      "capital": "Thatta",
+      "culture": "Tradisi Sindhi dan jaringan delta Indus",
+      "relig": "Islam Sunni",
+      "provinceRel": "Hindu",
+      "gov": "Kerajaan Sindh",
+      "title": "Penguasa",
+      "ruler": "Dewan Sindh",
+      "real": false,
+      "bio": "Sindh mengalami perubahan kekuasaan pada pertengahan abad ke-14; profil dewan menghindari klaim yang terlalu pasti.",
+      "tech": [
+        "Pengelolaan delta Indus",
+        "Bandar Thatta",
+        "Penjaga Indus"
+      ],
+      "tradition": {
+        "prod": 0.04
+      },
+      "missions": [
+        {
+          "id": "m0",
+          "title": "Lumbung Thatta",
+          "metric": "stock",
+          "branch": "Istana",
+          "min": 50
+        },
+        {
+          "id": "m1",
+          "title": "Pengelolaan delta Indus",
+          "metric": "tech",
+          "branch": "Istana",
+          "min": 4
+        },
+        {
+          "id": "m2",
+          "title": "Bandar Thatta",
+          "metric": "trade",
+          "branch": "Diplomasi",
+          "min": 1
+        },
+        {
+          "id": "m3",
+          "title": "Tata Thatta",
+          "metric": "stability",
+          "branch": "Ekspansi",
+          "min": 2
+        }
+      ],
+      "events": [
+        {
+          "id": "dewan",
+          "title": "Dewan Indus",
+          "text": "Skenario alternatif: Sindh mengalami perubahan kekuasaan pada pertengahan abad ke-14; profil dewan menghindari klaim yang terlalu pasti. Dewan mempertimbangkan penataan kerajaan dan dukungan terhadap masyarakat setempat.",
+          "year": 1350,
+          "historical": false
+        },
+        {
+          "id": "bandar",
+          "title": "Jaringan Thatta",
+          "text": "Skenario alternatif: saudagar dan pengrajin mengusulkan perlindungan jalur pertukaran. Hasil bergantung pada pilihan kerajaan.",
+          "year": 1350,
+          "historical": false
+        }
+      ]
     }
   },
   "newNations": [
