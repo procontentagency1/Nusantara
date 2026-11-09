@@ -27,7 +27,11 @@ with sync_playwright() as p:
  page.evaluate("newGame('Yuan');beginGame();winMode='missions';missionBranch='Istana';renderWin()")
  page.wait_for_timeout(1000);page.screenshot(path='/tmp/nusantara-east-yuan.png')
  page.evaluate("winMode=null;renderWin();showStart()")
- page.locator('#nationPicker').select_option('Goryeo');page.locator('#btnStart').click();assert page.evaluate('G.nat')=='Goryeo'
+ assert page.locator('#stList, #nationPicker').count()==0
+ page.evaluate("cancelAnimationFrame(anim);centerOn(NATS.Goryeo.capital.lab[0],NATS.Goryeo.capital.lab[1],2)")
+ page.wait_for_timeout(500);page.screenshot(path='/tmp/nusantara-start-map-only.png')
+ page.mouse.click(390,180);assert page.evaluate('selNat')=='Goryeo'
+ page.locator('#btnStart').click();assert page.evaluate('G.nat')=='Goryeo'
  page.locator('#mapViewToggle').click();page.locator('[data-mapregion=japan]').click();assert not page.locator('#mapViewMenu').is_visible()
  page.wait_for_timeout(600);page.screenshot(path='/tmp/nusantara-east-overview.png')
  assert not errors,errors

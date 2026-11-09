@@ -4,7 +4,7 @@ Riset: [RISET_ASIA_TIMUR.md](RISET_ASIA_TIMUR.md). Data: `data/east-asia.json`; 
 
 ## Negara dan konten
 
-Negara baru: Yuan, Goryeo, Ashikaga, Yoshino, Hokuzan, Chuzan, Nanzan, Komunitas Ainu, Komunitas Taiwan, Dai Viet, Sukhothai, Lan Na, Muang Sua, Pinya, Sagaing, Hanthawaddy, Mong Mao. Profil Siam, Khmer dan Champa turut diperluas. Semua dapat dipilih melalui dropdown kerajaan di layar awal. Menu peta mempunyai pintasan Nusantara, Tiongkok dan Jepang/Korea.
+Negara baru: Yuan, Goryeo, Ashikaga, Yoshino, Hokuzan, Chuzan, Nanzan, Komunitas Ainu, Komunitas Taiwan, Dai Viet, Sukhothai, Lan Na, Muang Sua, Pinya, Sagaing, Hanthawaddy, Mong Mao. Profil Siam, Khmer dan Champa turut diperluas. Semua dapat dipilih dengan mengetuk wilayahnya di peta layar awal. Daftar dan dropdown kerajaan bawah dihapus atas permintaan pemilik. Menu peta mempunyai pintasan Nusantara, Tiongkok dan Jepang/Korea.
 
 Dua puluh profil menyediakan budaya, pusat politik, busana, pemerintahan dan konteks teknologi ADM/DIP/MIL. Gambar memakai sembilan kelompok regional: Tiongkok, Korea, Jepang, Ryukyu, Ainu, Taiwan, Vietnam, daratan Asia Tenggara, Champa. Pasukan dan bangunan dibedakan dalam siluet; arsitektur Majapahit dan Nusantara yang sudah ada tetap tersedia. Agama negara/provinsi serta warna/label mencakup tradisi Tionghoa, Vajrayana, Shinto-Buddha, Ryukyu dan Ainu. Goryeo memulai sebagai negara upeti Yuan, bukan vasal.
 
