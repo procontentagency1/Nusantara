@@ -413,9 +413,11 @@ function layout() {
   vw = rot ? H : W; vh = rot ? W : H;
   app.style.width = vw + 'px'; app.style.height = vh + 'px';
   app.style.transform = rot ? `translateX(${W}px) rotate(90deg)` : 'none';
-  dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+  // Batas backing store mengikuti layar, tidak ikut luas peta.
+  dpr = Math.min(window.devicePixelRatio || 1, matchMedia('(pointer:coarse)').matches ? 1.5 : 1.75, Math.sqrt(1500000/(vw*vh)));
   cvs.style.width = vw + 'px'; cvs.style.height = vh + 'px';
-  cvs.width = Math.round(vw*dpr); cvs.height = Math.round(vh*dpr);
+  const bw=Math.round(vw*dpr),bh=Math.round(vh*dpr);
+  if(cvs.width!==bw)cvs.width=bw;if(cvs.height!==bh)cvs.height=bh;
   fitS = Math.min(vw/WW, vh/WH); minS = fitS*.9; maxS = Math.max(6,fitS*12);
 }
 const clampS = s => Math.min(maxS, Math.max(minS, s));
@@ -470,7 +472,8 @@ function counter(x, y, txt, color) {
 
 /* ===== tekstur medan & air (dibuat sekali saat memuat) ===== */
 const TEX = { land:null, water:null, ready:false };
-const TK = 1.2;
+// Tekstur dekoratif dibatasi satu megapiksel; detail geometri tetap pada resolusi layar.
+const TK = Math.min(1.2,Math.sqrt(1000000/(WW*WH)));
 const LANDC = { plains:'#8fae55', jungle:'#43723a', mountain:'#86714f', coast:'#b8b479' };
 const PERM = new Uint8Array(512), GR = new Float32Array(256);
 function rng(seed) { let a = seed >>> 0; return () => (a = (a*1664525 + 1013904223) >>> 0) / 4294967296; }
@@ -502,6 +505,8 @@ function buildTextures() {
   const mc = mkc(tw, th), mcx = mc.getContext('2d'); mcx.imageSmoothingQuality = 'high'; mcx.drawImage(mo, 0, 0, tw, th);
   const lmC = mkc(tw, th), lmx = lmC.getContext('2d'); lmx.scale(tw/WW, th/WH); lmx.fillStyle = '#000'; lmx.fill(coast, 'evenodd');
   const lm = lmx.getImageData(0, 0, tw, th).data, md = mcx.getImageData(0, 0, tw, th).data;
+  // Lepaskan backing store sementara segera, jangan menunggu GC pada HP.
+  for(const c of [lo,mo,mc,lmC])c.width=c.height=1;
   TEX.lm = new Uint8Array(tw*th); for (let i = 0; i < tw*th; i++) TEX.lm[i] = lm[i*4 + 3];
   TEX.tw = tw; TEX.th = th;
   const bc = mkc(tw, th), bx = bc.getContext('2d'), img = bx.createImageData(tw, th), d = img.data;
@@ -531,14 +536,15 @@ function buildTextures() {
   bx.putImageData(img, 0, 0);
   TEX.land = bc;
 
-  const ww = Math.round(WW*.8), wh = Math.round(WH*.8);
+  const waterK=Math.min(.8,Math.sqrt(400000/(WW*WH)));
+  const ww = Math.round(WW*waterK), wh = Math.round(WH*waterK);
   const wc = mkc(ww, wh), wx = wc.getContext('2d');
   const g = wx.createLinearGradient(0, 0, 0, wh); g.addColorStop(0, '#15506c'); g.addColorStop(1, '#103f5a');
   wx.fillStyle = g; wx.fillRect(0, 0, ww, wh);
   for (const [div, col, al] of [[16, '#2f8ca4', .34], [9, '#4aaabd', .32], [4.5, '#78cdd0', .30]]) {
     const w2 = Math.round(ww/div), h2 = Math.round(wh/div), c2 = mkc(w2, h2), x2 = c2.getContext('2d');
     x2.scale(w2/WW, h2/WH); x2.fillStyle = x2.strokeStyle = col; x2.fill(coast, 'evenodd'); x2.lineWidth = 2; x2.stroke(coast);
-    wx.imageSmoothingQuality = 'high'; wx.globalAlpha = al; wx.drawImage(c2, 0, 0, ww, wh);
+    wx.imageSmoothingQuality = 'high'; wx.globalAlpha = al; wx.drawImage(c2, 0, 0, ww, wh);c2.width=c2.height=1;
   }
   wx.globalAlpha = 1; TEX.water = wc; TEX.ready = true;
 }
@@ -935,10 +941,10 @@ const clamp01 = v => Math.max(0, Math.min(1, v));
 let vigCache = null;
 
 /* ===== render dua tingkat: cache dunia + detail tajam saat diam ===== */
-const WORLD_K = 1.25;
+const WORLD_K = Math.min(1.25,Math.sqrt(1000000/(WW*WH)));
 let cacheVer = 0, idleT = 0, idleKey = '';
 const worldCache = { c:null, ver:-1, mode:null };
-const detail = { c:null, ok:false, s:0, tx:0, ty:0, mode:null, ver:-1, w:0 };
+const detail = { c:null, ok:false, s:0, tx:0, ty:0, mode:null, ver:-1, w:0, h:0 };
 const BG = '#7d6c46';
 
 function paintStatic(c, k, tx, ty, sEff, full) {
@@ -1085,7 +1091,7 @@ function renderDetail() {
   if (detail.c.width !== cvs.width || detail.c.height !== cvs.height) { detail.c.width = cvs.width; detail.c.height = cvs.height; }
   const dc = detail.c.getContext('2d');
   paintStatic(dc, dpr*view.s, dpr*view.tx, dpr*view.ty, view.s, true);
-  Object.assign(detail, { ok:true, s:view.s, tx:view.tx, ty:view.ty, mode, ver:cacheVer, w:cvs.width });
+  Object.assign(detail, { ok:true, s:view.s, tx:view.tx, ty:view.ty, mode, ver:cacheVer, w:cvs.width, h:cvs.height });
   frame();
 }
 function invalidate(now) { cacheVer++; if (now && TEX.ready !== undefined) renderDetail(); else request(); }
@@ -1103,17 +1109,17 @@ function frame() {
   if(mode==='religion'&&phase==='game'&&G){const key=JSON.stringify(G.pr);if(key!==religionRenderKey){religionRenderKey=key;COUNTRY_LABELS=null;for(const p of provs)p._pf=null;cacheVer++;}}
   const s = view.s;
   ctx.setTransform(1,0,0,1,0,0);
-  const same = detail.ok && detail.mode === mode && detail.ver === cacheVer && detail.w === cvs.width && detail.s === s && detail.tx === view.tx && detail.ty === view.ty;
+  const same = detail.ok && detail.mode === mode && detail.ver === cacheVer && detail.w === cvs.width && detail.h === cvs.height && detail.s === s && detail.tx === view.tx && detail.ty === view.ty;
   if (same) ctx.drawImage(detail.c, 0, 0);
   else {
     ctx.fillStyle = BG; ctx.fillRect(0, 0, cvs.width, cvs.height);
     ensureWorld();
     ctx.setTransform(dpr*s, 0, 0, dpr*s, dpr*view.tx, dpr*view.ty); ctx.drawImage(worldCache.c, 0, 0, WW, WH);
-    if (detail.ok && detail.mode === mode && detail.ver === cacheVer && detail.w === cvs.width) {
+    if (detail.ok && detail.mode === mode && detail.ver === cacheVer && detail.w === cvs.width && detail.h === cvs.height) {
       const k = s/detail.s; ctx.setTransform(1,0,0,1,0,0);
       ctx.drawImage(detail.c, dpr*(view.tx - detail.tx*k), dpr*(view.ty - detail.ty*k), cvs.width*k, cvs.height*k);
     }
-    const k2 = view.tx + '|' + view.ty + '|' + s + '|' + mode + '|' + cacheVer + '|' + cvs.width;
+    const k2 = view.tx + '|' + view.ty + '|' + s + '|' + mode + '|' + cacheVer + '|' + cvs.width + '|' + cvs.height;
     if (k2 !== idleKey || !idleT) { idleKey = k2; clearTimeout(idleT); idleT = setTimeout(renderDetail, 130); }
   }
   // overlay dinamis (murah)
@@ -1197,7 +1203,10 @@ function onResize() {
   else { view.s = clampS(view.s); view.tx = vw/2-keep.wx*view.s; view.ty = vh/2-keep.wy*view.s; clampView(); }
   request();
 }
-window.addEventListener('resize', onResize);
+let resizeFrame=0;
+window.addEventListener('resize',()=>{if(!resizeFrame)resizeFrame=requestAnimationFrame(()=>{resizeFrame=0;onResize();});});
+cvs.addEventListener('contextlost',e=>{e.preventDefault();detail.ok=false;});
+cvs.addEventListener('contextrestored',()=>{ctx=mainCtx;detail.ok=false;worldCache.ver=-1;makePatterns();for(const k of Object.keys(HATCH))delete HATCH[k];cacheVer++;request();});
 makePatterns(); onResize();
 /* ================= GAME: data, state, systems, UI ================= */
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
@@ -4188,7 +4197,7 @@ function initGame() { requestAnimationFrame(loop); showStart(); }
 
 rebuildOwned(); computeBB(); centerPts();
 initGame();
-setTimeout(() => { buildTextures(); cacheVer++; request(); setTimeout(() => { buildIcons(); cacheVer++; request(); }, 30); }, 60);
+setTimeout(() => { try{buildTextures();}catch(e){TEX.ready=false;for(const k of ['land','water','tint']){if(TEX[k])TEX[k].width=TEX[k].height=1;TEX[k]=null;}TEX.lm=null;console.warn('Tekstur dinonaktifkan; peta memakai warna dasar.',e);}cacheVer++;request();setTimeout(()=>{buildIcons();cacheVer++;request();},30); },60);
 /* ---------- Audio: bus terpisah, efek halus dan musik situasional ---------- */
 const SFX = (() => {
   let ctx=null,master=null,fx=null,ui=null,mus=null,peace=null,war=null,battle=null,noiseBuf=null;
