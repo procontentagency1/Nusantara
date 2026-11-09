@@ -74,7 +74,7 @@ canvas#map{position:absolute;left:0;top:0;display:block;touch-action:none;cursor
 #stTitle{left:50%;top:6px;transform:translateX(-50%);padding:5px 26px 6px;text-align:center;background:linear-gradient(#6b4f22,#33240f);border:2px solid #b08d45;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.55)}
 #stTitle b{display:block;color:var(--gold);font-size:15px;letter-spacing:3px}
 #stTitle small{font:10px system-ui,sans-serif;opacity:.8}
-#stPanel{left:6px;top:6px;width:236px;max-height:calc(100% - 62px);overflow:auto;border-radius:4px}
+#stPanel[hidden]{display:none}#stPanelToggle{left:6px;bottom:6px;z-index:8;padding:8px 12px;min-height:38px}#stPanel{left:6px;top:6px;width:236px;max-height:calc(100% - 62px);overflow:auto;border-radius:4px}
 #stPanel .hd{display:flex;gap:9px;align-items:center;padding:8px;background:linear-gradient(#7a5a26,#43301a);border-bottom:2px solid #000}
 #stFlag{width:38px;height:38px;border:2px solid #000;border-radius:5px;display:grid;place-items:center;color:#fff3cf;font-size:18px;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
 #stPanel h2{margin:0;font-size:16px;color:var(--gold);text-transform:uppercase;letter-spacing:.8px}
@@ -320,7 +320,7 @@ button,.btn{touch-action:manipulation}
 
 <div id="start">
   <div id="stTitle" class="abs"><b>NUSANTARA</b><small>1 Januari 1350 · Pilih negara Anda</small></div>
-  <div id="stPanel" class="abs wood"></div>
+  <div id="stPanel" class="abs wood"></div><button id="stPanelToggle" class="abs btn" aria-expanded="true">Sembunyikan info</button>
   <button id="btnStart" class="abs" disabled>MULAI</button>
 </div>
 <div id="rail" class="abs">
@@ -4154,7 +4154,7 @@ function showStart() {
 }
 function selectNation(nat) {
   selNat = nat; const n = NATS[nat], sv = loadSave();
-  $('btnStart').disabled = !n.playable;
+  $('btnStart').disabled = !n.playable; $('btnStart').textContent = 'Mulai '+nat;
   $('stPanel').innerHTML = `<div class="hd"><div id="stFlag" style="background:${n.color}">☀︎</div><div><h2>${nat}</h2><div class="sub">${n.gov}</div></div></div>`
     + (n.playable ? `<div class="r"><span>Penguasa</span><b>${n.title} ${n.ruler.name}</b></div>
       <div class="r"><span>Kemampuan</span><b>${n.ruler.a} / ${n.ruler.d} / ${n.ruler.m}</b></div>
@@ -4166,11 +4166,12 @@ function selectNation(nat) {
       <div class="r"><span>Kesulitan</span><b class="stars">${'★'.repeat(4 - n.diff)}${'☆'.repeat(n.diff - 1)}</b></div>
       <p class="note" style="margin:0;padding:6px 9px;font:10px system-ui,sans-serif;opacity:.55">${n.ruler.real ? '' : 'Nama & kemampuan penguasa masih contoh. '}Ketuk wilayah kerajaan di peta untuk memilih.</p>`
       : `<p class="note" style="padding:10px;font:11px system-ui,sans-serif;opacity:.8">Wilayah ini hanya sebagian terlihat di peta, jadi belum bisa dimainkan.</p>`)
-    + (sv ? `<button class="btn mini-btn" id="btnCont">Lanjutkan (${sv.nat}, ${sv.y})</button>` : '');
+    + (sv ? `<button class="btn mini-btn" id="btnCont">Lanjutkan save ${sv.nat} (${sv.y})</button>` : '');
   if (sv) $('btnCont').onclick = () => { G = sv; G.battles ||= []; G.wex ||= {}; G.ae ||= {}; G.coal ||= {}; G.fab ||= []; G.mis ||= []; G.net ||= {}; fixSave(); beginGame(); };
   const c = n.capital; focusNation(nat, (vw + 244)/2 + 40 > vw ? vw/2 : (vw + 244)/2);
   request();
 }
+$('stPanelToggle').onclick=()=>{const p=$('stPanel'),hidden=!p.hidden;p.hidden=hidden;$('stPanelToggle').textContent=hidden?'Tampilkan info':'Sembunyikan info';$('stPanelToggle').setAttribute('aria-expanded',String(!hidden));};
 $('btnStart').onclick = () => { if (selNat && NATS[selNat].playable) { newGame(selNat); beginGame(); toast(`Anda memimpin ${selNat}. Tekan ▶ untuk memulai waktu.`); } };
 function beginGame() {
   phase = 'game'; app.dataset.phase = 'game'; paused = true; winMode = null; winProv = null; selId = null;
