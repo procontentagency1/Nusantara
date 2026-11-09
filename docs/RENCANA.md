@@ -1,6 +1,6 @@
 # Rencana pembangunan Tahap A–H
 
-> **Status 2026-11-09:** Fondasi A–G sudah tersedia; H dikerjakan bertahap. Catatan di bawah menyimpan rencana awal dan pembaruan berurutan. Implementasi terkini juga mencakup kesiapan tentara, sumber daya dan integrasi/perlawanan daerah taklukan. Armada belum tersedia. Kontrak terbaru: `docs/AUDIT.md`, `docs/ARMADA_DAN_PASUKAN.md`, dan `docs/EKSPANSI.md`.
+> **Status 2026-11-09:** Fondasi A–G sudah tersedia; H dikerjakan bertahap. Catatan di bawah menyimpan rencana awal dan pembaruan berurutan. Implementasi terkini mencakup kesiapan tentara, sumber daya, integrasi/perlawanan daerah, audio adaptif dan armada awal. Kontrak terbaru: `docs/AUDIT.md`, `docs/ARMADA_DAN_PASUKAN.md`, `docs/ARMADA.md`, `docs/AUDIO.md`, dan `docs/EKSPANSI.md`. Angkutan tentara/blokade laut masih tahap lanjutan.
 
 Prinsip: bangun bertahap, tiap tahap bisa dimainkan dan dites sendiri, UI kecil dan rapi, tiru EU4 bila ragu. Urutan dipilih supaya tahap awal jadi fondasi tahap berikutnya.
 
