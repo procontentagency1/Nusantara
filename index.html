@@ -1755,11 +1755,11 @@ function layout() {
   cvs.style.width = vw + 'px'; cvs.style.height = vh + 'px';
   const bw=Math.round(vw*dpr),bh=Math.round(vh*dpr);
   if(cvs.width!==bw)cvs.width=bw;if(cvs.height!==bh)cvs.height=bh;
-  fitS = Math.min(vw/WW, vh/WH); minS = fitS*.9; maxS = Math.max(6,fitS*12);
+  fitS = Math.min(vw/WW, vh/WH); minS = Math.max(vw/WW, vh/WH); maxS = Math.max(6,minS*12);
 }
 const clampS = s => Math.min(maxS, Math.max(minS, s));
 function clampView() {
-  const mw = WW*view.s, mh = WH*view.s, m = 40;
+  const mw = WW*view.s, mh = WH*view.s, m = 0;
   view.tx = mw <= vw ? (vw-mw)/2 : Math.min(m, Math.max(vw-mw-m, view.tx));
   view.ty = mh <= vh ? (vh-mh)/2 : Math.min(m, Math.max(vh-mh-m, view.ty));
 }
@@ -2394,7 +2394,7 @@ function paintStatic(c, k, tx, ty, sEff, full) {
     if (aC > .12) {
       if (!COUNTRY_LABELS) buildCountryLabels();
       for (const cl of COUNTRY_LABELS) {
-        const x = view.tx + cl.cx*s, y = view.ty + cl.cy*s, fs = Math.min(46, cl.fsW*s);
+        const x = view.tx + cl.cx*s, y = view.ty + cl.cy*s, fs = Math.min(34, cl.fsW*s);
         if (fs < 8.5 || x < -150 || y < -60 || x > vw + 150 || y > vh + 60) continue;
         c.font = `bold ${fs}px Georgia,serif`; if ('letterSpacing' in c) c.letterSpacing = (fs*.2) + 'px';
         const w = c.measureText(cl.name).width, ca = Math.abs(Math.cos(cl.ang)), sa = Math.abs(Math.sin(cl.ang));
