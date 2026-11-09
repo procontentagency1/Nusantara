@@ -410,11 +410,11 @@ function layout() {
   cvs.style.width = vw + 'px'; cvs.style.height = vh + 'px';
   const bw=Math.round(vw*dpr),bh=Math.round(vh*dpr);
   if(cvs.width!==bw)cvs.width=bw;if(cvs.height!==bh)cvs.height=bh;
-  fitS = Math.min(vw/WW, vh/WH); minS = Math.max(vw/WW, vh/WH); maxS = Math.max(6,minS*12);
+  fitS = Math.min(vw/WW, vh/WH); minS = fitS*.9; maxS = Math.max(6,fitS*12);
 }
 const clampS = s => Math.min(maxS, Math.max(minS, s));
 function clampView() {
-  const mw = WW*view.s, mh = WH*view.s, m = 0;
+  const mw = WW*view.s, mh = WH*view.s, m = 40;
   view.tx = mw <= vw ? (vw-mw)/2 : Math.min(m, Math.max(vw-mw-m, view.tx));
   view.ty = mh <= vh ? (vh-mh)/2 : Math.min(m, Math.max(vh-mh-m, view.ty));
 }
@@ -3014,7 +3014,7 @@ const loanSize = dev => Math.max(20, Math.floor(dev*.5));
 const loanRate = () => Math.max(1, 4 + Math.max(0, -G.stab) + (G.bank > 0 ? 5 : 0) + modSum('int'));
 function syncLoans() { G.loans = G.ln.reduce((a, l) => a + l.a, 0); }
 function fixSave() {
-  fixEastWorld();
+  fixEastWorld(); fixEqualAreaWorld();
   G.claims=[...new Set((G.claims || []).map(Number).filter(id=>PROV[id] && PROV[id].k==='L'))];
   G.missions ||= []; G.flags ||= {}; G.mod ||= []; G.fired ||= []; G.evq ||= []; G.infl ||= 0; G.bank ||= 0;
   G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel(); fixSubjects(); fixTrade(); fixKingdomContent(); fixResources(); fixMilitary(); fixExpansion(); fixNavy(); fixResourceTrade(); fixWorld();
@@ -4099,16 +4099,29 @@ function resourceTradeHTML(){
 function eastIdeaNames(n){const p=EAST_PROFILE[n];return ['Penjaga '+p.capital,'Jaringan Bandar '+n,'Tata Dewan dan Arsip','Tradisi Pengetahuan','Utusan '+p.capital,'Perlengkapan Prajurit','Pelindung Seni dan Naskah'];}
 function fixEastWorld(){
  if(!G)return;G.rulerChanges ||= {};for(const n of Object.keys(NATS))if(G.rulerChanges[n])NATS[n].ruler={...G.rulerChanges[n]};
- if((G.mapVersion||1)>=(DATA.mapVersion||1))return;
+ if((G.mapVersion||1)>=2)return;
  const added=[];for(const p of provs)if(p.k==='L'&&G.own[p.id]===undefined){G.own[p.id]=BASE_OWN[p.id];added.push(p);if(G.pr)G.pr[p.id]=initialEastReligion(p);}
  const tr=DATA.legacyTransform;
- if(tr&&G.fleets)for(const f of G.fleets){f.x*=tr.scale;f.y=f.y*tr.scale+tr.offsetY;const target=f.targetPort||f.targetSea;f.path=f.path?.length&&target?(navalPath(f.x,f.y,target)||[]):[];const point=navalGrid().xy(f.port?navalPoint(f.port):waterPoint(f.x,f.y));f.x=point[0];f.y=point[1];}
+ if(tr&&G.fleets)for(const f of G.fleets){f.x*=tr.scale;f.y=f.y*tr.scale+tr.offsetY;}
  for(const n of EAST_ASIA.newNations){if(!added.some(p=>p.nat===n)||!NATS[n])continue;
   mkArmy(n,Math.max(2,Math.round(NATS[n].dev/18)),NATS[n].capital.id);
-  if(G.fleets){const ports=portsOf(n);if(ports.length)makeFleet(n,ports[0],ports.length>=5?['jung','patrol','patrol']:['patrol','dayung']);}
+  if(G.fleets){const ports=portsOf(n);if(ports.length){const f=makeFleet(n,ports[0],ports.length>=5?['jung','patrol','patrol']:['patrol','dayung']);f._equalAreaPosition=true;}}
  }
  if(added.some(p=>p.nat==='Goryeo')&&added.some(p=>p.nat==='Yuan')){setSubject('Goryeo','Yuan','tributary',120);G.rel[pairKey('Goryeo','Yuan')]=60;}
- G.mapVersion=DATA.mapVersion;addLog('Peta Asia Timur tersedia. Kepemilikan dan progres wilayah lama dipertahankan.');
+ G.mapVersion=2;addLog('Peta Asia Timur tersedia. Kepemilikan dan progres wilayah lama dipertahankan.');
+}
+// Konversi koordinat Mercator versi 2 ke Lambert equal-area; ID dan state lain tetap.
+function mercatorV2ToEqualArea(x,y){const rad=Math.PI/180,scale=1600/(54*rad),top=46*rad;const mercTop=Math.log(Math.tan(Math.PI/4+top/2));const lat=2*Math.atan(Math.exp(mercTop-y/scale))-Math.PI/2;return [x,scale*(Math.sin(top)-Math.sin(lat))];}
+function fixEqualAreaWorld(){
+ if(!G||(G.mapVersion||1)>=3)return;
+ for(const f of G.fleets||[]){
+  if(f._equalAreaPosition){delete f._equalAreaPosition;continue;}
+  const moving=!!f.path?.length,target=f.landing||f.targetPort||f.targetSea,xy=mercatorV2ToEqualArea(f.x,f.y);
+  const point=navalGrid().xy(f.port?navalPoint(f.port):waterPoint(xy[0],xy[1]));f.x=point[0];f.y=point[1];f.sea=nearestSea(f.x,f.y);
+  if(moving&&target){const path=navalPath(f.x,f.y,target);if(path){f.path=path;if(!path.length&&f.targetPort&&!f.landing){f.port=f.targetPort;f.mission='harbor';}}else{f.path=[];f.landing=null;f.targetPort=null;f.mission=f.port?'harbor':'hold';addLog('Rute '+f.name+' perlu diperintahkan ulang setelah pembaruan peta.');}}
+  else f.path=[];
+ }
+ G.mapVersion=3;addLog('Proyeksi peta diperbarui; posisi armada disesuaikan.');
 }
 function eastMissionReady(m,n=G.nat){
  if(m.metric==='stock')return (G.resourceStocks[n]?.food||0)>=m.min;
