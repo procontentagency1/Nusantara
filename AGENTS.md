@@ -259,3 +259,7 @@ Paket awal dan batas di docs/ASIA_TIMUR.md; sumber di docs/RISET_ASIA_TIMUR.md. 
 
 ## Batas memori render HP
 Lihat docs/RENDER_MOBILE.md. TK dan WORLD_K harus mengikuti batas jumlah piksel, bukan skala tetap terhadap luas dunia. Detail viewport tetap tajam. Lepaskan canvas sementara di buildTextures; startup memakai warna dasar bila tekstur gagal. Jangan menetapkan cvs.width/height ketika nilainya sama karena assignment mereset backing store. Cache detail wajib memeriksa h dan w untuk resize bilah alamat Android; contextrestored membangun ulang pola/cache. tests/t39_mobile_render.py membatasi alokasi dan memeriksa resize, pemulihan, fallback dan save.
+
+
+## Angkutan pasukan laut
+Armada menyimpan satu `f.cargo` berisi objek pasukan yang dikeluarkan dari G.armies selama berlayar, agar tidak mengepung/bertempur di darat. `regsOf` tetap menghitung muatan untuk biaya dan tenaga. `embarkArmy`, `orderLanding`, `landCargo` memvalidasi kapasitas, lokasi, akses, rute dan perang; landCargo mengembalikan objek sekali lalu memicu resolveBattles. `f.landing` disimpan dalam save dan dibatalkan saat rute diubah atau armada terlibat perang laut. Bila kapal hilang, kapasitas turun dan kelebihan muatan hilang. AI memakai angkutan sederhana; tests/t40_transport.py menguji save, perang, kapasitas dan tombol.

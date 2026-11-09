@@ -2922,7 +2922,7 @@ const EVA = {
 /* ---------- pasukan ---------- */
 function mkArmy(nat, regs, loc) { const a = { id:G.nid++, nat, regs, loc, path:[], prog:0, morale:1, drill:0, drilling:false }; G.armies.push(a); return a; }
 const armiesOf = nat => G.armies.filter(a => a.nat === nat);
-const regsOf = nat => armiesOf(nat).reduce((s, a) => s + a.regs, 0);
+const regsOf = nat => armiesOf(nat).reduce((s,a)=>s+a.regs,0)+(G.fleets||[]).reduce((s,f)=>s+(f.nat===nat&&f.cargo?f.cargo.regs:0),0);
 const myArmies = () => armiesOf(G.nat);
 function syncRegs() { G.regs = regsOf(G.nat); }
 function armyName(a) { const L = armiesOf(a.nat); return `Pasukan ${L.indexOf(a) + 1}`; }
@@ -4740,7 +4740,7 @@ const MAJ_MISSIONS = [
   { id:'malaka', branch:'Diplomasi', prev:'selat', name:'Kuasai Gerbang Selat', condition:'Miliki atau kuasai lewat vasal Palembang dan Tumasik', reward:'+50 DIP dan +10 prestise', targets:['Palembang','Tumasik'], ready:() => missionTargets(['Palembang','Tumasik']).every(missionHeld), grant:() => { G.mana[1] += 50; G.prestige = Math.min(100,G.prestige+10); } },
   { id:'dharma', branch:'Istana', prev:'stabil', name:'Pelindung Dharma', condition:'Kesatuan agama minimal 90% dan tidak bangkrut', reward:'+1 toleransi iman selama 25 tahun', ready:() => unity() >= 90 && !G.bank, grant:() => addMod('mission_dharma','Pelindung Dharma',300,{tolT:1}) },
 ];
-function activeMissions() { return G.nat === 'Majapahit' ? [...MISSIONS.filter(m=>m.id!=='perbatasan'),...MAJ_MISSIONS] : [...MISSIONS,...kingdomMissions(G.nat),...eastMissions(G.nat)]; }
+function activeMissions() { return G.nat === 'Majapahit' ? [...MISSIONS.filter(m=>m.id!=='perbatasan'),...MAJ_MISSIONS] : [...MISSIONS,...kingdomMissions(G.nat),...eastMissions(G.nat),...regionalCenterMissions(G.nat)]; }
 function completeMission(id) {
   const m = activeMissions().find(x => x.id === id);
   if (!m || G.missions.includes(id) || (m.prev && !G.missions.includes(m.prev)) || !m.ready()) return;
@@ -5276,15 +5276,23 @@ function fixNavy(){
 function orderFleet(f,to,port=null,quiet=false){
  if(!f||!PROV[to]||port&&((OWNR[port]!==f.nat)||CTRL[port]))return false;
  const path=navalPath(f.x,f.y,to);if(!path){if(!quiet&&f.nat===G.nat)toast('Tidak ada jalur laut ke tujuan itu.');return false;}
- f.path=path;f.port=null;f.targetPort=port;f.targetSea=port?nearestSea(...navalGrid().xy(navalPoint(port))):to;f.mission='sail';
+ f.landing=null;f.path=path;f.port=null;f.targetPort=port;f.targetSea=port?nearestSea(...navalGrid().xy(navalPoint(port))):to;f.mission='sail';
  if(!path.length){f.port=port;f.sea=f.targetSea;f.mission=port?'harbor':'hold';}return true;
 }
 const fleetHealth=f=>f.ships.length?f.ships.reduce((s,x)=>s+x.hp,0)/f.ships.length:0;
 function fleetHome(f){const ports=portsOf(f.nat).filter(id=>!CTRL[id]).sort((a,b)=>Math.hypot(PROV[a].lab[0]-f.x,PROV[a].lab[1]-f.y)-Math.hypot(PROV[b].lab[0]-f.x,PROV[b].lab[1]-f.y));for(const id of ports)if(orderFleet(f,id,id,true))return true;return false;}
+function transportCapacity(f){return f.ships.length*2;}
+function embarkArmy(f,a){
+ if(!f||!a||f.nat!==a.nat||!f.port||f.port!==a.loc||f.cargo||a.bt||a.exiled||a.path.length||a.regs>transportCapacity(f)||f.retreat)return false;
+ f.cargo=a;f.cargo.drilling=false;G.armies=G.armies.filter(x=>x!==a);if(G.sel===a.id){G.sel=null;updDesel();}syncRegs();saveGame(true);return true;
+}
+function landingAllowed(f,id){return !!(f?.cargo&&PROV[id]?.k==='L'&&PROV[id].cd&&access(f.nat,id)&&(!CTRL[id]||CTRL[id]===f.nat||sameSide(f.nat,CTRL[id])||atWar(f.nat,CTRL[id])));}
+function landCargo(f,id){if(!landingAllowed(f,id))return false;const a=f.cargo;f.cargo=null;f.landing=null;a.loc=id;a.path=[];a.prog=0;delete a.bt;G.armies.push(a);resolveBattles(new Set([a.id]));syncRegs();if(f.nat===G.nat)toast('Pasukan mendarat di '+PROV[id].n+'.');return true;}
+function orderLanding(f,id){if(!landingAllowed(f,id)||f.retreat||f.battleDays)return false;const path=navalPath(f.x,f.y,id);if(!path)return false;f.port=null;f.targetPort=null;f.targetSea=nearestSea(...navalGrid().xy(navalPoint(id)));f.path=path;f.mission='sail';f.landing=id;if(!path.length)landCargo(f,id);return true;}
 function navyDay(){
  for(const f of G.fleets||[]){f.battleDays=Math.max(0,f.battleDays-1);f.retreat=Math.max(0,f.retreat-1);if(f.port&&(OWNR[f.port]!==f.nat||CTRL[f.port])){f.port=null;f.mission='hold';}
   let budget=12;while(f.path.length&&budget>0){const p=f.path[0],d=Math.hypot(p[0]-f.x,p[1]-f.y);if(d<=budget){f.x=p[0];f.y=p[1];f.path.shift();budget-=d;}else{f.x+=(p[0]-f.x)*budget/d;f.y+=(p[1]-f.y)*budget/d;budget=0;}if(!f.path.length){f.sea=f.targetSea;f.port=f.targetPort&&OWNR[f.targetPort]===f.nat&&!CTRL[f.targetPort]?f.targetPort:null;if(f.mission!=='trade')f.mission=f.port?'harbor':'hold';}}
-  if(f.path.length)f.sea=nearestSea(f.x,f.y);
+  if(f.path.length)f.sea=nearestSea(f.x,f.y);else if(f.landing){const target=f.landing;f.landing=null;if(!landCargo(f,target)&&f.nat===G.nat)toast('Pendaratan batal: akses berubah.');}
  }
  const fleets=(G.fleets||[]).filter(f=>f.ships.length&&!f.port&&!f.retreat),paired=new Set();
  for(let i=0;i<fleets.length;i++)for(let j=i+1;j<fleets.length;j++){
@@ -5294,10 +5302,12 @@ function navyDay(){
    if(f.ships.length&&(fleetHealth(f)<35||f.ships.length<=f.engagedSize/2)){f.retreat=20;fleetHome(f);if(f.nat===G.nat)toast(f.name+' mundur ke pelabuhan.');}}
   if(a.nat===G.nat||b.nat===G.nat)SFX.play('clash',900);
  }
- for(const f of G.fleets||[])if(!paired.has(f.id))f.engagedSize=0;
+ for(const f of G.fleets||[]){if(!paired.has(f.id))f.engagedSize=0;if(f.battleDays)f.landing=null;if(f.cargo&&f.cargo.regs>transportCapacity(f)){const lost=f.cargo.regs-transportCapacity(f);f.cargo.regs-=lost;if(f.nat===G.nat)toast(lost+' resimen hilang bersama kapal.');if(!f.cargo.regs)f.cargo=null;syncRegs();}}
  const sunk=(G.fleets||[]).filter(f=>!f.ships.length);for(const f of sunk)if(f.nat===G.nat){toast(f.name+' tenggelam dalam pertempuran laut.');addLog(f.name+' tenggelam.');}
  G.fleets=(G.fleets||[]).filter(f=>f.ships.length);if(G.selFleet&&!G.fleets.some(f=>f.id===G.selFleet))G.selFleet=null;
  if(G.d%5===0)for(const f of G.fleets){if(f.nat===G.nat||f.path.length||f.retreat)continue;if(fleetHealth(f)<80){fleetHome(f);continue;}
+  if(f.cargo&&!f.battleDays){const target=provs.find(p=>p.k==='L'&&p.cd&&atWar(f.nat,OWNR[p.id])&&landingAllowed(f,p.id));if(target&&orderLanding(f,target.id))continue;if(f.port){landCargo(f,f.port);continue;}if(fleetHome(f))continue;}
+  if(f.port&&!f.cargo&&warsOf(f.nat).length){const troop=G.armies.find(a=>a.nat===f.nat&&a.loc===f.port&&!a.bt&&!a.exiled&&!a.path.length&&a.regs<=transportCapacity(f));if(troop){const target=provs.find(p=>p.k==='L'&&p.cd&&atWar(f.nat,OWNR[p.id])&&!pathTo(f.nat,troop.loc,p.id));if(target){const origin=f.port;if(embarkArmy(f,troop)){if(orderLanding(f,target.id))continue;landCargo(f,origin);}}}}
   if(warsOf(f.nat).length){const enemy=G.fleets.filter(e=>atWar(f.nat,e.nat)&&!e.port&&!e.retreat).sort((a,b)=>Math.hypot(a.x-f.x,a.y-f.y)-Math.hypot(b.x-f.x,b.y-f.y))[0];if(enemy&&powerFleet(f)>=powerFleet(enemy)*.9){orderFleet(f,enemy.sea,null,true);continue;}}
   if(!warsOf(f.nat).length&&f.ships.some(s=>s.type==='patrol')&&f.mission!=='trade'){if(orderFleet(f,f.sea,null,true))f.mission='trade';}
  }
@@ -5308,25 +5318,28 @@ function navyMonth(){
  G.shipQueue=G.shipQueue.filter(q=>{if(OWNR[q.port]!==q.nat){if(q.nat===G.nat)toast('Pembangunan kapal batal: pelabuhan hilang.');return false;}if(CTRL[q.port])return true;if(--q.left>0)return true;
   const f=G.fleets.find(f=>f.nat===q.nat&&f.port===q.port);if(f)f.ships.push({type:q.type,hp:100});else makeFleet(q.nat,q.port,[q.type]);if(q.nat===G.nat)toast(SHIP_TYPES[q.type].name+' selesai dibangun di '+PROV[q.port].n+'.');return false;});
 }
-function navyHTML(){let h=hd('Armada Laut','Kapal awal, pelayaran, patroli dan pertempuran')+row('Biaya bulanan',econ().navalCost.toFixed(2)+' dukat')+'<p class="note">Pilih armada, lalu ketuk laut untuk berlayar atau pelabuhan sendiri untuk sandar. Kapal musuh yang berdekatan saat perang bertempur otomatis. Kapal di pelabuhan pulih 15% lambung/bulan. Angkutan tentara dan blokade belum tersedia.</p>';
+function navyHTML(){let h=hd('Armada Laut','Kapal awal, pelayaran, patroli dan pertempuran')+row('Biaya bulanan',econ().navalCost.toFixed(2)+' dukat')+'<p class="note">Pilih armada, lalu ketuk laut untuk berlayar atau pelabuhan sendiri untuk sandar. Kapal musuh yang berdekatan saat perang bertempur otomatis. Kapal di pelabuhan pulih 15% lambung/bulan. Muat pasukan di pelabuhan sendiri: setiap kapal membawa 2 resimen; pisahkan pasukan yang terlalu besar. Armada tenggelam membawa serta muatannya. Blokade belum tersedia.</p>';
  for(const f of G.fleets.filter(f=>f.nat===G.nat))h+='<button class="btn rowb" data-act="selfleet" data-id="'+f.id+'"><span>'+f.name+' · '+f.ships.length+' kapal</span><em>'+Math.round(fleetHealth(f))+'% · '+(f.port?PROV[f.port].n:PROV[f.sea].n)+'</em></button>';
  const ports=portsOf(G.nat);if(!ports.length)h+='<p class="note">Kerajaan ini belum memiliki wilayah pesisir untuk pelabuhan.</p>';
  for(const id of ports){h+='<div class="sec">Galangan '+PROV[id].n+'</div>';const q=G.shipQueue.find(q=>q.port===id);if(q){h+=row(SHIP_TYPES[q.type].name,q.left+' bulan'+(CTRL[id]?' · tertunda':''));continue;}for(const [type,s] of Object.entries(SHIP_TYPES))h+='<div class="r">'+btn(s.name+' · '+s.cost+' dukat','buildship',{port:id,type},canBuildShip(id,type))+'</div><p class="note">'+s.wood+' kayu'+(s.iron?', '+s.iron+' besi':'')+' · '+s.months+' bulan · '+s.upkeep.toFixed(2)+' dukat/bln</p>';}
  return h;}
 function fleetHTML(f){if(!f||f.nat!==G.nat)return hd('Armada')+'<p class="note">Armada tidak tersedia.</p>';let h=hd(f.name,f.ships.length+' kapal')+row('Lokasi',f.port?'Bersandar di '+PROV[f.port].n:PROV[f.sea].n)+row('Lambung',Math.round(fleetHealth(f))+'%')+row('Tugas',f.retreat?'Mundur':f.path.length?'Berlayar':f.mission==='trade'?'Menjaga perdagangan':f.port?'Di pelabuhan':'Siaga di laut');for(const [type,s] of Object.entries(SHIP_TYPES)){const ships=f.ships.filter(x=>x.type===type);if(ships.length)h+=row(s.name,ships.length);}
+ if(f.cargo){h+=row('Muatan',f.cargo.regs+' resimen / '+transportCapacity(f))+'<p class="note">Pilih pesisir dengan akses atau wilayah musuh saat perang untuk mendarat.</p>';for(const p of provs.filter(p=>landingAllowed(f,p.id)))h+='<div class="r">'+btn('Mendarat: '+p.n,'landarmy',{id:f.id,port:p.id},!f.retreat&&!f.battleDays)+'</div>';}else if(f.port){h+=row('Kapasitas',transportCapacity(f)+' resimen');for(const a of G.armies.filter(a=>a.nat===f.nat&&a.loc===f.port&&!a.path.length&&!a.bt&&!a.exiled))h+='<div class="r">'+btn('Muat '+armyName(a)+' · '+a.regs+' res.','embark',{id:f.id,army:a.id},a.regs<=transportCapacity(f))+'</div>';}
  h+='<div class="r">'+btn('Kembali ke pelabuhan','fleethome',{id:f.id})+'</div><div class="r">'+btn('Jaga perdagangan','fleettrade',{id:f.id},!f.retreat&&f.ships.some(s=>s.type==='patrol'))+btn('Siaga','fleetstop',{id:f.id},!f.retreat)+'</div><p class="note">Patroli memberi +2 kekuatan dagang per kapal × kondisi lambung di node laut tujuan setelah tiba. Ketuk laut untuk mengubah tujuan; ketuk provinsi pesisir sendiri untuk sandar.</p><div class="sec">Tujuan laut</div>';
  for(const p of SEA_PROVS)h+='<div class="r">'+btn(p.n,'fleetsail',{id:f.id,sea:p.id},!f.retreat)+'</div>';return h;}
 function canBuildShip(port,type){const s=SHIP_TYPES[type],stock=G.resourceStocks[G.nat];return !!s&&portsOf(G.nat).includes(+port)&&!CTRL[port]&&!G.shipQueue.some(q=>q.port===+port)&&G.treasury>=s.cost&&stock.wood>=s.wood&&stock.iron>=s.iron;}
+act.embark=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat),a=G.armies.find(a=>a.id===+b.dataset.army&&a.nat===G.nat);if(embarkArmy(f,a))toast('Pasukan naik ke armada.');};
+act.landarmy=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat);if(f&&!orderLanding(f,+b.dataset.port))toast('Tidak dapat mendarat di sana.');};
 act.buildship=b=>{const port=+b.dataset.port,type=b.dataset.type;if(!canBuildShip(port,type))return;const s=SHIP_TYPES[type];G.treasury-=s.cost;G.resourceStocks[G.nat].wood-=s.wood;G.resourceStocks[G.nat].iron-=s.iron;G.shipQueue.push({nat:G.nat,port,type,left:s.months});saveGame(true);};
 act.selfleet=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat);if(!f)return;G.sel=null;G.selFleet=f.id;winMode='fleet';centerOn(f.x,f.y,Math.max(view.s,fitS*2));};
 act.fleetsail=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat);if(f&&!f.retreat&&PROV[+b.dataset.sea]?.k==='S')orderFleet(f,+b.dataset.sea);};
 act.fleethome=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat);if(f)fleetHome(f);};
 act.fleettrade=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat);if(f&&!f.retreat&&f.ships.some(s=>s.type==='patrol')&&orderFleet(f,f.targetSea||f.sea))f.mission='trade';};
-act.fleetstop=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat);if(f&&!f.retreat){f.path=[];f.mission=f.port?'harbor':'hold';}};
+act.fleetstop=b=>{const f=G.fleets.find(f=>f.id===+b.dataset.id&&f.nat===G.nat);if(f&&!f.retreat){f.path=[];f.landing=null;f.mission=f.port?'harbor':'hold';}};
 function seaFleetHTML(id){return '<div class="sec">Armada di perairan ini</div>'+G.fleets.filter(f=>f.sea===+id).map(f=>f.nat===G.nat?'<div class="r">'+btn(f.name+' · '+f.ships.length+' kapal','selfleet',{id:f.id})+'</div>':row(f.nat,f.ships.length+' kapal')).join('');}
 function handleFleetTap(p,x,y){const h=FLEET_HIT.slice().reverse().find(h=>Math.hypot(x-h.x,y-h.y)<h.r);if(h){act.selfleet({dataset:{id:String(h.id)}});renderWin();request();return true;}
  const f=winMode==='fleet'&&G.fleets.find(f=>f.id===G.selFleet&&f.nat===G.nat);if(!f||!p||f.retreat)return false;
- if(p.k==='S'){orderFleet(f,p.id);renderWin();request();return true;}if(portsOf(G.nat).includes(p.id)){orderFleet(f,p.id,p.id);renderWin();request();return true;}return false;}
+ if(p.k==='S'){f.landing=null;orderFleet(f,p.id);renderWin();request();return true;}if(f.cargo&&landingAllowed(f,p.id)){orderLanding(f,p.id);renderWin();request();return true;}if(portsOf(G.nat).includes(p.id)){orderFleet(f,p.id,p.id);renderWin();request();return true;}return false;}
 function drawFleets(){FLEET_HIT=[];if(phase!=='game'||!G?.fleets)return;const groups={};
  for(const f of G.fleets){if(f.nat!==G.nat&&view.s<fitS*1.4&&!atWar(f.nat,G.nat))continue;const key=Math.round(f.x/12)+','+Math.round(f.y/12),i=groups[key]||0;groups[key]=i+1;const x=sxw(f.x)+i*17,y=syw(f.y),k=Math.min(1.25,.6*Math.pow(Math.max(1,view.s/unitZoomBase()),.25));if(x<-40||x>vw+40||y<-40||y>vh+40)continue;
   ctx.save();if(f.id===G.selFleet&&f.path.length){ctx.strokeStyle='#f4dc90';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,y);for(const p of f.path)ctx.lineTo(sxw(p[0]),syw(p[1]));ctx.stroke();ctx.setLineDash([]);}
@@ -5457,11 +5470,13 @@ function eastMissions(n){const p=EAST_PROFILE[n];if(!p)return [];return p.missio
  reward:i===0?'+25 MIL dan +5 prestise'+(p.missions[3].targets?'; klaim sasaran penyatuan':''):i===1?'Biaya teknologi −5% selama 5 tahun':i===2?'Efisiensi dagang +10% selama 5 tahun':'+50 ADM dan +10 prestise',targets:m.targets,
  ready:()=>eastMissionReady(m),grant:()=>{if(i===0){EF.mana(2,25);EF.prestige(5);if(p.missions[3].targets)missionClaims(p.missions[3].targets);}else if(i===1)addMod('east_tech_'+n,'Pengetahuan '+n,60,{tech:-.05});else if(i===2)addMod('east_trade_'+n,'Jaringan '+n,60,{trade:.1});else{EF.mana(0,50);EF.prestige(10);}}
  }));}
+function regionalCenterMissions(n){const p=EAST_PROFILE[n];if(!p)return [];const bonus={china:{tax:.05},korea:{tech:-.04},japan:{army:-.05},ryukyu:{trade:.08},ainu:{mp:.05},taiwan:{prod:.05},vietnam:{mpmax:.05},mainland:{tax:.05},champa:{trade:.08}}[p.region]||{prod:.05};const key=Object.keys(bonus)[0],label={tax:'pajak +5%',tech:'biaya teknologi −4%',army:'pemeliharaan tentara −5%',trade:'efisiensi dagang +8%',mp:'pemulihan tenaga +5%',prod:'produksi +5%',mpmax:'batas tenaga +5%'}[key];return [{id:'east_'+n+'_center',branch:'Istana',name:'Kembangkan '+p.capital,condition:'Kuasai '+p.capital+' tanpa pendudukan musuh dan tingkatkan perkembangan menjadi 15',reward:label+' selama 10 tahun',ready:()=>{const c=byName(p.capital);return !!c&&missionHeld(c)&&provDev(c.id)>=15;},grant:()=>addMod('east_center_'+n,p.tech[0],120,bonus)}];}
 function eastCultureHTML(n){const p=EAST_PROFILE[n];if(!p)return hd('Budaya')+'<p class="note">Profil regional belum tersedia.</p>';
  const dress={china:'Jubah, sabuk dan lamelar terinspirasi tradisi Yuan; tekstil emas terbatas sebagai aksen komando.',korea:'Jubah dan lamelar berhelm, dengan perlengkapan besi; bukan seragam istana Joseon.',japan:'Siluet yoroi/lamelar, bahu dan kabuto; bukan tosei-gusoku atau seragam Edo.',ryukyu:'Busana sederhana berikat dan perlengkapan aji; warna adalah kode permainan.',ainu:'Jubah dan tepi berpola terinspirasi koleksi Ainu; motif tidak diklaim persis dari 1350.',taiwan:'Tunik serat, penutup kepala dan perlengkapan setempat sebagai pendekatan majemuk.',vietnam:'Jubah, ikat pinggang dan perlengkapan penjaga masa Tran secara sederhana.',mainland:'Kain berikat, tunik dan perlengkapan kota daratan; bukan pakaian tunggal seluruh masyarakat.',champa:'Kain berikat dan perlengkapan penjaga bandar sebagai pendekatan Champa.'};
  return hd(n,'Budaya & sejarah 1350')+row('Pusat',p.capital)+row('Pemerintahan',p.gov)+row('Tradisi agama',p.relig)+'<div class="sec">Latar sejarah</div><p class="note">'+p.bio+'</p><div class="sec">Budaya</div><p class="note">'+p.culture+'</p><div class="sec">Pakaian & perlengkapan</div><p class="note">'+dress[p.region]+'</p><div class="sec">Pengetahuan & teknologi</div>'+p.tech.map((t,i)=>row(TECH_NAME[i],t)).join('')+'<p class="note">Semua memulai pada tingkat teknologi 3 untuk keseimbangan. Tradisi dan hadiah misi memberi perbedaan mekanis; angka bukan ukuran keunggulan sebuah budaya. Batas wilayah dan gambar adalah pendekatan. Profil penguasa dewan yang belum terverifikasi ditandai sebagai contoh.</p>';
 }
 for(const [n,p] of Object.entries(EAST_PROFILE)){
+ defEvent({id:'east_'+n+'_pengetahuan',t:p.tech[0]+' di '+p.capital,once:true,mtth:96,cond:()=>G.nat===n&&G.y>=1355&&G.tech[0]>=4&&alive(n),x:'Skenario alternatif: para pemuka '+p.capital+' mengusulkan perluasan '+p.tech[0].toLowerCase()+'. Pilihan kerajaan menentukan dukungan pengetahuan atau persediaan.',o:[{l:'Dukung pengetahuan',tip:'−2 bulan pendapatan; +30 ADM; biaya teknologi −4% selama 5 tahun',fx:()=>{EF.gold(-grossInc()*2);EF.mana(0,30);EF.mod('east_knowledge_'+n,p.tech[0],60,{tech:-.04});}},{l:'Utamakan persediaan',tip:'+20 pangan dan +10 kayu; −2 prestise',fx:()=>{for(const [k,v] of [['food',20],['wood',10]])G.resourceStocks[n][k]=Math.min(resourceCapacity(n,k),G.resourceStocks[n][k]+v);EF.prestige(-2);}}]});
  (CITY_STYLE_GROUPS[p.region] ||= []);if(!CITY_STYLE_GROUPS[p.region].includes(n))CITY_STYLE_GROUPS[p.region].push(n);
  for(const e of p.events)defEvent({id:'east_'+n+'_'+e.id,t:e.title,once:true,mtth:e.historical?6:84,cond:()=>G.nat===n&&G.y>=e.year&&alive(n),x:e.text,
  o:[{l:e.id==='dewan'?'Biayai penataan dan pengetahuan':'Lindungi pertukaran',tip:'−2 bulan pendapatan; +25 ADM; biaya teknologi −5% selama 36 bulan',fx:()=>{EF.gold(-grossInc()*2);EF.mana(0,25);EF.mod('east_'+n+'_'+e.id,'Pengetahuan '+p.capital,36,{tech:-.05});if(n==='Goryeo'&&e.id==='dewan'){G.rulerChanges ||= {};G.rulerChanges[n]={name:'Gongmin',a:4,d:3,m:3,real:true};NATS[n].ruler={...G.rulerChanges[n]};}}},
