@@ -1387,7 +1387,7 @@ function renderWin() {
   } else if (winMode === 'mil') {
     h = milHTML(e);
   } else if (winMode === 'menu') {
-    h = hd('Menu') + `<div style="padding:8px">${btn('Simpan permainan', 'save', {})}<div style="height:6px"></div>${btn('Efek suara: ' + (SFX.sfx ? 'NYALA' : 'MATI'), 'sfx', {})}<div style="height:6px"></div>${btn('Musik gamelan: ' + (SFX.mus ? 'NYALA' : 'MATI'), 'mus', {})}<div style="height:6px"></div>${btn('Keluar ke pilih negara', 'quit', {})}</div>`;
+    h = hd('Menu') + `<div style="padding:8px">${btn('Simpan permainan', 'save', {})}<div style="height:6px"></div>${soundSettingsHTML()}<div style="height:6px"></div>${btn('Keluar ke pilih negara', 'quit', {})}</div>`;
   }
   w.innerHTML = h; w.classList.add('open');
 }
@@ -3920,104 +3920,143 @@ function initGame() { requestAnimationFrame(loop); showStart(); }
 rebuildOwned(); computeBB(); centerPts();
 initGame();
 setTimeout(() => { buildTextures(); cacheVer++; request(); setTimeout(() => { buildIcons(); cacheVer++; request(); }, 30); }, 60);
-/* ---------- suara: sintesis WebAudio bernuansa gamelan / kendang ---------- */
+/* ---------- Audio: bus terpisah, efek halus dan musik situasional ---------- */
 const SFX = (() => {
-  let ctx = null, master = null, mus = null, sfxOn = true, musOn = true, musTimer = 0, last = {};
-  try { const s = JSON.parse(localStorage.getItem('nus_snd') || '{}'); if (s.sfx === false) sfxOn = false; if (s.mus === false) musOn = false; } catch (e) {}
-  const save = () => { try { localStorage.setItem('nus_snd', JSON.stringify({ sfx:sfxOn, mus:musOn })); } catch (e) {} };
-  const SL = [0, 240, 480, 720, 960];                    // laras slendro (sen)
-  const hz = (base, i) => base * Math.pow(2, (SL[((i % 5) + 5) % 5] + 1200 * Math.floor(i / 5)) / 1200);
-  function init() {
-    if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
-    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    ctx = new AC(); master = ctx.createGain(); master.gain.value = .8;
-    const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
-    mus = ctx.createGain(); mus.gain.value = musOn ? .5 : 0; mus.connect(master);
-    const len = ctx.sampleRate * .6, nb = ctx.createBuffer(1, len, ctx.sampleRate), d = nb.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; noiseBuf = nb;
-    startMusic();
+  let ctx=null,master=null,fx=null,ui=null,mus=null,peace=null,war=null,battle=null,noiseBuf=null;
+  let sfxOn=true,musOn=true,levels={effects:65,interface:65,music:40},last={},voices=0,timer=0,step=0,next=0,scene='peace',duckUntil=0,hidden=false;
+  let seed=1350;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+  try{const s=JSON.parse(localStorage.getItem('nus_snd')||'{}');sfxOn=s.sfx!==false;musOn=s.mus!==false;for(const k in levels)if(Number.isFinite(s.levels?.[k]))levels[k]=lim(s.levels[k],0,100);}catch(e){}
+  const save=()=>{try{localStorage.setItem('nus_snd',JSON.stringify({sfx:sfxOn,mus:musOn,levels}));}catch(e){}window.dispatchEvent(new Event('nus-soundchange'));};
+  const T=()=>ctx.currentTime;
+  // Pentatonik yang terinspirasi slendro, bukan rekonstruksi laras gamelan tertentu.
+  const scale=[0,240,480,720,960],hz=(base,i)=>base*Math.pow(2,(scale[((i%5)+5)%5]+1200*Math.floor(i/5))/1200);
+  function ramp(param,value,time=.15){if(!ctx)return;param.setTargetAtTime(value,T(),time);}
+  function currentScene(){if(phase!=='game'||!G)return 'peace';if((G.battles||[]).some(b=>!b.done&&btMine(b)))return 'battle';return warsOf(G.nat).length?'war':'peace';}
+  function mix(){
+    if(!ctx)return;scene=currentScene();
+    ramp(fx.gain,sfxOn?levels.effects/100:0,.03);ramp(ui.gain,sfxOn?levels.interface/100:0,.03);
+    ramp(mus.gain,musOn?levels.music/100*(T()<duckUntil?.48:1):0,.3);
+    ramp(peace.gain,scene==='peace'?1:0,.65);ramp(war.gain,scene==='peace'?0:1,.65);ramp(battle.gain,scene==='battle'?1:0,.45);
   }
-  let noiseBuf = null;
-  const T = () => ctx.currentTime;
-  function env(g, t, a, d, v) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); }
-  function osc(type, f, t, a, d, v, dest, f2) {
-    const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.setValueAtTime(f, t);
-    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + a + d * .8);
-    env(g, t, a, d, v); o.connect(g); g.connect(dest || master); o.start(t); o.stop(t + a + d + .05);
+  function init(){
+    if(ctx){if(ctx.state==='suspended'&&!hidden)ctx.resume().catch(()=>{});mix();return;}
+    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    try{ctx=new AC();}catch(e){return;}
+    master=ctx.createGain();master.gain.value=.7;
+    const comp=ctx.createDynamicsCompressor();comp.threshold.value=-18;comp.knee.value=18;comp.ratio.value=3;comp.attack.value=.006;comp.release.value=.25;
+    const limit=ctx.createDynamicsCompressor();limit.threshold.value=-3;limit.knee.value=0;limit.ratio.value=16;limit.attack.value=.002;limit.release.value=.12;
+    master.connect(comp);comp.connect(limit);limit.connect(ctx.destination);
+    fx=ctx.createGain();ui=ctx.createGain();mus=ctx.createGain();peace=ctx.createGain();war=ctx.createGain();battle=ctx.createGain();
+    // Volume awal nol: tidak ada semburan keras sebelum parameter preferensi diterapkan.
+    for(const g of [fx,ui,mus,peace,war,battle])g.gain.value=0;
+    ui.connect(master);const tone=ctx.createBiquadFilter();tone.type='lowpass';tone.frequency.value=6200;tone.Q.value=.3;
+    fx.connect(tone);mus.connect(tone);tone.connect(master);peace.connect(mus);war.connect(mus);battle.connect(mus);
+    const reverb=ctx.createConvolver(),wet=ctx.createGain();wet.gain.value=.1;
+    const impulse=ctx.createBuffer(2,Math.floor(ctx.sampleRate*.9),ctx.sampleRate);
+    for(let c=0;c<2;c++){const d=impulse.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(random()*2-1)*Math.pow(1-i/d.length,3);}
+    reverb.buffer=impulse;tone.connect(reverb);reverb.connect(wet);wet.connect(master);
+    noiseBuf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.7),ctx.sampleRate);const data=noiseBuf.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=random()*2-1;
+    hidden=document.hidden;mix();next=T()+.12;schedule();timer=setInterval(schedule,100);
+    if(hidden)ctx.suspend().catch(()=>{});
   }
-  function noise(t, d, v, type, f, dest) {
-    const s = ctx.createBufferSource(), g = ctx.createGain(), fl = ctx.createBiquadFilter(); s.buffer = noiseBuf;
-    fl.type = type; fl.frequency.value = f; env(g, t, .004, d, v); s.connect(fl); fl.connect(g); g.connect(dest || master); s.start(t); s.stop(t + d + .05);
+  function env(g,t,a,d,v){g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0001,v),t+a);g.gain.exponentialRampToValueAtTime(.0001,t+a+d);}
+  function clean(source,nodes){voices++;source.onended=()=>{source.disconnect();for(const n of nodes)n.disconnect();voices--;};}
+  function osc(type,f,t,a,d,v,dest,f2){
+    if(voices>=56)return;const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+a+d*.8);
+    env(g,t,a,d,v);o.connect(g);g.connect(dest||fx);clean(o,[g]);o.start(t);o.stop(t+a+d+.04);
   }
-  const bell = (f, t, v = .18, dest) => { osc('sine', f, t, .004, 1.4, v, dest); osc('sine', f * 2.01, t, .004, .7, v * .45, dest); osc('sine', f * 2.76, t, .004, .35, v * .25, dest); };
-  const gong = (f, t, v = .3) => { osc('sine', f, t, .01, 3, v, null, f * .985); osc('sine', f * 1.5, t, .01, 2.2, v * .5); osc('sine', f * 2.4, t, .01, 1.4, v * .3); noise(t, .25, v * .25, 'lowpass', 700); };
-  const drum = (t, v = .45, f = 150) => { osc('sine', f, t, .002, .22, v, null, f * .38); noise(t, .06, v * .5, 'bandpass', 1400); };
-  const click = (t, f = 520, v = .025) => osc('sine', f, t, .008, .035, v);
-  function horn(t, f, dur = .5, v = .16) {
-    const o = ctx.createOscillator(), g = ctx.createGain(), fl = ctx.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f, t); o.frequency.linearRampToValueAtTime(f * 1.06, t + dur);
-    fl.type = 'lowpass'; fl.frequency.setValueAtTime(500, t); fl.frequency.linearRampToValueAtTime(1800, t + dur * .6);
-    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + .08); g.gain.setValueAtTime(v, t + dur - .1); g.gain.linearRampToValueAtTime(.0001, t + dur);
-    o.connect(fl); fl.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .05);
+  function noise(t,d,v,type,f,dest){
+    if(voices>=56)return;const s=ctx.createBufferSource(),g=ctx.createGain(),fl=ctx.createBiquadFilter();s.buffer=noiseBuf;fl.type=type;fl.frequency.value=f;fl.Q.value=.6;
+    env(g,t,.012,d,v);s.connect(fl);fl.connect(g);g.connect(dest||fx);clean(s,[g,fl]);s.start(t);s.stop(t+d+.03);
   }
-  const S = {
-    tap:   t => click(t, 480, .022),
-    open:  t => click(t,560,.025),
-    close: t => click(t,420,.018),
-    sel:   t => click(t,500,.022),
-    march: t => {click(t,240,.025);click(t+.06,200,.018);},
-    clash: t => { noise(t, .18, .3, 'highpass', 2500); osc('square', 420, t, .002, .08, .08, null, 180); noise(t + .09, .14, .2, 'highpass', 3200); drum(t, .35, 90); },
-    war:   t => { drum(t, .6, 110); drum(t + .28, .5, 100); drum(t + .56, .6, 90); horn(t + .1, 146, .9, .2); horn(t + .1, 220, .9, .1); },
-    win:   t => { [0, 2, 4, 7].forEach((n, i) => bell(hz(392, n), t + i * .13, .2)); gong(hz(130, 0), t, .25); },
-    lose:  t => { [4, 3, 1, 0].forEach((n, i) => bell(hz(330, n), t + i * .2, .16)); gong(hz(98, 0), t + .5, .35); },
-    peace: t => { gong(hz(110, 0), t, .3); bell(hz(440, 2), t + .35, .16); bell(hz(440, 4), t + .6, .14); },
-    build: t => { noise(t, .05, .3, 'bandpass', 1800); osc('sine', 90, t, .002, .12, .35); noise(t + .16, .05, .25, 'bandpass', 2200); osc('sine', 110, t + .16, .002, .12, .3); bell(hz(659, 4), t + .38, .12); },
-    up:    t => {click(t,520,.022);click(t+.045,650,.014);},
-    coin:  t => { click(t,640,.02);click(t+.035,760,.012); },
-    ok:    t => click(t,620,.025),
-    no:    t => osc('sine',220,t,.008,.08,.025,null,180),
-    alert: t => { gong(hz(98, 0), t, .3); drum(t + .02, .35, 100); },
-    event: t => { gong(hz(130, 0), t, .22); [0, 2, 1, 3].forEach((n, i) => bell(hz(494, n), t + .2 + i * .15, .15)); },
-    gone:  t => { gong(hz(82, 0), t, .4); gong(hz(61, 0), t + .4, .35); },
-    start: t => { gong(hz(98, 0), t, .35); drum(t + .5, .5, 120); drum(t + .75, .5, 120); [0, 2, 4, 7, 9].forEach((n, i) => bell(hz(330, n), t + 1 + i * .12, .17)); },
-    month: t => click(t,380,.012),
-    horn:  t => { horn(t, 130, .7, .2); horn(t + .05, 195, .7, .1); drum(t, .5, 100); },
-    bday:  t => { noise(t, .09, .13, 'highpass', 2200); drum(t, .16, 95); },
-    whoosh:t => { noise(t, .22, .06, 'bandpass', 900); },
+  const bell=(f,t,v=.07,dest)=>{osc('sine',f,t,.012,1.2,v,dest);osc('sine',f*2.01,t,.01,.5,v*.25,dest);osc('sine',f*2.76,t,.01,.22,v*.1,dest);};
+  const gong=(f,t,v=.1,dest)=>{osc('sine',f,t,.035,2.5,v,dest,f*.994);osc('sine',f*1.5,t,.03,1.6,v*.3,dest);noise(t,.17,v*.08,'lowpass',500,dest);};
+  const drum=(t,v=.08,f=110,dest)=>{osc('sine',f,t,.008,.19,v,dest,f*.43);noise(t,.055,v*.18,'bandpass',850,dest);};
+  const click=(t,f=500,v=.022)=>{osc('sine',f,t,.009,.045,v,ui,f*.96);osc('sine',f*.5,t,.012,.03,v*.15,ui);};
+  function horn(t,f,d=.65,v=.055,dest){osc('triangle',f,t,.1,d,v,dest,f*1.008);osc('sine',f*1.5,t,.12,d*.8,v*.18,dest);}
+  const S={
+    tap:t=>click(t),open:t=>click(t,560,.025),close:t=>click(t,410,.018),sel:t=>click(t,490,.022),
+    march:t=>{drum(t,.035,150);drum(t+.09,.023,125);},
+    coin:t=>{click(t,640,.02);click(t+.06,760,.012);},
+    ok:t=>click(t,600,.024),no:t=>osc('sine',220,t,.015,.09,.025,ui,185),month:t=>click(t,380,.012),
+    up:t=>{bell(hz(260,0),t,.035);bell(hz(260,2),t+.13,.028);},
+    build:t=>{drum(t,.045,175);drum(t+.13,.032,145);bell(hz(220,2),t+.22,.035);},
+    recruit:t=>{drum(t,.045,135);drum(t+.14,.032,165);},
+    diplomacy:t=>{bell(hz(220,0),t,.04);bell(hz(220,3),t+.17,.035);},
+    core:t=>{bell(hz(220,0),t,.045);bell(hz(220,2),t+.15,.04);gong(82.4,t+.3,.055);},
+    trade:t=>{bell(hz(260,1),t,.035);bell(hz(260,3),t+.14,.027);},
+    clash:t=>{noise(t,.12,.055,'bandpass',1500);drum(t,.065,95);},
+    bday:t=>{noise(t,.075,.025,'bandpass',1150);drum(t,.035,100);},
+    whoosh:t=>noise(t,.15,.022,'bandpass',700),
+    horn:t=>{horn(t,130,.6,.06);drum(t+.06,.06,100);},
+    war:t=>{gong(65.4,t,.1);drum(t,.075,100);drum(t+.25,.06,90);horn(t+.12,130,.8,.065);},
+    win:t=>{[0,2,4].forEach((n,i)=>bell(hz(220,n),t+i*.16,.06));gong(82.4,t,.075);},
+    lose:t=>{[3,1,0].forEach((n,i)=>bell(hz(165,n),t+i*.2,.045));gong(55,t+.2,.065);},
+    peace:t=>{gong(82.4,t,.075);bell(hz(220,0),t+.2,.05);bell(hz(220,2),t+.4,.04);},
+    alert:t=>{gong(82.4,t,.065);bell(220,t+.14,.035);},
+    event:t=>{bell(hz(220,0),t,.045);bell(hz(220,1),t+.16,.032);},
+    gone:t=>gong(55,t,.09),start:t=>{gong(65.4,t,.08);[0,2,4].forEach((n,i)=>bell(hz(220,n),t+.25+i*.16,.045));},
   };
-  function play(name, minGap = 40) {
-    if (!sfxOn || !S[name]) return; init(); if (!ctx || ctx.state !== 'running') return;
-    const n = performance.now(); const ui=['tap','open','close','sel','coin','ok','month','up','no','march'].includes(name);if(ui&&last.ui&&n-last.ui<100)return;if(ui)last.ui=n; if (last[name] && n - last[name] < minGap) return; last[name] = n;
-    try { S[name](T() + .01); } catch (e) {}
+  const uiNames=new Set(['tap','open','close','sel','coin','ok','no','month']);
+  const combatNames=new Set(['clash','bday','whoosh']);
+  const important=new Set(['war','win','lose','peace','alert','event','gone','start','core','diplomacy']);
+  const gaps={war:2500,win:2000,lose:2000,peace:2200,event:1000,alert:1200,horn:1800,clash:700,bday:450,whoosh:400,march:250,build:500,recruit:350,core:900};
+  function play(name,minGap=40){
+    if(!sfxOn||!S[name]||hidden)return;init();if(!ctx||ctx.state!=='running')return;
+    const now=performance.now(),family=uiNames.has(name)?'ui':combatNames.has(name)?'combat':null;
+    if(last[name]!==undefined&&now-last[name]<Math.max(minGap,gaps[name]||0))return;
+    if(family&&last[family]!==undefined&&now-last[family]<(family==='ui'?100:220))return;
+    last[name]=now;if(family)last[family]=now;
+    if(important.has(name)&&levels.effects>0){duckUntil=T()+1.4;mix();}
+    S[name](T()+.012);
   }
-  /* musik latar: gamelan ambient generatif (slendro), pelan */
-  function startMusic() {
-    let step = 0, mel = 2, tt = T() + .5; const pat = [0, 2, 1, 4, 3, 2, 0, 1];
-    const sched = () => {
-      if (!ctx) return;
-      while (tt < T() + 1.5) {
-        const beat = step % 8;
-        if (musOn) {
-          if (beat === 0) bell(hz(110, 0), tt, .16, mus), osc('sine', 55, tt, .02, 2.4, .22, mus);          // gong ageng + pulsa dasar
-          if (beat === 4) bell(hz(110, 3), tt, .1, mus);
-          if (beat % 2 === 0) bell(hz(220, pat[(beat >> 1) + (step >> 3) % 2 * 4 & 7]), tt, .07, mus);       // balungan
-          if (Math.random() < .55) { mel = Math.max(3, Math.min(12, mel + [-2, -1, 1, 2][Math.random() * 4 | 0])); bell(hz(440, mel), tt + (Math.random() < .3 ? .22 : 0), .055, mus); }
-          if (beat === 7) drum(tt, .08, 120);
+  // Motif tetap berulang dengan variasi antarfrasa; tidak memakai RNG gameplay.
+  const peaceful=[0,2,1,4,3,2,0,1],campaign=[0,0,2,1,0,3,2,1];
+  function schedule(){
+    if(!ctx||hidden||ctx.state!=='running')return;mix();
+    if(next<T()-.3)next=T()+.04;
+    while(next<T()+.3){
+      const beat=step%16,bar=Math.floor(step/16),t=next;
+      if(musOn&&levels.music>0){
+        // Bus yang memudar tetap dijadwalkan agar transisi tidak memotong ekor nada.
+        if(scene==='peace'||peace.gain.value>.01){
+          if(beat===0)gong(55,t,.07,peace);
+          if(beat%2===0)bell(hz(165,peaceful[(beat/2+bar%2)%8]),t,.04,peace);
+          if(beat===5||beat===13)bell(hz(330,peaceful[(beat+bar)%8]+2),t+.05,.019,peace);
+          if(beat===14)drum(t,.026,120,peace);
         }
-        tt += .62; step++;
+        if(scene!=='peace'||war.gain.value>.01){
+          if(beat===0)gong(55,t,.085,war);
+          if(beat%4===0)osc('sine',55,t,.04,.8,.07,war);
+          if(beat%2===0)bell(hz(130,campaign[(beat/2+bar%2)%8]),t,.038,war);
+          drum(t,beat%4===0?.065:.034,beat%4===0?100:145,war);
+          if(beat===7||beat===15)drum(t+.22,.027,165,war);
+          if(beat===0&&bar%4===0)horn(t,110,.85,.026,war);
+        }
+        if(scene==='battle'||battle.gain.value>.01){
+          if(beat%2===1)drum(t+.22,.038,175,battle);
+          if(beat%4===2)bell(hz(220,campaign[beat%8]+2),t,.025,battle);
+        }
       }
-    };
-    sched(); musTimer = setInterval(sched, 500);
+      next+=.46;step++;
+    }
   }
-  return {
-    init, play, pauseAll(h) { if (ctx) h ? ctx.suspend() : ctx.resume(); },
-    get sfx() { return sfxOn; }, get mus() { return musOn; },
-    setSfx(v) { sfxOn = v; save(); },
-    setMus(v) { musOn = v; save(); if (mus) mus.gain.value = v ? .5 : 0; },
+  return {init,play,
+    pauseAll(v){hidden=!!v;if(!ctx)return Promise.resolve();if(v)return ctx.suspend();next=Math.max(next,T()+.04);mix();return ctx.resume();},
+    get sfx(){return sfxOn;},get mus(){return musOn;},get levels(){return {...levels};},get scene(){return currentScene();},get voices(){return voices;},
+    setSfx(v){sfxOn=!!v;mix();save();},setMus(v){musOn=!!v;mix();save();},
+    setLevel(k,v){if(!(k in levels)||!Number.isFinite(+v))return;levels[k]=lim(+v,0,100);mix();save();},
   };
 })();
-['pointerdown', 'touchend', 'keydown'].forEach(ev => window.addEventListener(ev, () => SFX.init(), { passive:true }));
+function soundSettingsHTML(){
+  let h='<div class="sec">Audio</div><div class="r">'+btn('Efek: '+(SFX.sfx?'NYALA':'MATI'),'sfx',{})+btn('Musik: '+(SFX.mus?'NYALA':'MATI'),'mus',{})+'</div>';
+  for(const [k,label] of [['interface','Klik & menu'],['effects','Efek permainan'],['music','Musik latar']])h+='<label class="r" for="sound-'+k+'"><span>'+label+'</span><b id="sound-value-'+k+'">'+SFX.levels[k]+'%</b></label><input id="sound-'+k+'" data-sound="'+k+'" aria-label="Volume '+label+'" type="range" min="0" max="100" step="5" value="'+SFX.levels[k]+'" style="width:calc(100% - 24px);margin:4px 12px 12px;accent-color:#e9bf67">';
+  return h+'<p class="note">Musik mengikuti kerajaan Anda: damai, perang, dan pertempuran. Transisi halus; musik merendah sebentar saat kabar penting. Pengaturan tersimpan di perangkat ini.</p>';
+}
+document.addEventListener('input',e=>{const k=e.target.dataset?.sound;if(!k)return;SFX.setLevel(k,e.target.value);const v=$('sound-value-'+k);if(v)v.textContent=SFX.levels[k]+'%';});
+['pointerdown','touchend','keydown'].forEach(ev=>window.addEventListener(ev,()=>SFX.init(),{passive:true}));
+document.addEventListener('visibilitychange',()=>SFX.pauseAll(document.hidden).catch(()=>{}));
 
-document.addEventListener('visibilitychange', () => SFX.pauseAll(document.hidden));
 /* ---------- kait suara ke game ---------- */
 (() => {
   const P = SFX.play;
@@ -4026,16 +4065,18 @@ document.addEventListener('visibilitychange', () => SFX.pauseAll(document.hidden
     _toast(t);
     const me = typeof G !== 'undefined' && G ? G.nat : '';
     if (/^Kemenangan/.test(t)) P('win'); else if (/^Kekalahan/.test(t)) P('lose');
-    else if (/menyatakan perang/.test(t)) P(me && t.includes(me) ? 'war' : 'month');
+    else if (/menyatakan perang/.test(t)&&me&&t.includes(me)) P('war');
     else if (/^Perang berakhir/.test(t)) P('peace');
     else if (/selesai dibangun/.test(t)) P('build');
     else if (/^Membangun/.test(t)) P('coin');
     else if (/naik ke/.test(t)) P('up');
     else if (/lenyap/.test(t)) P('gone');
     else if (/diduduki|dibebaskan/.test(t)) P('alert');
-    else if (/menerima aliansi|Pernikahan|memberi akses|Hadiah|disimpan|memimpin/.test(t)) P('ok');
+    else if (/menjadi inti|kini menjadi provinsi inti/.test(t)) P('core');
+    else if (/menerima aliansi|Pernikahan|memberi akses/.test(t)) P('diplomacy');
+    else if (/Hadiah|disimpan/.test(t)) P('ok');
     else if (/ditolak|Tidak ada rute|menolak|tidak mau|Kas habis/.test(t)) P('no');
-    else P('month');
+    // Notifikasi biasa tetap tenang; bunyi hanya untuk kejadian yang bermakna.
   };
   const _om = orderMove;
   orderMove = function (a) { const r = _om.apply(this, arguments); if (r && a && a.nat === G.nat) P('march', 200); return r; };
@@ -4049,13 +4090,14 @@ document.addEventListener('visibilitychange', () => SFX.pauseAll(document.hidden
     const b = e.target.closest('[data-act]'); if (!b) return;
     if (b.disabled) return P('no');
     const a = b.dataset.act;
-    if (a === 'win') P(winMode === b.dataset.w ? 'close' : 'open'); else if (a === 'close') P('close'); else if (a === 'rec' || a === 'loan') P('coin'); else if (a === 'stab') P('up'); else P('tap');
+    if (a === 'win') P(winMode === b.dataset.w ? 'close' : 'open'); else if (a === 'close') P('close'); else if(a==='rec') P('recruit'); else if(a==='merchant')P('trade'); else if (a === 'loan') P('coin'); else if (a === 'stab') P('up'); else P('tap');
   }, true);
   $('pause').addEventListener('click', () => P('tap'));
   act.sfx = () => { SFX.setSfx(!SFX.sfx); if (SFX.sfx) P('ok'); };
   act.mus = () => SFX.setMus(!SFX.mus);
   const z = document.createElement('button'); z.id = 'zsnd'; z.className = 'btn'; z.title = 'Suara';
-  const ico = () => { z.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 8h3l5-4v12l-5-4H3z"/>${(SFX.sfx || SFX.mus) ? '<path d="M13.5 7.5a3.5 3.5 0 010 5M15.5 5.5a6.5 6.5 0 010 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' : '<path d="M13 8l5 5M18 8l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'}</svg>`; };
+  const ico = () => { z.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 8h3l5-4v12l-5-4H3z"/>${(SFX.sfx&&(SFX.levels.effects>0||SFX.levels.interface>0)||SFX.mus&&SFX.levels.music>0) ? '<path d="M13.5 7.5a3.5 3.5 0 010 5M15.5 5.5a6.5 6.5 0 010 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' : '<path d="M13 8l5 5M18 8l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'}</svg>`; };
+  window.addEventListener('nus-soundchange',ico);
   ico(); z.onclick = () => { const on = SFX.sfx || SFX.mus; SFX.setSfx(!on); SFX.setMus(!on); ico(); if (!on) P('ok'); };
   $('zoom').appendChild(z);
   const _ico = ico; $('app').addEventListener('click', e => { if (e.target.closest('[data-act="sfx"],[data-act="mus"]')) _ico(); });
