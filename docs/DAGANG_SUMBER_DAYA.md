@@ -10,6 +10,8 @@ View Politik tetap menampilkan nama kerajaan saat zoom jauh dan nama provinsi sa
 
 Buka **Ekonomi → Sumber daya → Dagang antarkerajaan**, atau **Diplomasi → kerajaan → Dagang sumber daya**. Pilih mitra, jumlah **5/10/20 unit**, lalu Beli/Jual pada pangan, kayu, besi atau rempah. Tombol menyebut total pembayaran/penerimaan bersih. Mitra, stok kedua pihak, dana dagang mitra, lama pengiriman, ongkos dan alasan penolakan terlihat sebelum pesan. Ganti mitra kembali ke daftar tanpa memenuhi layar dengan seluruh daftar di bawah setiap penawaran.
 
+Unit adalah jumlah stok abstrak dalam permainan, bukan ton atau jumlah kapal. Pangan dikonsumsi pasukan/provinsi, kayu dipakai pengolahan dan pembangunan kapal, besi dipakai kapal tertentu dan rekrut MIL 4+, sedangkan stok rempah terutama untuk diperdagangkan. Nilai dagang komoditas provinsi dihitung terpisah dari jumlah stok fisik.
+
 Maksimal tiga kiriman aktif. Barang sumber dan pembayaran pembeli ditahan ketika pesanan disepakati. Harga dikunci selama perjalanan; saat tiba, barang masuk gudang pembeli dan penjual menerima pembayaran. Ekspor pemain menghasilkan dukat setelah tiba, bukan saat klik. Pembatalan manual, perang atau hilangnya kerajaan mitra mengembalikan barang dan pembayaran penuh. Perang diperiksa setiap hari permainan. Satu pesanan hanya dapat diselesaikan/dibatalkan sekali.
 
 Pemesanan memakai stok fisik yang sudah ada. Bahan yang sedang dikirim tidak bisa sekaligus dipakai untuk kapal, bangunan atau rekrut. Ruang gudang dicadangkan pada pengirim (untuk kemungkinan refund) dan penerima (untuk kedatangan). Produksi dan pasar lokal menghormati kapasitas efektif ini; kapasitas kembali setelah kiriman selesai. Ini mencegah produksi mengisi ruang yang dibutuhkan untuk pengembalian atau pengiriman.

@@ -269,3 +269,7 @@ Kontrak di docs/DUNIA_AGAMA_TEKNOLOGI.md. `src/world-systems.js` diinsert tools/
 
 ## Pembingkaian peta dan audit dagang
 `minS` memakai skala yang menutup viewport, dan `clampView` menjaga batas peta menutup layar saat digeser. Seluruh dunia tidak dapat terlihat sekaligus pada layar yang jauh lebih lebar daripada peta; geser untuk berpindah kawasan. `tests/t43_map_framing.py` memeriksa zoom, tepi, dan pemilihan negara pada dua orientasi. Temuan ekonomi dan batas AI/rute dicatat di docs/AUDIT_PERDAGANGAN.md; angka di sana adalah snapshot, bukan bonus tetap.
+
+
+## Kejernihan saat geser peta
+Cache detail menyimpan area ekstra terbatas di sekitar viewport (`detailPadding`, maksimum sekitar 1,9 juta piksel). Pada geser kecil dengan zoom tetap, `frame` melakukan satu blit detail pada koordinat piksel bulat, tanpa cache dunia atau resampling; refresh diam tetap berlangsung. Geseran besar/pinch dapat sementara memakai cache dunia. `paintStatic` memakai padding untuk culling dan transform ikon/label; jangan menghilangkannya tanpa uji posisi. tests/t44_map_drag_cache.py dan t39 menguji cache, gesture, resize dan memori. Lihat docs/RENDER_MOBILE.md.

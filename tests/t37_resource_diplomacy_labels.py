@@ -24,7 +24,7 @@ with sync_playwright() as p:
  saveGame(true);const sv=JSON.parse(localStorage.getItem(SAVE_KEY));out.saved=sv.resourceOrders.length===3;delete G.resourceTradeGold;fixResourceTrade();out.migration=G.resourceTradeGold.Bali>0&&G.resourceOrders.length===3;
  reset();for(let i=0;i<5;i++){q=resourceQuote('Bali','wood','buy',5);if(q.reason)throw Error(q.reason);bookResourceTrade(q);for(let j=0;j<q.days;j++)resourceTradeDay();}out.goodwill=G.resourceGoodwill.Bali.points===6;
  reset();G.resourceStocks.Bali.wood=100;G.mo=6;G.resourceStocks[G.nat].food=0;resourceTradeMonth();out.aiOffer=G.ev.some(e=>e.t.startsWith('Tawaran Pasokan'));
- G.ev=[];showEvent();RESOURCE_PARTNER='Bali';RESOURCE_QUANTITY=10;winMode='resourceTrade';renderWin();out.ui=document.querySelector('#win').innerText.toLowerCase().includes('mitra: bali');return out;
+ G.ev=[];showEvent();RESOURCE_PARTNER='Bali';RESOURCE_QUANTITY=10;winMode='resourceTrade';renderWin();out.ui=document.querySelector('#win').innerText.toLowerCase().includes('mitra: bali')&&document.querySelector('#win').innerText.toLowerCase().includes('bukan ton atau jumlah kapal');return out;
  }""")
  print(result,flush=True);assert all(result.values()),result
  page.wait_for_timeout(6000);page.screenshot(path='/tmp/nusantara-resource-diplomacy.png')
