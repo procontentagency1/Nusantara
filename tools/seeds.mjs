@@ -118,3 +118,35 @@ export const SEA = [
   ['Laut Aru',131.0,-7.0],['Teluk Benggala',93.0,9.0],['Teluk Siam',101.0,9.5],
   ['Laut Champa',110.0,9.5],['Laut Halmahera',129.5,2.5],
 ];
+// Asia Timur dan koridor daratan, skenario 1350; batas Voronoi adalah abstraksi.
+LAND.push(
+ ['Dadu',116.4,39.9,'Yuan','indep','plains',1],['Shangdu',116.18,42.36,'Yuan','indep','plains',2],
+ ['Liaoyang',123.17,41.27,'Yuan','indep','plains',2],['Heilongjiang',126.6,45.7,'Yuan','indep','jungle',2],['Jilin',126.55,43.84,'Yuan','indep','mountain',2],
+ ['Taiyuan',112.55,37.87,'Yuan','indep','mountain',2],['Shandong',117.0,36.65,'Yuan','indep','coast',2],['Kaifeng',114.35,34.8,'Yuan','indep','plains',2],
+ ['Xian',108.94,34.34,'Yuan','indep','plains',2],['Gansu',103.83,36.06,'Yuan','indep','mountain',2],['Qinghai',101.78,36.62,'Yuan','indep','mountain',2],
+ ['Tibet Timur',96.6,31.1,'Yuan','indep','mountain',2],['Chengdu',104.07,30.67,'Yuan','indep','plains',2],['Chongqing',106.55,29.56,'Yuan','indep','mountain',2],
+ ['Huguang',114.3,30.6,'Yuan','indep','plains',2],['Jiqing',118.78,32.06,'Yuan','indep','plains',2],['Hangzhou',120.15,30.27,'Yuan','indep','coast',2],
+ ['Jingdezhen',117.2,29.27,'Yuan','indep','plains',2],['Jiangxi',115.85,28.68,'Yuan','indep','jungle',2],['Quanzhou',118.67,24.87,'Yuan','indep','coast',2],
+ ['Fuzhou',119.3,26.08,'Yuan','indep','coast',2],['Guangzhou',113.27,23.13,'Yuan','indep','coast',2],['Guilin',110.29,25.27,'Yuan','indep','mountain',2],
+ ['Hainan',110.35,20.02,'Yuan','indep','coast',2],['Dali',100.27,25.6,'Yuan','indep','mountain',2],['Kunming',102.83,25.04,'Yuan','indep','mountain',2],
+ ['Kaesong',126.55,37.97,'Goryeo','indep','plains',1],['Pyongyang',125.75,39.03,'Goryeo','indep','plains',2],['Uiju',124.4,40.2,'Goryeo','indep','coast',2],
+ ['Hamheung',127.54,39.92,'Goryeo','indep','coast',2],['Gyeongju',129.21,35.85,'Goryeo','indep','mountain',2],['Jeonju',127.15,35.82,'Goryeo','indep','plains',2],
+ ['Dongnae',129.08,35.18,'Goryeo','indep','coast',2],['Tamna',126.53,33.45,'Yuan','indep','coast',2],
+ ['Kyoto',135.77,35.01,'Ashikaga','indep','plains',1],['Kamakura',139.55,35.32,'Ashikaga','indep','coast',2],['Musashi',139.64,35.7,'Ashikaga','indep','plains',2],
+ ['Mutsu',140.88,38.27,'Ashikaga','indep','plains',2],['Dewa',140.1,39.7,'Ashikaga','indep','mountain',2],['Echizen',136.18,36.06,'Ashikaga','indep','coast',2],
+ ['Izumo',132.75,35.37,'Ashikaga','indep','mountain',2],['Harima',134.69,34.83,'Ashikaga','indep','coast',2],['Hakata',130.41,33.6,'Ashikaga','indep','coast',2],['Satsuma',130.55,31.6,'Ashikaga','indep','mountain',2],
+ ['Yoshino',135.86,34.37,'Yoshino','indep','mountain',1],['Ise',136.5,34.5,'Yoshino','indep','coast',2],['Kii',135.18,34.2,'Yoshino','indep','mountain',2],
+ ['Tosa',133.53,33.56,'Yoshino','indep','coast',2],['Higo',130.7,32.8,'Yoshino','indep','plains',2],
+ ['Nakijin',127.93,26.68,'Hokuzan','indep','mountain',1],['Urasoe',127.72,26.25,'Chuzan','indep','coast',1],['Ozato',127.77,26.16,'Nanzan','indep','plains',1],
+ ['Shiraoi',141.35,42.55,'Komunitas Ainu','indep','coast',1],['Ishikari',141.4,43.1,'Komunitas Ainu','indep','plains',2],['Tokachi',143.2,42.9,'Komunitas Ainu','indep','plains',2],['Kushiro',144.38,42.98,'Komunitas Ainu','indep','coast',2],['Soya',141.67,45.4,'Komunitas Ainu','indep','coast',2],
+ ['Taiwan Utara',121.4,25.0,'Komunitas Taiwan','indep','jungle',1],['Taiwan Barat',120.3,23.0,'Komunitas Taiwan','indep','coast',2],['Taiwan Timur',121.1,23.7,'Komunitas Taiwan','indep','mountain',2],
+ ['Thang Long',105.85,21.03,'Dai Viet','indep','plains',1],['Thanh Hoa',105.78,19.8,'Dai Viet','indep','plains',2],['Nghe An',105.67,18.67,'Dai Viet','indep','plains',2],['Thuan Hoa',107.5,16.5,'Dai Viet','indep','coast',2],['Hai Dong',106.67,20.87,'Dai Viet','indep','coast',2],
+ ['Vijaya',109.1,13.87,'Champa','foreign','plains',1],['Panduranga',108.99,11.56,'Champa','foreign','coast',2],['Angkor',103.86,13.4,'Khmer','foreign','plains',1],['Ayutthaya',100.58,14.35,'Siam','foreign','plains',1],
+ ['Sukhothai',99.82,17.0,'Sukhothai','indep','plains',1],['Si Satchanalai',99.82,17.42,'Sukhothai','indep','plains',2],['Phitsanulok',100.26,16.82,'Sukhothai','indep','plains',2],
+ ['Chiang Mai',98.99,18.79,'Lan Na','indep','plains',1],['Lamphun',99.0,18.57,'Lan Na','indep','plains',2],['Chiang Rai',99.83,19.91,'Lan Na','indep','mountain',2],
+ ['Muang Sua',102.14,19.88,'Muang Sua','indep','mountain',1],['Vientiane',102.61,17.97,'Muang Sua','indep','plains',2],
+ ['Pinya',96.05,21.82,'Pinya','indep','plains',1],['Sagaing',95.98,21.88,'Sagaing','indep','plains',1],['Shwebo',95.7,22.6,'Sagaing','indep','plains',2],
+ ['Martaban',97.62,16.53,'Hanthawaddy','indep','coast',1],['Pegu',96.48,17.33,'Hanthawaddy','indep','plains',2],['Pathein',94.73,16.78,'Hanthawaddy','indep','coast',2],
+ ['Ruili',97.85,24.0,'Mong Mao','indep','mountain',1],['Mogaung',96.94,25.3,'Mong Mao','indep','mountain',2]
+);
+SEA.push(['Teluk Tonkin',108.0,19.4],['Laut Guangdong',115.0,21.5],['Selat Taiwan',119.3,23.3],['Laut Cina Timur',124.0,28.5],['Laut Kuning',123.0,35.0],['Laut Bohai',120.0,39.0],['Selat Korea',129.5,34.3],['Laut Jepang',135.0,39.0],['Laut Seto',133.5,34.1],['Laut Ryukyu',130.0,26.0],['Laut Hokkaido',143.0,44.8],['Pasifik Utara',145.0,36.0],['Pasifik Honshu',141.0,33.0]);

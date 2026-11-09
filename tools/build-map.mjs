@@ -5,7 +5,7 @@ import { Delaunay } from 'd3-delaunay';
 import polygonClipping from 'polygon-clipping';
 import { LAND, SEA } from './seeds.mjs';
 
-const B = { x0: 92, x1: 142, y0: -11.5, y1: 10 };
+const B = { x0: 92, x1: 146, y0: -11.5, y1: 46 };
 const bboxGeo = { type: 'Polygon', coordinates: [[[B.x0,B.y0],[B.x1,B.y0],[B.x1,B.y1],[B.x0,B.y1],[B.x0,B.y0]]] };
 const proj = geoMercator().fitWidth(1600, bboxGeo);
 {
@@ -61,7 +61,10 @@ function centroidLabel(mp, fallback) { return fallback; }
 const provinces = [];
 const landShapes = {};
 const shapesByNat = {};
-let id = 0;
+const previous=JSON.parse(fs.readFileSync('data/map-data.json','utf8'));
+const stableIds=new Map(previous.provinces.map(p=>[p.k+'|'+p.n,p.id]));
+let id=Math.max(...previous.provinces.map(p=>p.id));
+const allocId=(kind,name)=>stableIds.get(kind+'|'+name)||++id;
 const seedPts = LAND.map(s => P(s[1], s[2]));
 const inRing = (ring, x, y) => { let c = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const [xi, yi] = ring[i], [xj, yj] = ring[j]; if ((yi > y) !== (yj > y) && x < (xj - xi)*(y - yi)/(yj - yi) + xi) c = !c; } return c; };
 const parts = LAND.map(() => []);
@@ -84,16 +87,16 @@ for (const poly of orphans) {
 }
 LAND.forEach((s, i) => {
   const shape = parts[i]; if (!shape.length) { console.warn('kosong:', s[0]); return; }
-  provinces.push({ id: ++id, n: s[0], nat: s[3], st: s[4], t: s[5], r: s[6], k: 'L',
+  provinces.push({ id: allocId('L',s[0]), n: s[0], nat: s[3], st: s[4], t: s[5], r: s[6], k: 'L',
     lab: [round(seedPts[i][0]), round(seedPts[i][1])], d: toD(shape) });
-  landShapes[id] = shape;
+  landShapes[provinces.at(-1).id] = shape;
   (shapesByNat[s[3]] ||= []).push(shape);
 });
 const seaCells = cellsOf(SEA);
 SEA.forEach((s, i) => {
   const shape = polygonClipping.intersection([[seaCells[i][0]]], ocean);
   if (!shape.length) { console.warn('laut kosong:', s[0]); return; }
-  provinces.push({ id: ++id, n: s[0], nat: 'laut', st: 'sea', t: 'sea', r: 1, k: 'S',
+  provinces.push({ id: allocId('S',s[0]), n: s[0], nat: 'laut', st: 'sea', t: 'sea', r: 1, k: 'S',
     lab: [round(P(s[1],s[2])[0]), round(P(s[1],s[2])[1])], d: toD(shape) });
 });
 
@@ -156,6 +159,7 @@ for (const i of ids) {
   let d = '', last = null;
   for (const poly of landShapes[i]) for (const ring of poly) for (let k = 0; k < ring.length - 1; k++) {
     const p = ring[k], q = ring[k+1];
+    if((Math.abs(p[0])<.01&&Math.abs(q[0])<.01)||(Math.abs(p[0]-W)<.01&&Math.abs(q[0]-W)<.01)||(Math.abs(p[1])<.01&&Math.abs(q[1])<.01)||(Math.abs(p[1]-H)<.01&&Math.abs(q[1]-H)<.01)){last=null;continue;}
     if (nb.has(key(p[0],p[1])) && nb.has(key(q[0],q[1]))) { last = null; continue; }
     if (last && last === key(p[0],p[1])) d += 'L' + round(q[0]) + ' ' + round(q[1]) + ' ';
     else d += 'M' + round(p[0]) + ' ' + round(p[1]) + ' L' + round(q[0]) + ' ' + round(q[1]) + ' ';
@@ -189,6 +193,7 @@ const RIVERS = [
 ];
 const rivers = RIVERS.map(r => { let d=''; r.forEach(([lo,la],i)=>{ const [x,y]=P(lo,la); d += (i?'L':'M')+round(x)+' '+round(y)+' '; }); return d.trim(); });
 const lakes = [[98.85,2.65,.28,.14]].map(([lo,la,rx,ry]) => { let d=''; for (let i=0;i<24;i++){ const a=i/24*Math.PI*2; const [x,y]=P(lo+Math.cos(a)*rx, la+Math.sin(a)*ry); d += (i?'L':'M')+round(x)+' '+round(y)+' '; } return d+'Z'; });
-const out = { W: round(W), H: round(H), coast, provinces, nations, rivers, lakes, adj, edges, straits };
+provinces.sort((a,b)=>a.id-b.id);
+const out = {mapVersion:2,geo:B,legacyTransform:{scale:50/54,offsetY:P(92,10)[1]}, W: round(W), H: round(H), coast, provinces, nations, rivers, lakes, adj, edges, straits };
 fs.writeFileSync('data/map-data.json', JSON.stringify(out));
 console.log('provinsi:', provinces.length, 'W', W.toFixed(1), 'H', H.toFixed(1), 'bytes', JSON.stringify(out).length);
