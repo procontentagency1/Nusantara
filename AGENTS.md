@@ -268,7 +268,10 @@ Armada menyimpan satu `f.cargo` berisi objek pasukan yang dikeluarkan dari G.arm
 Kontrak di docs/DUNIA_AGAMA_TEKNOLOGI.md. `src/world-systems.js` diinsert tools/make.mjs pada __WORLD_SYSTEMS__; jangan hanya mengedit index.html. `fixWorld` dari fixSave memigrasikan save, `worldSystemsMonth` sekali setiap bulan sebelum autosave. `G.world.communities[id].islam` adalah indeks pengaruh, bukan agama dominan (`G.pr`); kebijakan penerimaan/pembatasan memberi modifier dan dapat mengubah dominasi bertahap. `G.world.faith` menyimpan agama AI dan dipulihkan saat load/newGame. Kiriman sukses mengisi `G.world.tradeLinks` lewat wrapper settleResourceTrade; jangan mencatat kiriman batal. `G.inst[k].progress`, `started`, `aiEmb` menambah data lama tanpa mengubah makna pv/emb; `worldAiLevel` dipakai pertempuran dan bonus tetangga. Era global memeriksa tahun dan jumlah provinsi yang menerima lembaga; hadiah `age_` dihapus saat transisi. Peristiwa dunia menandai flag sebelum enqueue dan memakai uid event agar tidak dibayar dua kali. `tests/t41_world_systems.py` menguji alur/migrasi dan sisi AI.
 
 ## Pembingkaian peta dan audit dagang
-`minS` memakai skala yang menutup viewport, dan `clampView` menjaga batas peta menutup layar saat digeser. Seluruh dunia tidak dapat terlihat sekaligus pada layar yang jauh lebih lebar daripada peta; geser untuk berpindah kawasan. `tests/t43_map_framing.py` memeriksa zoom, tepi, dan pemilihan negara pada dua orientasi. Temuan ekonomi dan batas AI/rute dicatat di docs/AUDIT_PERDAGANGAN.md; angka di sana adalah snapshot, bukan bonus tetap.
+`minS` adalah 90% dari skala fit agar seluruh dunia tetap dapat dilihat sekaligus, termasuk pada layar lebar dengan ruang kosong di samping. `tests/t43_map_framing.py` memeriksa zoom seluruh dunia dan pemilihan negara pada dua orientasi. Temuan ekonomi dan batas AI/rute dicatat di docs/AUDIT_PERDAGANGAN.md; angka di sana adalah snapshot, bukan bonus tetap.
+
+## Proyeksi peta
+Peta versi 3 memakai proyeksi silinder setara luas. `fixEqualAreaWorld` memigrasikan koordinat armada versi 2 dan merencanakan ulang rute; migrasi versi 1 dijalankan lebih dahulu. Jangan mengubah ID provinsi atau menafsirkan pengaruh politik sebagai kepemilikan langsung. Lihat docs/PROYEKSI_PETA.md.
 
 
 ## Kejernihan saat geser peta
