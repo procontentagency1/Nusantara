@@ -82,10 +82,6 @@ canvas#map{position:absolute;left:0;top:0;display:block;touch-action:none;cursor
 #stPanel .r{display:flex;justify-content:space-between;gap:8px;padding:4px 9px;font:11.5px system-ui,sans-serif;border-bottom:1px solid rgba(241,211,138,.12)}
 #stPanel .r span{opacity:.65}#stPanel .r b{text-align:right}
 .stars{color:var(--gold);letter-spacing:2px}
-#stList{left:248px;right:150px;bottom:6px;display:flex;gap:5px;overflow-x:auto;padding:5px;border-radius:5px}
-#stList button{flex:none;display:flex;align-items:center;gap:6px;padding:5px 9px;font:600 11px system-ui,sans-serif;white-space:nowrap;height:32px}
-#stList i{width:12px;height:12px;border:1px solid #000;border-radius:2px}
-#stList .lbl{align-self:center;font:10px system-ui,sans-serif;opacity:.6;flex:none;margin-right:2px}
 #btnStart{right:6px;bottom:6px;width:138px;height:44px;font:700 14px Georgia,serif;letter-spacing:1px;color:#2a1a08;background:linear-gradient(#f5dc95,#a77c34);border:2px solid #000;border-radius:6px;cursor:pointer;box-shadow:inset 0 1px 0 #fff3c0,0 4px 12px rgba(0,0,0,.6)}
 #btnStart:disabled{opacity:.4;filter:grayscale(.6)}
 .mini-btn{margin:7px 9px;padding:6px 10px;font:600 11px system-ui,sans-serif;width:calc(100% - 18px)}
@@ -119,7 +115,7 @@ canvas#map{position:absolute;left:0;top:0;display:block;touch-action:none;cursor
 .dev i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 11px Georgia,serif;color:#241607;border:1px solid #000}
 .dev small{font:9px system-ui,sans-serif;opacity:.6;font-weight:400}
 .bar{height:6px;background:#150f08;border:1px solid #000;margin:2px 0 0;border-radius:3px;overflow:hidden;width:70px}.bar>i{display:block;height:100%;background:var(--gold)}
-#win,#stPanel,#stList{scrollbar-width:thin;scrollbar-color:#9c7a3c #1a1208}
+#win,#stPanel{scrollbar-width:thin;scrollbar-color:#9c7a3c #1a1208}
 #toasts{right:44px;top:44px;display:flex;flex-direction:column;gap:5px;z-index:8;pointer-events:none;align-items:flex-end}
 .toast{max-width:230px;padding:6px 10px;font:11.5px system-ui,sans-serif;background:linear-gradient(#4a3519,#2b1d0d);border:1.5px solid var(--gd);border-left:4px solid var(--gold);border-radius:4px;box-shadow:0 4px 10px rgba(0,0,0,.5);animation:ti .25s ease}
 @keyframes ti{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
@@ -161,7 +157,6 @@ html,body{color:var(--paper)}
 #stTitle::before{content:'';position:absolute;left:8px;top:50%;width:36px;height:36px;transform:translateY(-50%);background:url("data:image/svg+xml;utf8,<svg viewBox='0 0 40 40'><polygon points='17.6,9.3 18.7,1.0 20.0,0.4 21.3,1.0 22.4,9.3' fill='%23d9a93a' stroke='%232a0d08' stroke-width='.6'/><polygon points='21.9,10.2 25.7,6.1 25.6,11.7' fill='%23f4d88a' stroke='%232a0d08' stroke-width='.5'/><polygon points='25.9,10.7 32.5,5.7 33.9,6.1 34.3,7.5 29.3,14.1' fill='%23d9a93a' stroke='%232a0d08' stroke-width='.6'/><polygon points='28.3,14.4 33.9,14.3 29.8,18.1' fill='%23f4d88a' stroke='%232a0d08' stroke-width='.5'/><polygon points='30.7,17.6 39.0,18.7 39.6,20.0 39.0,21.3 30.7,22.4' fill='%23d9a93a' stroke='%232a0d08' stroke-width='.6'/><polygon points='29.8,21.9 33.9,25.7 28.3,25.6' fill='%23f4d88a' stroke='%232a0d08' stroke-width='.5'/><polygon points='29.3,25.9 34.3,32.5 33.9,33.9 32.5,34.3 25.9,29.3' fill='%23d9a93a' stroke='%232a0d08' stroke-width='.6'/><polygon points='25.6,28.3 25.7,33.9 21.9,29.8' fill='%23f4d88a' stroke='%232a0d08' stroke-width='.5'/><polygon points='22.4,30.7 21.3,39.0 20.0,39.6 18.7,39.0 17.6,30.7' fill='%23d9a93a' stroke='%232a0d08' stroke-width='.6'/><polygon points='18.1,29.8 14.3,33.9 14.4,28.3' fill='%23f4d88a' stroke='%232a0d08' stroke-width='.5'/><polygon points='14.1,29.3 7.5,34.3 6.1,33.9 5.7,32.5 10.7,25.9' fill='%23d9a93a' stroke='%232a0d08' stroke-width='.6'/><polygon points='11.7,25.6 6.1,25.7 10.2,21.9' fill='%23f4d88a' stroke='%232a0d08' stroke-width='.5'/><polygon points='9.3,22.4 1.0,21.3 0.4,20.0 1.0,18.7 9.3,17.6' fill='%23d9a93a' stroke='%232a0d08' stroke-width='.6'/><polygon points='10.2,18.1 6.1,14.3 11.7,14.4' fill='%23f4d88a' stroke='%232a0d08' stroke-width='.5'/><polygon points='10.7,14.1 5.7,7.5 6.1,6.1 7.5,5.7 14.1,10.7' fill='%23d9a93a' stroke='%232a0d08' stroke-width='.6'/><polygon points='14.4,11.7 14.3,6.1 18.1,10.2' fill='%23f4d88a' stroke='%232a0d08' stroke-width='.5'/><circle cx='20' cy='20' r='10.5' fill='%237a1a12' stroke='%23d9a93a' stroke-width='1.6'/><circle cx='20' cy='20' r='7' fill='none' stroke='%23d9a93a' stroke-width='.8'/><path d='M20 12.5l1.8 4.3 4.7.4-3.6 3 1.1 4.6-4-2.5-4 2.5 1.1-4.6-3.6-3 4.7-.4z' fill='%23f6dc8f' stroke='%232a0d08' stroke-width='.6'/></svg>") center/contain no-repeat}
 #btnStart{background:linear-gradient(#f7de97,#b78428);border:2px solid #140603;box-shadow:inset 0 1px 0 #fff3c0,0 0 0 2px #7a1f14,0 4px 12px rgba(0,0,0,.6);font-family:Georgia,serif}
 #stFlag{border:2px solid #d9a93a;box-shadow:0 0 0 2px #140603,inset 0 0 0 1px rgba(255,255,255,.35)}
-#stList{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='26' height='26'><g fill='none' stroke='%23d9a93a' stroke-opacity='.17' stroke-width='1'><ellipse cx='13' cy='6.5' rx='3.4' ry='6'/><ellipse cx='13' cy='19.5' rx='3.4' ry='6'/><ellipse cx='6.5' cy='13' rx='6' ry='3.4'/><ellipse cx='19.5' cy='13' rx='6' ry='3.4'/></g><circle cx='13' cy='13' r='1.2' fill='%23d9a93a' fill-opacity='.2'/></svg>"),linear-gradient(#3d1a10,#21100a)}
 #rail button{display:grid;place-items:center;padding:0}
 #rail button svg{width:19px;height:19px;filter:drop-shadow(0 1px 0 rgba(0,0,0,.6))}
 .sb{background:linear-gradient(90deg,#7a2418,#7a2418 50%,#2c5e3a 50%);border:1px solid #140603}
@@ -176,7 +171,6 @@ html,body{color:var(--paper)}
 #win .hd,#prov .hd,#stPanel .hd,#stTitle{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='26' height='26'><g fill='none' stroke='%23d9a93a' stroke-opacity='0.09' stroke-width='1'><ellipse cx='13' cy='6.5' rx='3.4' ry='6'/><ellipse cx='13' cy='19.5' rx='3.4' ry='6'/><ellipse cx='6.5' cy='13' rx='6' ry='3.4'/><ellipse cx='19.5' cy='13' rx='6' ry='3.4'/></g></svg>"),linear-gradient(#942c1f,#561710)}
 .mbox{background:linear-gradient(#45170f,#26100a);box-shadow:inset 0 0 26px rgba(0,0,0,.4),0 0 0 3px #4a0f08,0 0 0 4px #c99a3a,0 10px 28px rgba(0,0,0,.75)}
 .mbox::before{content:'';position:absolute;left:0;right:0;top:0;height:20px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='26' height='26'><g fill='none' stroke='%23d9a93a' stroke-opacity='0.09' stroke-width='1'><ellipse cx='13' cy='6.5' rx='3.4' ry='6'/><ellipse cx='13' cy='19.5' rx='3.4' ry='6'/><ellipse cx='6.5' cy='13' rx='6' ry='3.4'/><ellipse cx='19.5' cy='13' rx='6' ry='3.4'/></g></svg>");pointer-events:none;border-radius:3px 3px 0 0;-webkit-mask:linear-gradient(#000,transparent);mask:linear-gradient(#000,transparent)}
-#stList{background:linear-gradient(#3b190f,#1f0f09)}
 #win .r span,#stPanel .r span,.rowb em{opacity:.85}
 #win .r,#stPanel .r,.rowb,.mbox p{color:#f8ecd0}
 #win h2,#stPanel h2{background:linear-gradient(#fff3c4,#e2b14c);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 1px 0 #000)}
@@ -203,7 +197,6 @@ button,.btn{touch-action:manipulation}
 .mbox .mo button{min-height:38px;padding:8px 14px;font-size:13px}
 .toast{font-size:12.5px;max-width:250px;padding:8px 11px}
 #toasts{right:52px}
-#stList button{height:40px;font-size:12px}
 #btnStart{height:48px}
 #modes button{height:34px}
 .spd{width:22px;height:22px;font-size:13px}
@@ -328,7 +321,6 @@ button,.btn{touch-action:manipulation}
 <div id="start">
   <div id="stTitle" class="abs"><b>NUSANTARA</b><small>1 Januari 1350 · Pilih negara Anda</small></div>
   <div id="stPanel" class="abs wood"></div>
-  <div id="stList" class="abs wood"></div>
   <button id="btnStart" class="abs" disabled>MULAI</button>
 </div>
 <div id="rail" class="abs">
@@ -4158,17 +4150,9 @@ function focusNation(nat, sx) {
 function showStart() {
   phase = 'start'; app.dataset.phase = 'start'; $('win').classList.remove('open'); $('modal').classList.remove('open'); selId = null; setBaseWorld();
   const first = selNat && NATS[selNat].playable ? selNat : 'Majapahit';
-  buildStartList(); selectNation(first);
-}
-function buildStartList() {
-  const top = RANKED.slice(0, 12);
-  $('stList').innerHTML = `<span class="lbl">Negara<br>menonjol</span>` + top.map(n => `<button class="btn" data-nat="${n.nat}"><i style="background:${n.color}"></i>${n.nat}</button>`).join('');
-  $('stList').insertAdjacentHTML('afterbegin','<select id="nationPicker" aria-label="Pilih kerajaan" style="flex:none;max-width:190px;margin:6px;padding:7px;background:#3b1c12;color:#f4d28d;border:1px solid #d2ab58"><option value="">Semua kerajaan…</option>'+Object.values(NATS).filter(n=>n.playable).sort((a,b)=>a.nat.localeCompare(b.nat)).map(n=>'<option value="'+n.nat+'">'+n.nat+'</option>').join('')+'</select>');
-  $('nationPicker').onchange=e=>{if(e.target.value)selectNation(e.target.value);};
-  $('stList').querySelectorAll('button').forEach(b => b.onclick = () => selectNation(b.dataset.nat));
+  selectNation(first);
 }
 function selectNation(nat) {
-  if($('nationPicker'))$('nationPicker').value=nat;
   selNat = nat; const n = NATS[nat], sv = loadSave();
   $('btnStart').disabled = !n.playable;
   $('stPanel').innerHTML = `<div class="hd"><div id="stFlag" style="background:${n.color}">☀︎</div><div><h2>${nat}</h2><div class="sub">${n.gov}</div></div></div>`
@@ -4180,7 +4164,7 @@ function selectNation(nat) {
       <div class="r"><span>Perkembangan</span><b>${n.dev}</b></div>
       <div class="r"><span>Peringkat</span><b>#${n.rank} dari ${RANKED.length}</b></div>
       <div class="r"><span>Kesulitan</span><b class="stars">${'★'.repeat(4 - n.diff)}${'☆'.repeat(n.diff - 1)}</b></div>
-      <p class="note" style="margin:0;padding:6px 9px;font:10px system-ui,sans-serif;opacity:.55">${n.ruler.real ? '' : 'Nama & kemampuan penguasa masih contoh. '}Ketuk negara lain di peta, atau pilih dari daftar bawah.</p>`
+      <p class="note" style="margin:0;padding:6px 9px;font:10px system-ui,sans-serif;opacity:.55">${n.ruler.real ? '' : 'Nama & kemampuan penguasa masih contoh. '}Ketuk wilayah kerajaan di peta untuk memilih.</p>`
       : `<p class="note" style="padding:10px;font:11px system-ui,sans-serif;opacity:.8">Wilayah ini hanya sebagian terlihat di peta, jadi belum bisa dimainkan.</p>`)
     + (sv ? `<button class="btn mini-btn" id="btnCont">Lanjutkan (${sv.nat}, ${sv.y})</button>` : '');
   if (sv) $('btnCont').onclick = () => { G = sv; G.battles ||= []; G.wex ||= {}; G.ae ||= {}; G.coal ||= {}; G.fab ||= []; G.mis ||= []; G.net ||= {}; fixSave(); beginGame(); };
