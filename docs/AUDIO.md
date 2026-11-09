@@ -22,7 +22,7 @@ Bus terpisah untuk antarmuka, efek permainan dan musik mencegah perkusi musik ma
 
 ## Kontrol
 
-**Menu → Audio** menyediakan sakelar efek/musik serta slider 0–100 untuk klik/menu, efek permainan dan musik. Default masing-masing 65%, 65%, 40%. Nilai tersimpan dalam `nus_snd.levels`, terpisah dari save kampanye. Preferensi lama yang hanya punya `sfx`/`mus` tetap dihormati. Tombol speaker peta tetap menjadi kontrol hidup/mati cepat.
+**Pengaturan → Audio** menyediakan sakelar efek/musik serta slider 0–100 untuk klik/menu, efek permainan dan musik. Default masing-masing 65%, 65%, 40%. Nilai tersimpan dalam `nus_snd.levels`, terpisah dari save kampanye. Preferensi lama yang hanya punya `sfx`/`mus` tetap dihormati. Tombol speaker peta tetap menjadi kontrol hidup/mati cepat.
 
 Audio baru dimulai setelah interaksi pengguna bila browser memerlukannya. Menonaktifkan musik menghentikan penjadwalan nada baru; sisa suara memudar lewat bus musik. `SFX.pauseAll` dipakai oleh perubahan visibilitas. Jangan membuat AudioContext atau interval baru setiap deklarasi perang.
 

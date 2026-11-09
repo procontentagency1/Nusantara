@@ -19,7 +19,7 @@ with sync_playwright() as p:
  CTRL[loc]=enemy.nat;act.drill({dataset:{id:String(a.id)}});const occupied=!a.drilling;delete CTRL[loc];
  return {entry,width,migration,occupied};}''')
  print('combat and migration',combat);assert all(combat.values())
- page.locator('#rail button[data-w=menu]').click()
+ page.locator('#rightControls button[data-w=menu]').click()
  page.evaluate("SFX.setMus(false)")
  page.wait_for_timeout(150)
  audio=page.evaluate("""()=>{const peaks=[],gains=new WeakSet(),cp=AudioContext.prototype,cg=cp.createGain;cp.createGain=function(){const g=cg.call(this);gains.add(g.gain);return g;};const proto=AudioParam.prototype,old=proto.exponentialRampToValueAtTime;proto.exponentialRampToValueAtTime=function(v,t){if(gains.has(this))peaks.push(v);return old.call(this,v,t);};try{SFX.play('tap');}finally{proto.exponentialRampToValueAtTime=old;cp.createGain=cg;}return peaks;}""")
