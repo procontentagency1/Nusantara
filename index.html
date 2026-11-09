@@ -868,7 +868,14 @@ function drawRidge(x, y, z) {
 /* ===== nama negara besar melintang (khas EU4) ===== */
 let COUNTRY_LABELS = null;
 function buildCountryLabels() {
-  const by = {}; provs.forEach(p => { if (p.k === 'L') (by[OWNR[p.id]] ||= []).push(p); });
+  const by = {};
+  if(mode==='pol'||phase==='start')provs.forEach(p=>{if(p.k==='L')(by[OWNR[p.id]] ||= []).push(p);});
+  else{const remaining=new Set(provs.filter(p=>p.k==='L').map(p=>p.id)),key=p=>mapProvinceLabel(p)+'|'+tradeNode(p);
+    for(const p of provs){if(!remaining.has(p.id))continue;const group=[p],wanted=key(p);remaining.delete(p.id);
+      for(let i=0;i<group.length;i++)for(const link of LINK[group[i].id]||[]){const next=PROV[link.to];if(remaining.has(link.to)&&key(next)===wanted){remaining.delete(link.to);group.push(next);}}
+      by[wanted+'|'+p.id]=group;
+    }
+  }
   COUNTRY_LABELS = Object.entries(by).map(([nat, ps]) => {
     const pts = ps.map(p => p.lab), n = pts.length;
     const cx = pts.reduce((a, q) => a + q[0], 0)/n, cy = pts.reduce((a, q) => a + q[1], 0)/n;
@@ -880,7 +887,7 @@ function buildCountryLabels() {
       L = Math.max(...pr) - Math.min(...pr) + 110;
     } else L = ps[0].r === 1 ? 130 : 95;
     ctx.font = 'bold 100px Georgia,serif'; if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
-    const name = nat.toUpperCase(), w100 = ctx.measureText(name).width;
+    const name = (mode==='pol'||phase==='start'?nat:mapProvinceLabel(ps[0])).toUpperCase(), w100 = ctx.measureText(name).width;
     return { nat, name, cx, cy, ang, fsW: L/(w100/100 + name.length*.2), L };
   }).sort((a, b) => b.L - a.L);
 }
@@ -1017,8 +1024,8 @@ function paintStatic(c, k, tx, ty, sEff, full) {
     }
     if (aP > .12) {
       c.globalAlpha = aP;
-      for (const p of L) if (p.r === 1) { const q = on(p); if (q) label(p.n.toUpperCase(), q[0], q[1] + cityDY(p, s, fsMaj), fsMaj, `bold ${fsMaj}px Georgia,serif`, '#fbeccb', '#120801', fsMaj*.08); }
-      for (const p of L) if (p.r !== 1) { const q = on(p); if (q) label(p.n, q[0], q[1] + cityDY(p, s, fsMin), fsMin, `${fsMin}px Georgia,serif`, '#f3e4c0', '#120801', 0); }
+      for (const p of L) if (p.r === 1) { const q = on(p); if (q) label(mapProvinceLabel(p).toUpperCase(), q[0], q[1] + cityDY(p, s, fsMaj), fsMaj, `bold ${fsMaj}px Georgia,serif`, '#fbeccb', '#120801', fsMaj*.08); }
+      for (const p of L) if (p.r !== 1) { const q = on(p); if (q) label(mapProvinceLabel(p), q[0], q[1] + cityDY(p, s, fsMin), fsMin, `${fsMin}px Georgia,serif`, '#f3e4c0', '#120801', 0); }
       c.globalAlpha = 1;
     }
     for (const p of S) { const q = on(p); if (q) label(p.n, q[0], q[1], fsSea, `italic ${fsSea}px Georgia,serif`, '#9fcbdc', '#06202f', fsSea*.2); }
@@ -1051,7 +1058,9 @@ function vignette() {
   }
   ctx.drawImage(vigC, 0, 0, cvs.width, cvs.height);
 }
+let religionRenderKey='';
 function frame() {
+  if(mode==='religion'&&phase==='game'&&G){const key=JSON.stringify(G.pr);if(key!==religionRenderKey){religionRenderKey=key;COUNTRY_LABELS=null;for(const p of provs)p._pf=null;cacheVer++;}}
   const s = view.s;
   ctx.setTransform(1,0,0,1,0,0);
   const same = detail.ok && detail.mode === mode && detail.ver === cacheVer && detail.w === cvs.width && detail.s === s && detail.tx === view.tx && detail.ty === view.ty;
@@ -1134,7 +1143,7 @@ $('zfull').onclick = async () => {
 };
 const MAP_VIEWS={pol:'Politik',ter:'Medan',religion:'Agama',resources:'Sumber daya',trade:'Perdagangan'};
 function closeMapViews(){$('mapViewMenu').hidden=true;$('mapViewToggle').setAttribute('aria-expanded','false');}
-function setMode(m){if(!MAP_VIEWS[m])return;mode=m;for(const p of provs)p._pf=null;cacheVer++;$('mapViewToggle').textContent='Peta: '+MAP_VIEWS[m]+' ▾';for(const b of $('mapViewMenu').querySelectorAll('[data-mapmode]')){b.classList.toggle('on',b.dataset.mapmode===m);b.setAttribute('aria-pressed',String(b.dataset.mapmode===m));}updateMapLegend();closeMapViews();request();}
+function setMode(m){if(!MAP_VIEWS[m])return;mode=m;COUNTRY_LABELS=null;for(const p of provs)p._pf=null;cacheVer++;$('mapViewToggle').textContent='Peta: '+MAP_VIEWS[m]+' ▾';for(const b of $('mapViewMenu').querySelectorAll('[data-mapmode]')){b.classList.toggle('on',b.dataset.mapmode===m);b.setAttribute('aria-pressed',String(b.dataset.mapmode===m));}updateMapLegend();closeMapViews();request();}
 $('mapViewToggle').onclick=()=>{const open=$('mapViewMenu').hidden;$('mapViewMenu').hidden=!open;$('mapViewToggle').setAttribute('aria-expanded',String(open));updateMapLegend();SFX.play(open?'open':'close');};
 $('mapViewMenu').onclick=e=>{const b=e.target.closest('[data-mapmode]');if(b){setMode(b.dataset.mapmode);SFX.play('tap');}};
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('#mapviews'))closeMapViews();});
@@ -1240,7 +1249,7 @@ const slotsOf = (q) => Math.max(1, Math.min(4, 1 + Math.floor((q.t+q.p+q.m)/10))
 /* ---------- time ---------- */
 let paused = true, speed = 3, acc = 0, lastT = 0;
 function dayTick() {
-  G.d++; armiesDay(); navyDay(); syncRegs();
+  G.d++; armiesDay(); navyDay(); resourceTradeDay(); syncRegs();
   if (G.d > MDAYS[G.mo]) { G.d = 1; G.mo++; if (G.mo > 11) { G.mo = 0; G.y++; } monthTick(); }
   topDirty = true;
 }
@@ -1264,7 +1273,7 @@ function monthTick() {
   }
   if (G.mo === 0) { G.prestige = Math.round(G.prestige * .95); G.legit = Math.min(100, G.legit + 1); }
   diplomacyMonth(); aiMonth(); syncRegs();
-  modMonth(); relMonth(); instMonth(); evMonth(); subjectsMonth(); aiContentMonth(); resourcesMonth(); militaryMonth(); navyMonth();
+  modMonth(); relMonth(); instMonth(); evMonth(); subjectsMonth(); aiContentMonth(); resourcesMonth(); militaryMonth(); navyMonth(); resourceTradeMonth();
   saveGame(true); renderWin();
 }
 function saveGame(silent) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); if (!silent) toast('Permainan disimpan.'); } catch (e) { if (!silent) toast('Penyimpanan tidak tersedia di sini.'); } }
@@ -1325,6 +1334,7 @@ function renderWin() {
   else if (winMode === 'subjects') h = subjectsHTML();
   else if (winMode === 'trade') h = tradeHTML();
   else if (winMode === 'resources') h = resourcePanel();
+  else if(winMode==='resourceTrade')h=resourceTradeHTML();
   else if (winMode === 'expansion') h = expansionHTML();
   else if (winMode === 'navy') h=navyHTML();
   else if (winMode === 'fleet') h=fleetHTML(G.fleets.find(f=>f.id===G.selFleet));
@@ -1389,7 +1399,7 @@ function provHTML(p, e) {
 /* ---------- actions ---------- */
 const act = {
   win: b => { if (winMode === b.dataset.w) { winMode = null; } else winMode = b.dataset.w; selId = null; renderWin(); request(); },
-  back: () => { const parent = { rel:'nation', ide:'tech', missions:'nation', subjects:'nation', trade:'econ', worldcontent:'nation', resources:'econ', expansion:'nation', navy:'mil', fleet:'navy', declare:'dipn', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
+  back: () => { const parent = { rel:'nation', ide:'tech', missions:'nation', subjects:'nation', trade:'econ', worldcontent:'nation', resources:'econ', resourceTrade:'resources', expansion:'nation', navy:'mil', fleet:'navy', declare:'dipn', dipn:'dip', peace:'war', army:'mil' }; if (winMode === 'army' && G) G.sel = null; winMode = parent[winMode] || null; selId = null; renderWin(); request(); },
   close: () => { winMode = null; selId = null; renderWin(); request(); },
   dev: b => { const q = G.pv[b.dataset.id], i = +b.dataset.i, k = ['t','p','m'][i], c = devCost(q[k]); if (G.mana[i] < c) return; G.mana[i] -= c; q[k]++; toast(`${DEV_NAME[i]} ${PROV[b.dataset.id].n} naik ke ${q[k]}.`); },
   build: b => { const q = G.pv[b.dataset.id], B = BUILD[b.dataset.k]; if (!q || !B || q.bld.includes(b.dataset.k) || q.cons.some(c=>c.type===b.dataset.k) || G.treasury < bCost(B) || q.bld.length + q.cons.length >= slotsOf(q)) return; G.treasury -= bCost(B); q.cons.push({ type:b.dataset.k, left:B.months }); toast(`Membangun ${B.n} di ${PROV[b.dataset.id].n} (${B.months} bln).`); },
@@ -2074,6 +2084,7 @@ function dipNatHTML(t) {
   h += `<div class="r"><span>Akses militer</span>${acc ? btn('Cabut', 'dact', { k:'revoke', n:t }) : btn('Minta', 'dact', { k:'access', n:t }, !war && dipFree() > 0)}</div>`;
   if(!subjectMaster(t) && !subjectMaster(G.nat))h+='<div class="r">'+btn('Tawarkan hubungan upeti · 25 DIP','offertribute',{n:t},!war && dipFree()>0 && G.mana[1]>=25)+'</div>';
   if(!subjectMaster(t) && !subjectMaster(G.nat))h+='<div class="r">'+btn('Tawarkan vasalisasi · 25 DIP','offervassal',{n:t},!war && dipFree()>0 && G.mana[1]>=25)+'</div><p class="note">Upeti: hubungan +100, perkembangan 1,5× target. Vasal: sekutu, hubungan +190, perkembangan 3× target (target maks. 100). Keduanya damai dan target tidak punya bawahan.</p>';
+  h += '<div class="r">'+btn('Dagang sumber daya ›','openresourcetrade',{n:t})+'</div>';
   h += `<div class="sec">Perang & klaim</div>`;
   const why = canDeclare(t);
   if (why) h += `<div class="r"><span>Perang</span><b style="opacity:.6">${why}</b></div>`;
@@ -2944,7 +2955,7 @@ function syncLoans() { G.loans = G.ln.reduce((a, l) => a + l.a, 0); }
 function fixSave() {
   G.claims=[...new Set((G.claims || []).map(Number).filter(id=>PROV[id] && PROV[id].k==='L'))];
   G.missions ||= []; G.flags ||= {}; G.mod ||= []; G.fired ||= []; G.evq ||= []; G.infl ||= 0; G.bank ||= 0;
-  G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel(); fixSubjects(); fixTrade(); fixKingdomContent(); fixResources(); fixMilitary(); fixExpansion(); fixNavy();
+  G.ln ||= (G.loans > 0 ? [{ a:G.loans, left:60 }] : []); syncLoans(); fixRel(); fixSubjects(); fixTrade(); fixKingdomContent(); fixResources(); fixMilitary(); fixExpansion(); fixNavy(); fixResourceTrade();
 }
 function takeLoan(auto) {
   if (G.ln.length >= MAXLN) return false;
@@ -3669,10 +3680,10 @@ const RESOURCE_NAMES={food:'Pangan',wood:'Kayu',iron:'Besi',spice:'Rempah'};
 function fixResources(){G.resourceStocks ||= {};G.improvements ||= {};for(const n of Object.keys(NATS))G.resourceStocks[n] ||= {food:20,wood:15,iron:5,spice:0};}
 function provinceResource(p){const g=goodsOf(p);return ['Beras','Ikan'].includes(g)?'food':g==='Kayu'?'wood':g==='Besi'?'iron':['Rempah-rempah','Lada'].includes(g)?'spice':null;}
 function resourceYield(id){const p=PROV[id],type=provinceResource(p);if(!type)return 0;const q=G.pv[id],dev=q?q.p:baseDev(p)[1],imp=G.improvements[id];return (.4+dev*.12)*(imp?.built?2:1)*(G.expansion?.[id]?.revolt?0:1);}
-function resourcesMonth(){fixResources();for(const p of provs){if(p.k!=='L')continue;const owner=OWNR[p.id],ctl=CTRL[p.id]||owner,imp=G.improvements[p.id];if(imp?.left&&owner===ctl){imp.left--;if(!imp.left)imp.built=true;}const k=provinceResource(p);if(k&&G.resourceStocks[ctl])G.resourceStocks[ctl][k]=Math.min(500,G.resourceStocks[ctl][k]+resourceYield(p.id)*(ctl===owner?1:.5));}for(const n of Object.keys(NATS))if(alive(n)){const s=G.resourceStocks[n];s.food=Math.max(0,s.food-regsOf(n)*.1-(OWNED[n]||[]).length*.1);}}
-function resourcePanel(){const stock=G.resourceStocks[G.nat];let h=hd('Sumber Daya','Stok fisik · kapasitas 500 per jenis');for(const k in RESOURCE_NAMES)h+=row(RESOURCE_NAMES[k],stock[k].toFixed(1))+'<div class="r">'+btn('Beli 5 · 20 dukat','resourcebuy',{k},G.treasury>=20&&stock[k]<=495)+btn('Jual 5 · 10 dukat','resourcesell',{k},stock[k]>=5)+'</div>';h+='<p class="note">Pangan dikonsumsi provinsi dan resimen. Stok pangan habis: biaya pasukan +20%. Kayu dipakai membangun pengolahan; besi dipakai rekrut mulai MIL 4. Pendudukan mengambil separuh produksi sumber daya; pengolahan tetap melekat pada provinsi saat dicaplok.</p>';for(const id of Object.keys(G.pv)){const p=PROV[id],k=provinceResource(p);if(!k)continue;const imp=G.improvements[id],tech=k==='iron'?G.tech[2]:G.tech[0];h+='<div class="sec">'+p.n+' · '+RESOURCE_NAMES[k]+'</div>'+row('Produksi bulanan',resourceYield(id).toFixed(1))+(imp?.built?row('Pengolahan','Selesai · hasil ×2'):imp?.left?row('Pembangunan',imp.left+' bulan'):btn('Bangun pengolahan · 50 dukat, 5 kayu','improveResource',{id},tech>=4&&G.treasury>=50&&stock.wood>=5&&!CTRL[id]));}return h;}
-act.resourcebuy=b=>{const k=b.dataset.k,s=G.resourceStocks[G.nat];if(!(k in RESOURCE_NAMES)||G.treasury<20||s[k]>495)return;G.treasury-=20;s[k]+=5;};
-act.resourcesell=b=>{const k=b.dataset.k,s=G.resourceStocks[G.nat];if(!(k in RESOURCE_NAMES)||s[k]<5)return;s[k]-=5;G.treasury+=10;};
+function resourcesMonth(){fixResources();for(const p of provs){if(p.k!=='L')continue;const owner=OWNR[p.id],ctl=CTRL[p.id]||owner,imp=G.improvements[p.id];if(imp?.left&&owner===ctl){imp.left--;if(!imp.left)imp.built=true;}const k=provinceResource(p);if(k&&G.resourceStocks[ctl])G.resourceStocks[ctl][k]=Math.min(resourceCapacity(ctl,k),G.resourceStocks[ctl][k]+resourceYield(p.id)*(ctl===owner?1:.5));}for(const n of Object.keys(NATS))if(alive(n)){const s=G.resourceStocks[n];s.food=Math.max(0,s.food-regsOf(n)*.1-(OWNED[n]||[]).length*.1);}}
+function resourcePanel(){const stock=G.resourceStocks[G.nat];let h=hd('Sumber Daya','Stok fisik · kapasitas 500 per jenis')+'<div class="r">'+btn('Dagang antarkerajaan ›','openresourcetrade',{})+'</div>';for(const k in RESOURCE_NAMES)h+=row(RESOURCE_NAMES[k],stock[k].toFixed(1))+'<div class="r">'+btn('Beli 5 · '+marketResourcePrice(k,'buy')+' dukat','resourcebuy',{k},G.treasury>=marketResourcePrice(k,'buy')&&stock[k]+5<=resourceCapacity(G.nat,k))+btn('Jual 5 · '+marketResourcePrice(k,'sell')+' dukat','resourcesell',{k},stock[k]>=5)+'</div>';h+='<p class="note">Kiriman aktif mencadangkan ruang gudang. Harga pasar lokal berbeda per barang; bandingkan dengan mitra kerajaan. Pangan dikonsumsi provinsi dan resimen. Stok pangan habis: biaya pasukan +20%. Kayu dipakai membangun pengolahan; besi dipakai rekrut mulai MIL 4. Pendudukan mengambil separuh produksi sumber daya; pengolahan tetap melekat pada provinsi saat dicaplok.</p>';for(const id of Object.keys(G.pv)){const p=PROV[id],k=provinceResource(p);if(!k)continue;const imp=G.improvements[id],tech=k==='iron'?G.tech[2]:G.tech[0];h+='<div class="sec">'+p.n+' · '+RESOURCE_NAMES[k]+'</div>'+row('Produksi bulanan',resourceYield(id).toFixed(1))+(imp?.built?row('Pengolahan','Selesai · hasil ×2'):imp?.left?row('Pembangunan',imp.left+' bulan'):btn('Bangun pengolahan · 50 dukat, 5 kayu','improveResource',{id},tech>=4&&G.treasury>=50&&stock.wood>=5&&!CTRL[id]));}return h;}
+act.resourcebuy=b=>{const k=b.dataset.k,s=G.resourceStocks[G.nat],cost=marketResourcePrice(k,'buy');if(!(k in RESOURCE_NAMES)||G.treasury<cost||s[k]+5>resourceCapacity(G.nat,k))return;G.treasury-=cost;s[k]+=5;};
+act.resourcesell=b=>{const k=b.dataset.k,s=G.resourceStocks[G.nat];if(!(k in RESOURCE_NAMES)||s[k]<5)return;s[k]-=5;G.treasury+=marketResourcePrice(k,'sell');};
 act.improveResource=b=>{const id=+b.dataset.id,p=PROV[id],s=G.resourceStocks[G.nat];if(!G.pv[id]||!p||!provinceResource(p)||G.improvements[id]||CTRL[id]||G.treasury<50||s.wood<5)return;const tech=provinceResource(p)==='iron'?G.tech[2]:G.tech[0];if(tech<4)return;G.treasury-=50;s.wood-=5;G.improvements[id]={left:6,built:false};};
 (()=>{const recruit=act.rec;act.rec=b=>{const s=G.resourceStocks[G.nat],needs=G.tech[2]>=4;if(needs&&s.iron<1){toast('Rekrut membutuhkan 1 besi.');return;}const mp=G.mp;recruit(b);if(needs&&G.mp<mp)s.iron-=1;};})();
 
@@ -3936,6 +3947,91 @@ function mapFilterColor(p){
  return natColor[OWNR[p.id]]||'#888';
 }
 function updateMapLegend(){const labels=mode==='resources'?'Pangan: hijau muda · Kayu: hijau tua · Besi: biru abu · Rempah: ungu · Lainnya: krem':mode==='religion'?'Siwa/Hindu/Buddha: emas–jingga · Islam: hijau · Animisme: ungu':mode==='trade'?'Warna menunjukkan tujuh node perdagangan. Pilih provinsi untuk melihat nama node.':mode==='ter'?'Hijau: dataran/hutan · Abu: pegunungan · Krem: pesisir':'Warna menunjukkan pemilik wilayah; arsiran menunjukkan pendudukan.';$('mapLegend').textContent=labels;}
+
+/* ---------- Label tematik dan perdagangan sumber daya antarkerajaan ---------- */
+function mapProvinceLabel(p){
+ if(phase!=='game'||!G||mode==='pol')return p.n;
+ if(mode==='religion')return RELS[relOf(p.id)]?.n||'Animisme';
+ if(mode==='resources')return RESOURCE_NAMES[provinceResource(p)]||goodsOf(p);
+ if(mode==='trade')return TRADE_BY_ID[tradeNode(p)].n;
+ return TERR_TXT[p.t]||p.n;
+}
+const RESOURCE_BASE={food:2,wood:3,iron:5,spice:6};let RESOURCE_PARTNER=null,RESOURCE_QUANTITY=10;
+const marketResourcePrice=(k,kind)=>Object.hasOwn(RESOURCE_BASE,k)?(kind==='buy'?Math.ceil(RESOURCE_BASE[k]*1.8*5):Math.floor(RESOURCE_BASE[k]*.45*5)):Infinity;
+function fixResourceTrade(){G.resourceOrders ||= [];G.resourceTradeGold ||= {};G.resourceTradeLog ||= [];G.resourceGoodwill ||= {};for(const n of Object.keys(NATS))if(!Number.isFinite(G.resourceTradeGold[n]))G.resourceTradeGold[n]=Math.min(500,80+NATS[n].dev*2);}
+function resourceCapacity(n,k){return 500-(G.resourceOrders||[]).filter(o=>o.k===k&&(o.from===n||o.to===n)).reduce((s,o)=>s+o.qty,0);}
+function resourceRoute(n){
+ if(!Object.hasOwn(NATS,n)||n===G.nat||!alive(n)||!alive(G.nat))return {reason:'Kerajaan tidak tersedia.'};
+ if(atWar(G.nat,n))return {reason:'Perdagangan ditutup saat perang.'};
+ if(relGet(G.nat,n)<=-75)return {reason:'Hubungan terlalu buruk (butuh lebih dari −75).'};
+ const a=capOf(G.nat),b=capOf(n),distance=Math.hypot(a.lab[0]-b.lab[0],a.lab[1]-b.lab[1]);
+ const land=(OWNED[G.nat]||[]).some(id=>LINK[id].some(l=>OWNR[l.to]===n));
+ if(!land&&(!portsOf(G.nat).length||!portsOf(n).length))return {reason:'Butuh perbatasan darat/selat atau pelabuhan di kedua pihak.'};
+ if(distance>650+G.tech[1]*60)return {reason:'Di luar jangkauan dagang; tingkatkan DIP.'};
+ return {distance,days:lim(Math.ceil(distance/16)+5,10,60),fee:lim(Math.ceil(distance/120)+1,2,8),type:land?'Perbatasan':'Jalur laut'};
+}
+function resourceQuote(n,k,kind,qty=RESOURCE_QUANTITY){
+ const route=resourceRoute(n);if(route.reason)return route;
+ if(!Object.hasOwn(RESOURCE_BASE,k)||!['buy','sell'].includes(kind)||![5,10,20].includes(qty))return {reason:'Pesanan tidak valid.'};
+ if((G.resourceOrders||[]).length>=3)return {reason:'Maksimal tiga kiriman aktif.'};
+ const stock=G.resourceStocks[n][k],friend=Math.min(.12,Math.max(0,relGet(G.nat,n))*.0005+(allied(G.nat,n)||subjectMaster(n)===G.nat?.04:0));
+ const mid=RESOURCE_BASE[k]*lim(1.4-stock/150,.65,1.4),unit=mid*(kind==='buy'?1.15-friend:.75+friend);
+ const value=kind==='buy'?Math.ceil(unit*qty):Math.floor(unit*qty),total=kind==='buy'?value+route.fee:value-route.fee;
+ const from=kind==='buy'?n:G.nat,to=kind==='buy'?G.nat:n;
+ const reserve=kind==='buy'?(k==='food'?Math.max(5,regsOf(n)*.3+(OWNED[n]||[]).length*.5):k==='wood'?3:k==='iron'?1:0):0;
+ let reason='';if(G.resourceStocks[from][k]<qty+reserve)reason=kind==='buy'?'Mitra menjaga cadangan; stok surplus belum cukup.':'Stok Anda belum cukup.';
+ else if(G.resourceStocks[to][k]+qty>resourceCapacity(to,k))reason='Gudang penerima penuh atau sedang dicadangkan untuk kiriman.';
+ else if(total<=0)reason='Ongkos terlalu besar; pilih jumlah lebih banyak.';
+ else if(kind==='buy'&&G.treasury<total)reason='Dukat Anda belum cukup.';
+ else if(kind==='sell'&&G.resourceTradeGold[n]<value)reason='Dana dagang mitra belum cukup.';
+ return {n,k,kind,qty,from,to,value,total,fee:route.fee,days:route.days,route:route.type,reason};
+}
+function addResourceTradeLog(t){G.resourceTradeLog.unshift(`${G.d} ${MONTHS[G.mo]} ${G.y} · ${t}`);G.resourceTradeLog=G.resourceTradeLog.slice(0,20);}
+function bookResourceTrade(q){
+ const fresh=resourceQuote(q.n,q.k,q.kind,+q.qty);if(fresh.reason){toast(fresh.reason);return false;}if(fresh.total!==+q.total){toast('Harga berubah. Periksa penawaran terbaru.');return false;}
+ const o={...fresh,id:G.nid++,left:fresh.days};delete o.reason;
+ G.resourceStocks[o.from][o.k]-=o.qty;if(o.kind==='buy')G.treasury-=o.total;else G.resourceTradeGold[o.n]-=o.value;
+ G.resourceOrders.push(o);addResourceTradeLog((o.kind==='buy'?'Impor dari ':'Ekspor ke ')+o.n+': '+o.qty+' '+RESOURCE_NAMES[o.k]+', '+o.total+' dukat bersih, '+o.days+' hari.');
+ saveGame(true);SFX.play('trade');toast('Kiriman '+RESOURCE_NAMES[o.k]+' dengan '+o.n+' disepakati: '+o.days+' hari.');return true;
+}
+function settleResourceTrade(id,cancel=false){
+ const o=G.resourceOrders.find(o=>o.id===id);if(!o)return false;
+ G.resourceOrders=G.resourceOrders.filter(x=>x!==o);
+ if(cancel){G.resourceStocks[o.from][o.k]+=o.qty;if(o.kind==='buy')G.treasury+=o.total;else G.resourceTradeGold[o.n]+=o.value;
+  addResourceTradeLog('Kiriman '+o.n+' dibatalkan; barang dan pembayaran dikembalikan penuh.');toast('Kiriman '+o.n+' batal. Barang dan uang dikembalikan.');
+ }else{G.resourceStocks[o.to][o.k]+=o.qty;if(o.kind==='buy')G.resourceTradeGold[o.n]+=o.value;else G.treasury+=o.total;
+  const g=G.resourceGoodwill[o.n] ||= {year:G.y,points:0};if(g.year!==G.y){g.year=G.y;g.points=0;}const bonus=Math.min(2,6-g.points);if(bonus>0){relAdd(G.nat,o.n,bonus);g.points+=bonus;}
+  addResourceTradeLog('Kiriman '+o.qty+' '+RESOURCE_NAMES[o.k]+' '+(o.kind==='buy'?'dari ':'ke ')+o.n+' tiba'+(o.kind==='sell'?'; +'+o.total+' dukat':'')+'.');toast('Kiriman '+RESOURCE_NAMES[o.k]+' '+o.n+' tiba'+(o.kind==='sell'?' · +'+o.total+' dukat':'')+'.');SFX.play('trade');
+ }
+ saveGame(true);return true;
+}
+function resourceTradeDay(){const active=!!G.resourceOrders?.length;for(const o of [...(G.resourceOrders||[])]){if(!alive(o.n)||!alive(G.nat)||atWar(G.nat,o.n)){settleResourceTrade(o.id,true);continue;}if(--o.left<=0)settleResourceTrade(o.id);}if(active&&winMode==='resourceTrade')renderWin();}
+function resourceTradeMonth(){
+ for(const n of Object.keys(NATS))if(n!==G.nat&&alive(n)&&G.resourceTradeGold[n]<2000)G.resourceTradeGold[n]=Math.min(2000,G.resourceTradeGold[n]+Math.max(2,natDev(n)*.12));
+ if(monthIdx()===0||monthIdx()%6||G.resourceOrders.length>=3)return;
+ const needed=Object.keys(RESOURCE_NAMES).find(k=>G.resourceStocks[G.nat][k]<(k==='iron'?2:5));if(!needed)return;
+ const offers=Object.keys(NATS).filter(n=>n!==G.nat&&alive(n)&&relGet(n,G.nat)>=0).map(n=>resourceQuote(n,needed,'buy',10)).filter(q=>!q.reason).sort((a,b)=>a.total-b.total);
+ const q=offers[0];if(!q)return;pushEvent({t:'Tawaran Pasokan dari '+q.n,x:q.n+' menawarkan '+q.qty+' '+RESOURCE_NAMES[q.k]+' seharga '+q.total+' dukat termasuk ongkos, tiba dalam '+q.days+' hari. Harga dan persediaan diperiksa ulang saat diterima.',o:[['Lewati','ok',{}],['Pesan pasokan','resourceOffer',q]]});
+}
+EVA.resourceOffer=q=>bookResourceTrade(q);
+act.openresourcetrade=b=>{RESOURCE_PARTNER=b.dataset.n||null;winMode='resourceTrade';};
+act.resourcepartner=b=>{RESOURCE_PARTNER=b.dataset.n||null;$('win').scrollTop=0;};
+act.resourcequantity=b=>{const q=+b.dataset.q;if([5,10,20].includes(q))RESOURCE_QUANTITY=q;};
+act.resourceorder=b=>bookResourceTrade({n:b.dataset.n,k:b.dataset.k,kind:b.dataset.kind,qty:+b.dataset.qty,total:+b.dataset.total});
+act.resourcecancel=b=>settleResourceTrade(+b.dataset.id,true);
+function resourceTradeHTML(){
+ let h=hd('Dagang Kerajaan','Sumber daya · maksimal 3 kiriman');
+ if(G.resourceOrders.length)h+='<div class="sec">Kiriman berjalan</div>';for(const o of G.resourceOrders)h+=row((o.kind==='buy'?'Impor dari ':'Ekspor ke ')+o.n,o.qty+' '+RESOURCE_NAMES[o.k])+'<div class="r"><span>'+o.left+' hari · '+o.total+' dukat'+(o.kind==='sell'?' saat tiba':' telah dibayar')+'</span>'+btn('Batalkan','resourcecancel',{id:o.id})+'</div>';
+ if(!G.resourceOrders.length)h+='<p class="note">Belum ada kiriman. Harga dikunci saat pesan; perang membatalkan dengan pengembalian penuh.</p>';
+ const n=RESOURCE_PARTNER;if(n&&alive(n)&&n!==G.nat){const route=resourceRoute(n);h+='<div class="r">'+btn('Ganti mitra','resourcepartner',{n:''})+'</div><div class="sec">Mitra: '+n+'</div>'+row('Hubungan',Math.round(relGet(G.nat,n)))+row('Dana dagang mitra',Math.floor(G.resourceTradeGold[n])+' dukat')+'<div class="r">'+[5,10,20].map(q=>btn((q===RESOURCE_QUANTITY?'✓ ':'')+q+' unit','resourcequantity',{q})).join('')+'</div>';
+  if(route.reason)h+='<p class="note neg">'+route.reason+'</p>';else h+=row(route.type,route.days+' hari · ongkos '+route.fee+' dukat');
+  for(const k of Object.keys(RESOURCE_NAMES)){h+='<div class="sec">'+RESOURCE_NAMES[k]+'</div>'+row('Stok Anda / '+n,G.resourceStocks[G.nat][k].toFixed(1)+' / '+G.resourceStocks[n][k].toFixed(1));for(const kind of ['buy','sell']){const q=resourceQuote(n,k,kind),label=kind==='buy'?'Beli':'Jual';h+='<div class="r">'+btn(label+' '+RESOURCE_QUANTITY+(q.total!==undefined?' · '+q.total+' dukat':''),'resourceorder',{n,k,kind,qty:RESOURCE_QUANTITY,total:q.total},!q.reason)+'</div>'+(q.reason?'<p class="note">'+q.reason+'</p>':'');}}
+ }
+ if(!n||!alive(n)||n===G.nat){h+='<div class="sec">Pilih mitra</div>';const partners=Object.keys(NATS).filter(n=>n!==G.nat&&alive(n)).map(n=>({n,r:resourceRoute(n)})).sort((a,b)=>(!!a.r.reason)-(!!b.r.reason)||(a.r.distance||1e9)-(b.r.distance||1e9));
+ for(const p of partners)h+='<button class="btn rowb" data-act="resourcepartner" data-n="'+p.n+'"><span>'+p.n+'</span><em>'+(p.r.reason?'Belum tersedia':p.r.days+' hari · hubungan '+Math.round(relGet(G.nat,p.n)))+'</em></button>';}
+ h+='<p class="note">Surplus membuat harga lebih murah; kelangkaan menaikkan harga. Hubungan baik dan aliansi memperkecil selisih harga. Setiap pengiriman sukses memperbaiki hubungan +2, maksimal +6 per mitra/tahun. Dana dagang AI adalah anggaran khusus, bukan seluruh kas negaranya. Kapasitas gudang dicadangkan selama pengiriman.</p><div class="sec">Riwayat dagang</div>';
+ return h+G.resourceTradeLog.map(t=>'<p class="note">'+t+'</p>').join('');
+}
 
 /* ---------- start screen ---------- */
 let anim = 0;
